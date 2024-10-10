@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset='utf-8' />
     <title>First Aiders Map</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
     <script src='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.css' rel='stylesheet' />
     <style>
@@ -18,25 +18,8 @@
     var map = new mapboxgl.Map({
         container: 'map',
         style: 'mapbox://styles/ehs/cm21xst11006c01p33vsc0o63',
-        center: [0, 0], // Set this to your initial map center
-        zoom: 2 // Set this to your initial zoom level
-    });
-
-    map.on('load', function () {
-        map.addSource('first-aiders', {
-            type: 'geojson',
-            data: 'path/to/your/geojson/file.geojson' // This will be the path to your GeoJSON file in the repository
-        });
-
-        map.addLayer({
-            'id': 'first-aiders',
-            'type': 'circle',
-            'source': 'first-aiders',
-            'paint': {
-                'circle-radius': 6,
-                'circle-color': '#B42222'
-            }
-        });
+        center: [INITIAL_LONGITUDE, INITIAL_LATITUDE],
+        zoom: 12
     });
     </script>
 </body>
