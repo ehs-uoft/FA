@@ -1,26 +1,33 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset='utf-8' />
-    <title>First Aiders Map</title>
-    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
-    <script src='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.js'></script>
-    <link href='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.css' rel='stylesheet' />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>First Aid Kits Map</title>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.css" rel="stylesheet" />
     <style>
         body { margin: 0; padding: 0; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; }
     </style>
 </head>
 <body>
-    <div id='map'></div>
-    <script>
+
+<div id="map"></div>
+
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.js"></script>
+<script>
     mapboxgl.accessToken = 'pk.eyJ1IjoiZWhzIiwiYSI6ImNtMWpmbHh6dDEybjkya3BzeWo0dWE4aHkifQ.w76CswsnNz-LiIKAo2y7mQ';
+
     var map = new mapboxgl.Map({
-        container: 'map',
-        style: 'mapbox://styles/ehs/cm21xst11006c01p33vsc0o63',
-        center: [INITIAL_LONGITUDE, INITIAL_LATITUDE],
-        zoom: 12
+        container: 'map', 
+        style: 'mapbox://styles/ehs/cm21xst11006c01p33vsc0o63', // Your Mapbox style URL
+        center: [-79.3832, 43.6532], // Initial map center
+        zoom: 12 // Initial zoom level
     });
-    </script>
+
+    // Add navigation controls
+    map.addControl(new mapboxgl.NavigationControl());
+</script>
+
 </body>
 </html>
