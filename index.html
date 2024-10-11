@@ -13,33 +13,27 @@
             font-family: 'Roboto', sans-serif; 
             display: flex; 
             height: 100vh; 
-            background-color: #f4f4f4; /* Light background for contrast */
+            background-color: #f4f4f4;
         }
         #map { 
-            flex: 1; /* Map takes up remaining space */
+            flex: 1; 
             position: relative; 
         }
         #info-panel {
-            width: 300px; /* Fixed width for the panel */
+            width: 300px; 
             background: white; 
             padding: 20px; 
             border-radius: 8px; 
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Soft shadow */
-            overflow-y: auto; /* Scroll if content overflows */
-            position: absolute; /* Position it on top of the map */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            position: absolute; 
             right: 10px; 
             top: 10px; 
-            z-index: 10; /* Ensure it appears above the map */
-            display: none; /* Hide initially */
+            z-index: 10; 
+            display: none; 
         }
         h2 {
             font-size: 24px; 
             margin-bottom: 10px; 
-            display: flex; 
-            align-items: center; 
-        }
-        h2 i {
-            margin-right: 10px; /* Space between icon and text */
         }
         p {
             margin: 0 0 10px; 
@@ -47,29 +41,20 @@
             line-height: 1.5; 
         }
         a {
-            color: #0070f3; /* Link color */
+            color: #0070f3; 
             text-decoration: none; 
         }
-        a:hover {
-            text-decoration: underline; /* Underline on hover */
-        }
         button {
-            background-color: #0070f3; /* Primary color */
+            background-color: #0070f3; 
             color: white;
             border: none;
-            border-radius: 5px; /* Rounded corners */
+            border-radius: 5px; 
             padding: 10px 15px;
             cursor: pointer;
-            transition: background-color 0.3s; /* Smooth transition */
-            margin-top: 10px; /* Space above button */
+            margin-top: 10px; 
         }
         button:hover {
-            background-color: #005bb5; /* Darker shade on hover */
-        }
-        /* Focus styles */
-        button:focus, a:focus {
-            outline: 3px solid #005bb5; /* Clear outline for keyboard navigation */
-            outline-offset: 2px; /* Space between outline and element */
+            background-color: #005bb5; 
         }
     </style>
     <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
@@ -77,7 +62,7 @@
 <body>
     <div id="map" role="application" aria-label="Map displaying first aid locations"></div>
     <div id="info-panel" role="dialog" aria-labelledby="info-panel-title" aria-hidden="true">
-        <h2 id="info-panel-title"><i class="fas fa-first-aid" aria-hidden="true"></i> First Aid Information</h2>
+        <h2 id="info-panel-title">First Aid Information</h2>
         <p id="building-name"></p>
         <p id="building-address"></p>
         <div id="building-url"></div>
@@ -90,20 +75,18 @@
 
         const map = new mapboxgl.Map({
             container: 'map',
-            style: 'mapbox://styles/mapbox/light-v11', // Base map style
-            center: [-79.3832, 43.6532], // Center on Toronto
+            style: 'mapbox://styles/mapbox/light-v11', 
+            center: [-79.3832, 43.6532], 
             zoom: 12
         });
 
-        // Load GeoJSON data from your file
+        // Load GeoJSON data
         map.on('load', () => {
-            // Add GeoJSON source
             map.addSource('first-aid-source', {
                 type: 'geojson',
-                data: 'https://raw.githubusercontent.com/ehs-uoft/FA/94c447a9be1a677c3857724fac449f1168770c5e/geojson.json' // Replace with your GeoJSON file URL
+                data: 'https://raw.githubusercontent.com/ehs-uoft/FA/94c447a9be1a677c3857724fac449f1168770c5e/geojson.json',
             });
 
-            // Layer for points
             map.addLayer({
                 id: 'first-aid-points',
                 type: 'symbol',
@@ -115,9 +98,7 @@
                 }
             });
 
-            // Add an event listener for clicks on points
             map.on('click', 'first-aid-points', (e) => {
-                const coordinates = e.lngLat;
                 const properties = e.features[0].properties;
 
                 // Update info panel content
@@ -127,13 +108,13 @@
 
                 // Show the info panel
                 document.getElementById('info-panel').style.display = 'block';
-                document.getElementById('info-panel').setAttribute('aria-hidden', 'false'); // Update ARIA attribute
+                document.getElementById('info-panel').setAttribute('aria-hidden', 'false');
             });
 
             // Close panel button event
             document.getElementById('close-panel').onclick = function() {
                 document.getElementById('info-panel').style.display = 'none';
-                document.getElementById('info-panel').setAttribute('aria-hidden', 'true'); // Update ARIA attribute
+                document.getElementById('info-panel').setAttribute('aria-hidden', 'true');
             };
 
             // Zoom controls
