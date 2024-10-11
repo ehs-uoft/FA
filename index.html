@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapbox Streets Example</title>
+    <title>First Aid Map Example</title>
     <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
     <style>
@@ -26,25 +26,21 @@
         });
 
         map.on('load', () => {
-            // Add Mapbox Streets tileset as a source
-            map.addSource('streets', {
+            // Add your tileset as a source
+            map.addSource('first-aid-source', {
                 type: 'vector',
-                url: 'mapbox://mapbox.mapbox-streets-v8' // Reference to the Mapbox Streets tileset
+                url: 'mapbox://ehs.FirstAidMap' // Use the correct tileset URL
             });
 
-            // Example of adding a layer from the Mapbox Streets tileset
+            // Add a layer from the First Aid Map tileset
             map.addLayer({
-                'id': 'road-layer',
-                'type': 'line', // Line type to represent roads
-                'source': 'streets',
-                'source-layer': 'road', // Specific layer within the streets tileset
-                'layout': {
-                    'line-join': 'round',
-                    'line-cap': 'round'
-                },
+                'id': 'first-aid-layer',
+                'type': 'circle', // Use 'circle' to represent points
+                'source': 'first-aid-source',
+                'source-layer': 'FirstAidMap', // Make sure this matches your layer name
                 'paint': {
-                    'line-color': '#ff0000', // Color for roads
-                    'line-width': 2 // Width of the road lines
+                    'circle-color': '#00ff00', // Green color for points
+                    'circle-radius': 8 // Adjust the size as needed
                 }
             });
         });
