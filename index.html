@@ -16,12 +16,12 @@
     <script>
         const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoiZWhzIiwiYSI6ImNtMjNsYWtlZzA2bnQycW9qb2F3dHJuM2gifQ.Yw2JtBD13UqJFKtTj-SKsQ'; // Replace with your public access token
         const MAPBOX_USERNAME = 'ehs'; // Replace with your username
-        const TILESET_ID = 'cm24rdlnu1om01nqmylakk5uc-050gf'; // Replace with your public tileset ID
+        const TILESET_ID = 'ehs.cm24rdlnu1om01nqmylakk5uc-050gf'; // Replace with your public tileset ID
 
         mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
         const map = new mapboxgl.Map({
             container: 'map',
-            style: 'mapbox://styles/mapbox/light-v11',
+            style: 'mapbox://styles/mapbox/dark-v11',
             center: [-79.3832, 43.6532], // Toronto
             zoom: 12
         });
@@ -30,7 +30,7 @@
             // Add the vector tileset source
             map.addSource('public-tileset', {
                 type: 'vector',
-                url: `mapbox://${MAPBOX_USERNAME}.${TILESET_ID}` // Public tileset URL
+                url: `mapbox://ehs.cm24rdlnu1om01nqmylakk5uc-050gf` // Public tileset URL
             });
 
             // Add a symbol layer to display the first aid points with green color and an icon
