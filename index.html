@@ -3,32 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>First Aid Map with Side Panel</title>
-    <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
+    <title>First Aid Map</title>
     <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; padding: 0; display: flex; }
-        #map { width: 75%; height: 100vh; }
-        #info-panel {
-            width: 25%;
-            padding: 20px;
-            background: #fff;
-            height: 100vh;
-            overflow-y: auto;
-            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+        body { 
+            margin: 0; 
+            padding: 0; 
+            font-family: 'Roboto', sans-serif; 
+            display: flex; 
+            height: 100vh; 
+            background-color: #f4f4f4; /* Light background for contrast */
         }
-        #info-panel h2 {
-            margin: 0;
+        #map { 
+            flex: 1; /* Map takes up remaining space */
+            position: relative; 
+        }
+        #info-panel {
+            width: 300px; /* Fixed width for the panel */
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Soft shadow */
+            overflow-y: auto; /* Scroll if content overflows */
+            position: absolute; /* Position it on top of the map */
+            right: 10px; 
+            top: 10px; 
+            z-index: 10; /* Ensure it appears above the map */
+            display: none; /* Hide initially */
+        }
+        h2 {
+            font-size: 24px; 
+            margin-bottom: 10px; 
+            display: flex; 
+            align-items: center; 
+        }
+        h2 i {
+            margin-right: 10px; /* Space between icon and text */
+        }
+        p {
+            margin: 0 0 10px; 
+            font-size: 14px; 
+            line-height: 1.5; 
+        }
+        a {
+            color: #0070f3; /* Link color */
+            text-decoration: none; 
+        }
+        a:hover {
+            text-decoration: underline; /* Underline on hover */
+        }
+        button {
+            background-color: #0070f3; /* Primary color */
+            color: white;
+            border: none;
+            border-radius: 5px; /* Rounded corners */
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background-color 0.3s; /* Smooth transition */
+            margin-top: 10px; /* Space above button */
+        }
+        button:hover {
+            background-color: #005bb5; /* Darker shade on hover */
+        }
+        /* Focus styles */
+        button:focus, a:focus {
+            outline: 3px solid #005bb5; /* Clear outline for keyboard navigation */
+            outline-offset: 2px; /* Space between outline and element */
         }
     </style>
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
 </head>
 <body>
-    <div id="map"></div>
-    <div id="info-panel">
-        <h2>First Aid Information</h2>
-        <div id="info-content">
-            <p>Select a point to see details.</p>
-        </div>
+    <div id="map" role="application" aria-label="Map displaying first aid locations"></div>
+    <div id="info-panel" role="dialog" aria-labelledby="info-panel-title" aria-hidden="true">
+        <h2 id="info-panel-title"><i class="fas fa-first-aid" aria-hidden="true"></i> First Aid Information</h2>
+        <p id="building-name"></p>
+        <p id="building-address"></p>
+        <div id="building-url"></div>
+        <button id="close-panel" aria-label="Close information panel">Close</button>
     </div>
     <script>
         const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoiZWhzIiwiYSI6ImNtMjNsYWtlZzA2bnQycW9qb2F3dHJuM2gifQ.Yw2JtBD13UqJFKtTj-SKsQ'; // Replace with your public access token
@@ -42,54 +95,50 @@
             zoom: 12
         });
 
+        // Load GeoJSON data from your file
         map.on('load', () => {
-            // Add your tileset as a source
+            // Add GeoJSON source
             map.addSource('first-aid-source', {
-                type: 'vector',
-                url: 'mapbox://ehs.cm24rdlnu1om01nqmylakk5uc-050gf', // Your tileset URL
-                promoteId: 'id' // Use a unique ID if available
+                type: 'geojson',
+                data: 'https://raw.githubusercontent.com/ehs-uoft/FA/94c447a9be1a677c3857724fac449f1168770c5e/geojson.json' // Replace with your GeoJSON file URL
             });
 
-            // Layer for first aid points
+            // Layer for points
             map.addLayer({
-                'id': 'first-aid-points',
-                'type': 'symbol',
-                'source': 'first-aid-source',
-                'source-layer': 'FirstAidMap', // Name of your source layer
-                'layout': {
-                    'icon-image': 'first-aid-icon', // Use the first aid icon
+                id: 'first-aid-points',
+                type: 'symbol',
+                source: 'first-aid-source',
+                layout: {
+                    'icon-image': 'https://github.com/ehs-uoft/FA/raw/80b08d35ae684f78b0fd2f602cf8693f3e572c91/HH-4_First_Aid_Symbol_large.png',
                     'icon-size': 0.1,
                     'icon-allow-overlap': true
                 }
             });
 
-            // Add an image for the first aid symbol
-            map.loadImage('https://raw.githubusercontent.com/ehs-uoft/FA/80b08d35ae684f78b0fd2f602cf8693f3e572c91/HH-4_First_Aid_Symbol_large.png', (error, image) => {
-                if (error) throw error;
-                map.addImage('first-aid-icon', image);
-            });
-
-            // Add an event listener for clicks on first aid points
+            // Add an event listener for clicks on points
             map.on('click', 'first-aid-points', (e) => {
-                const buildingName = e.features[0].properties.building_name; // Adjust to match your data
-                const excelLink = e.features[0].properties.excel_link; // Adjust to match your data
+                const coordinates = e.lngLat;
+                const properties = e.features[0].properties;
 
-                // Update the side panel content
-                document.getElementById('info-content').innerHTML = `
-                    <strong>${buildingName}</strong><br>
-                    <a href="${excelLink}" target="_blank">More Info</a>
-                `;
+                // Update info panel content
+                document.getElementById('building-name').innerText = properties.name;
+                document.getElementById('building-address').innerText = properties.address;
+                document.getElementById('building-url').innerHTML = properties.url;
+
+                // Show the info panel
+                document.getElementById('info-panel').style.display = 'block';
+                document.getElementById('info-panel').setAttribute('aria-hidden', 'false'); // Update ARIA attribute
             });
 
-            // Change the cursor to a pointer when hovering over first aid points
-            map.on('mouseenter', 'first-aid-points', () => {
-                map.getCanvas().style.cursor = 'pointer';
-            });
+            // Close panel button event
+            document.getElementById('close-panel').onclick = function() {
+                document.getElementById('info-panel').style.display = 'none';
+                document.getElementById('info-panel').setAttribute('aria-hidden', 'true'); // Update ARIA attribute
+            };
 
-            // Reset the cursor when leaving first aid points
-            map.on('mouseleave', 'first-aid-points', () => {
-                map.getCanvas().style.cursor = '';
-            });
+            // Zoom controls
+            const nav = new mapboxgl.NavigationControl();
+            map.addControl(nav, 'top-right');
         });
     </script>
 </body>
