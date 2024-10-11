@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Toronto Mapbox Example with First Aid Points</title>
+    <title>Mapbox Streets Example</title>
     <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
     <style>
@@ -15,36 +15,36 @@
     <div id="map"></div>
     <script>
         const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoiZWhzIiwiYSI6ImNtMjNsYWtlZzA2bnQycW9qb2F3dHJuM2gifQ.Yw2JtBD13UqJFKtTj-SKsQ'; // Replace with your public access token
-        const MAPBOX_USERNAME = 'ehs'; // Replace with your username
-        const TILESET_ID = 'ehs.cm24rdlnu1om01nqmylakk5uc-050gf'; // Replace with your public tileset ID
 
         mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
+
         const map = new mapboxgl.Map({
             container: 'map',
-            style: 'mapbox://styles/mapbox/dark-v11',
-            center: [-79.3832, 43.6532], // Toronto
+            style: 'mapbox://styles/mapbox/light-v11', // Base map style
+            center: [-79.3832, 43.6532], // Center on Toronto
             zoom: 12
         });
 
         map.on('load', () => {
-            // Add the vector tileset source
-            map.addSource('public-tileset', {
+            // Add Mapbox Streets tileset as a source
+            map.addSource('streets', {
                 type: 'vector',
-                url: `mapbox://ehs.cm24rdlnu1om01nqmylakk5uc-050gf` // Public tileset URL
+                url: 'mapbox://mapbox.mapbox-streets-v8' // Reference to the Mapbox Streets tileset
             });
 
-            // Add a symbol layer to display the first aid points with green color and an icon
+            // Example of adding a layer from the Mapbox Streets tileset
             map.addLayer({
-                'id': 'first-aid-points',
-                'type': 'symbol',
-                'source': 'public-tileset',
+                'id': 'road-layer',
+                'type': 'line', // Line type to represent roads
+                'source': 'streets',
+                'source-layer': 'road', // Specific layer within the streets tileset
                 'layout': {
-                    'icon-image': 'first-aid-icon', // You can upload your own custom icon to Mapbox Studio and use its name here
-                    'icon-size': 1.5, // Adjust the size of the icon
-                    'icon-allow-overlap': true // Allow icons to overlap
+                    'line-join': 'round',
+                    'line-cap': 'round'
                 },
                 'paint': {
-                    'icon-color': '#00FF00' // Green color for the first aid icons
+                    'line-color': '#ff0000', // Color for roads
+                    'line-width': 2 // Width of the road lines
                 }
             });
         });
