@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Toronto Mapbox Example with Custom Dataset</title>
+    <title>First Aid Kits Map</title>
     <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
     <style>
@@ -25,7 +25,7 @@
         map.on('load', () => {
             map.addSource('custom-dataset', {
                 type: 'geojson',
-                data: `https://api.mapbox.com/datasets/v1/YOUR_USERNAME/YOUR_DATASET_ID/features?access_token=${mapboxgl.accessToken}`
+                data: `https://api.mapbox.com/datasets/v1/ehs/cm24rdlnu1om01nqmylakk5uc/features?access_token=${mapboxgl.accessToken}`
             });
 
             map.addLayer({
