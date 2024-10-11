@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Toronto Mapbox Example with Private Tileset</title>
+    <title>Toronto Mapbox Example with First Aid Points</title>
     <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
     <style>
@@ -14,9 +14,9 @@
 <body>
     <div id="map"></div>
     <script>
-        const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoiZWhzIiwiYSI6ImNtMjNsYWtlZzA2bnQycW9qb2F3dHJuM2gifQ.Yw2JtBD13UqJFKtTj-SKsQ'; // Replace with your secret token
+        const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoiZWhzIiwiYSI6ImNtMjNsYWtlZzA2bnQycW9qb2F3dHJuM2gifQ.Yw2JtBD13UqJFKtTj-SKsQ'; // Replace with your public access token
         const MAPBOX_USERNAME = 'ehs'; // Replace with your username
-        const TILESET_ID = 'ehs.cm24rdlnu1om01nqmylakk5uc-050gf'; // Replace with your private tileset ID
+        const TILESET_ID = 'cm24rdlnu1om01nqmylakk5uc-050gf'; // Replace with your public tileset ID
 
         mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
         const map = new mapboxgl.Map({
@@ -27,18 +27,24 @@
         });
 
         map.on('load', () => {
-            map.addSource('private-tileset', {
+            // Add the vector tileset source
+            map.addSource('public-tileset', {
                 type: 'vector',
-                url: `mapbox://${MAPBOX_USERNAME}.${TILESET_ID}` // Reference the tileset URL
+                url: `mapbox://${MAPBOX_USERNAME}.${TILESET_ID}` // Public tileset URL
             });
 
+            // Add a symbol layer to display the first aid points with green color and an icon
             map.addLayer({
-                'id': 'private-layer',
-                'type': 'fill', // Adjust depending on the geometry type (fill, line, circle, etc.)
-                'source': 'private-tileset',
+                'id': 'first-aid-points',
+                'type': 'symbol',
+                'source': 'public-tileset',
+                'layout': {
+                    'icon-image': 'first-aid-icon', // You can upload your own custom icon to Mapbox Studio and use its name here
+                    'icon-size': 1.5, // Adjust the size of the icon
+                    'icon-allow-overlap': true // Allow icons to overlap
+                },
                 'paint': {
-                    'fill-color': '#007cbf',
-                    'fill-opacity': 0.5
+                    'icon-color': '#00FF00' // Green color for the first aid icons
                 }
             });
         });
