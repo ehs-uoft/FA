@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Toronto Mapbox Example with Custom Dataset</title>
+    <title>Toronto Mapbox Example with Private Tileset</title>
     <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
     <style>
@@ -14,10 +14,9 @@
 <body>
     <div id="map"></div>
     <script>
-        // Replace these with your actual details
-        const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoiZWhzIiwiYSI6ImNtMjNsYWtlZzA2bnQycW9qb2F3dHJuM2gifQ.Yw2JtBD13UqJFKtTj-SKsQ';
-        const MAPBOX_USERNAME = 'ehs';
-        const DATASET_ID = 'cm24rdlnu1om01nqmylakk5uc';
+        const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoiZWhzIiwiYSI6ImNtMjNsYWtlZzA2bnQycW9qb2F3dHJuM2gifQ.Yw2JtBD13UqJFKtTj-SKsQ'; // Replace with your secret token
+        const MAPBOX_USERNAME = 'ehs'; // Replace with your username
+        const TILESET_ID = 'ehs.cm24rdlnu1om01nqmylakk5uc-050gf'; // Replace with your private tileset ID
 
         mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
         const map = new mapboxgl.Map({
@@ -28,15 +27,15 @@
         });
 
         map.on('load', () => {
-            map.addSource('custom-dataset', {
-                type: 'geojson',
-                data: `https://api.mapbox.com/datasets/v1/${MAPBOX_USERNAME}/${DATASET_ID}/features?access_token=${MAPBOX_ACCESS_TOKEN}`
+            map.addSource('private-tileset', {
+                type: 'vector',
+                url: `mapbox://${MAPBOX_USERNAME}.${TILESET_ID}` // Reference the tileset URL
             });
 
             map.addLayer({
-                'id': 'custom-layer',
-                'type': 'fill',
-                'source': 'custom-dataset',
+                'id': 'private-layer',
+                'type': 'fill', // Adjust depending on the geometry type (fill, line, circle, etc.)
+                'source': 'private-tileset',
                 'paint': {
                     'fill-color': '#007cbf',
                     'fill-opacity': 0.5
