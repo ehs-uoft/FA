@@ -3,16 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>First Aid Map with Tileset</title>
+    <title>First Aid Map with Side Panel</title>
     <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
     <style>
-        body { margin: 0; padding: 0; }
-        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+        body { margin: 0; padding: 0; display: flex; }
+        #map { width: 75%; height: 100vh; }
+        #info-panel {
+            width: 25%;
+            padding: 20px;
+            background: #fff;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+        }
+        #info-panel h2 {
+            margin: 0;
+        }
     </style>
 </head>
 <body>
     <div id="map"></div>
+    <div id="info-panel">
+        <h2>First Aid Information</h2>
+        <div id="info-content">
+            <p>Select a point to see details.</p>
+        </div>
+    </div>
     <script>
         const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoiZWhzIiwiYSI6ImNtMjNsYWtlZzA2bnQycW9qb2F3dHJuM2gifQ.Yw2JtBD13UqJFKtTj-SKsQ'; // Replace with your public access token
 
@@ -52,22 +69,16 @@
                 map.addImage('first-aid-icon', image);
             });
 
-            // Create a popup
-            const popup = new mapboxgl.Popup({
-                closeButton: false,
-                closeOnClick: false
-            });
-
             // Add an event listener for clicks on first aid points
             map.on('click', 'first-aid-points', (e) => {
-                const coordinates = e.lngLat;
                 const buildingName = e.features[0].properties.building_name; // Adjust to match your data
                 const excelLink = e.features[0].properties.excel_link; // Adjust to match your data
 
-                // Set the popup content
-                popup.setLngLat(coordinates)
-                    .setHTML(`<strong>${buildingName}</strong><br><a href="${excelLink}" target="_blank">More Info</a>`)
-                    .addTo(map);
+                // Update the side panel content
+                document.getElementById('info-content').innerHTML = `
+                    <strong>${buildingName}</strong><br>
+                    <a href="${excelLink}" target="_blank">More Info</a>
+                `;
             });
 
             // Change the cursor to a pointer when hovering over first aid points
@@ -78,7 +89,6 @@
             // Reset the cursor when leaving first aid points
             map.on('mouseleave', 'first-aid-points', () => {
                 map.getCanvas().style.cursor = '';
-                popup.remove(); // Remove popup when leaving
             });
         });
     </script>
