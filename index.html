@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>First Aid Kits Map</title>
+    <title>Toronto Mapbox Example with Custom Dataset</title>
     <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
     <style>
@@ -14,7 +14,12 @@
 <body>
     <div id="map"></div>
     <script>
-        mapboxgl.accessToken = 'pk.eyJ1IjoiZWhzIiwiYSI6ImNtMjNsYWtlZzA2bnQycW9qb2F3dHJuM2gifQ.Yw2JtBD13UqJFKtTj-SKsQ';
+        // Replace these with your actual details
+        const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoiZWhzIiwiYSI6ImNtMjNsYWtlZzA2bnQycW9qb2F3dHJuM2gifQ.Yw2JtBD13UqJFKtTj-SKsQ';
+        const MAPBOX_USERNAME = 'ehs';
+        const DATASET_ID = 'cm24rdlnu1om01nqmylakk5uc';
+
+        mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
         const map = new mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/mapbox/light-v11',
@@ -25,7 +30,7 @@
         map.on('load', () => {
             map.addSource('custom-dataset', {
                 type: 'geojson',
-                data: `https://api.mapbox.com/datasets/v1/ehs/cm24rdlnu1om01nqmylakk5uc/features?access_token=${mapboxgl.accessToken}`
+                data: `https://api.mapbox.com/datasets/v1/${MAPBOX_USERNAME}/${DATASET_ID}/features?access_token=${MAPBOX_ACCESS_TOKEN}`
             });
 
             map.addLayer({
