@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>First Aid Map with Clustering</title>
+    <title>First Aid Map with Tileset</title>
     <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
     <style>
@@ -26,56 +26,28 @@
         });
 
         map.on('load', () => {
-            // Add your tileset as a source with clustering enabled
+            // Add your tileset as a source
             map.addSource('first-aid-source', {
                 type: 'vector',
                 url: 'mapbox://ehs.cm24rdlnu1om01nqmylakk5uc-050gf', // Your tileset URL
-                promoteId: 'id', // Use a unique ID if available
-                'cluster': true, // Enable clustering
-                'clusterMaxZoom': 14, // Max zoom to cluster points on
-                'clusterRadius': 50 // Radius of each cluster when clustering points (in pixels)
+                promoteId: 'id' // Use a unique ID if available
             });
 
-            // Layer for clusters
+            // Layer for first aid points
             map.addLayer({
-                'id': 'clusters',
-                'type': 'circle',
-                'source': 'first-aid-source',
-                'filter': ['has', 'point_count'], // Only include features with point_count
-                'paint': {
-                    'circle-color': '#51bbd6',
-                    'circle-radius': 20 // Adjust size as needed
-                }
-            });
-
-            // Layer for cluster labels
-            map.addLayer({
-                'id': 'cluster-count',
+                'id': 'first-aid-points',
                 'type': 'symbol',
                 'source': 'first-aid-source',
-                'filter': ['has', 'point_count'], // Only include features with point_count
+                'source-layer': 'FirstAidMap', // Name of your source layer
                 'layout': {
-                    'text-field': '{point_count_abbreviated}',
-                    'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-                    'text-size': 12
-                }
-            });
-
-            // Layer for unclustered points
-            map.addLayer({
-                'id': 'unclustered-point',
-                'type': 'symbol',
-                'source': 'first-aid-source',
-                'filter': ['!', ['has', 'point_count']], // Only include features without point_count
-                'layout': {
-                    'icon-image': 'first-aid-icon',
+                    'icon-image': 'first-aid-icon', // Use the first aid icon
                     'icon-size': 0.1,
                     'icon-allow-overlap': true
                 }
             });
 
             // Add an image for the first aid symbol
-            map.loadImage('https://example.com/first-aid-icon.png', (error, image) => {
+            map.loadImage('https://raw.githubusercontent.com/ehs-uoft/FA/80b08d35ae684f78b0fd2f602cf8693f3e572c91/HH-4_First_Aid_Symbol_large.png', (error, image) => {
                 if (error) throw error;
                 map.addImage('first-aid-icon', image);
             });
@@ -86,25 +58,8 @@
                 closeOnClick: false
             });
 
-            // Add an event listener for clicks on clusters
-            map.on('click', 'clusters', (e) => {
-                const features = map.queryRenderedFeatures(e.point, {
-                    layers: ['clusters']
-                });
-                const clusterId = features[0].properties.cluster_id;
-
-                // Get the cluster's features
-                map.getSource('first-aid-source').getClusterExpansionZoom(clusterId, (err, zoom) => {
-                    if (err) return;
-                    map.easeTo({
-                        center: features[0].geometry.coordinates,
-                        zoom: zoom
-                    });
-                });
-            });
-
-            // Add an event listener for clicks on unclustered points
-            map.on('click', 'unclustered-point', (e) => {
+            // Add an event listener for clicks on first aid points
+            map.on('click', 'first-aid-points', (e) => {
                 const coordinates = e.lngLat;
                 const buildingName = e.features[0].properties.building_name; // Adjust to match your data
                 const excelLink = e.features[0].properties.excel_link; // Adjust to match your data
@@ -115,24 +70,13 @@
                     .addTo(map);
             });
 
-            // Change the cursor to a pointer when hovering over clusters
-            map.on('mouseenter', 'clusters', () => {
+            // Change the cursor to a pointer when hovering over first aid points
+            map.on('mouseenter', 'first-aid-points', () => {
                 map.getCanvas().style.cursor = 'pointer';
             });
 
-            // Reset the cursor when leaving clusters
-            map.on('mouseleave', 'clusters', () => {
-                map.getCanvas().style.cursor = '';
-                popup.remove(); // Remove popup when leaving
-            });
-
-            // Change the cursor to a pointer when hovering over unclustered points
-            map.on('mouseenter', 'unclustered-point', () => {
-                map.getCanvas().style.cursor = 'pointer';
-            });
-
-            // Reset the cursor when leaving unclustered points
-            map.on('mouseleave', 'unclustered-point', () => {
+            // Reset the cursor when leaving first aid points
+            map.on('mouseleave', 'first-aid-points', () => {
                 map.getCanvas().style.cursor = '';
                 popup.remove(); // Remove popup when leaving
             });
