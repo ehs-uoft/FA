@@ -6,6 +6,8 @@
     <title>Advanced First Aid Kit Locator</title>
     <script src='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.css' rel='stylesheet' />
+    <script src="https://unpkg.com/supercluster@7.1.2/dist/supercluster.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; height: 100%; }
@@ -53,7 +55,7 @@
             border-radius: 5px; border: 1px solid #ccc;
         }
         #slideout-panel {
-            position: fixed; right: -300px; top: 0; bottom: 0; width: 300px;
+            position: fixed; right: -400px; top: 0; bottom: 0; width: 400px;
             background: white; box-shadow: -2px 0 5px rgba(0,0,0,0.1);
             transition: right 0.3s ease-in-out; overflow-y: auto; padding: 20px;
             box-sizing: border-box;
@@ -63,25 +65,44 @@
             position: absolute; top: 10px; right: 10px; cursor: pointer;
             font-size: 20px; color: #333;
         }
+        #loading-indicator {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(255,255,255,0.8); padding: 20px; border-radius: 10px;
+            display: none; z-index: 1000;
+        }
+        #stats-panel {
+            position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+            background: rgba(255,255,255,0.9); padding: 15px; border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2); display: flex; align-items: center;
+        }
+        #stats-panel canvas { margin-right: 20px; }
+        .theme-toggle {
+            position: absolute; top: 10px; left: 10px; z-index: 1000;
+            background: white; border: none; padding: 10px;
+            border-radius: 5px; cursor: pointer;
+        }
         @media (max-width: 600px) {
-            #info-panel {
+            #info-panel, #slideout-panel {
                 width: 100%; right: 0; top: auto; bottom: 0; max-height: 50vh;
             }
             #info-panel.collapsed { transform: translateY(calc(100% - 40px)); }
             #collapse-button {
                 left: 10px; top: -30px; transform: rotate(90deg);
             }
+            #stats-panel { display: none; }
         }
     </style>
 </head>
 <body>
     <div id="map"></div>
+    <button class="theme-toggle">Toggle Theme</button>
     <div id="info-panel">
         <button id="collapse-button" aria-label="Toggle info panel">≡</button>
         <input type="text" id="search-box" placeholder="Search for a building..." aria-label="Search for a building">
-        <select id="sort-select" aria-label="Sort kits">
+        <select id="sort-select" aria-label="Sort buildings">
             <option value="alphabetical">Sort Alphabetically</option>
-            <option value="kit-count">Sort by Kit Count</option>
+            <option value="firstAiderCount">Sort by First Aider Count</option>
+            <option value="kitCount">Sort by Kit Count</option>
         </select>
         <div id="kit-list"></div>
     </div>
@@ -93,6 +114,11 @@
         <span class="close-slideout">&times;</span>
         <div id="slideout-content"></div>
     </div>
+    <div id="loading-indicator">Loading...</div>
+    <div id="stats-panel">
+        <canvas id="stats-chart" width="200" height="100"></canvas>
+        <div id="stats-text"></div>
+    </div>
 
     <script>
     (function() {
@@ -101,67 +127,109 @@
         const TORONTO_COORDINATES = [-79.3832, 43.6532];
         const DEFAULT_ZOOM = 14;
 
-        let map, kitFeatures = [], groupedKits = {};
+        let map, kitFeatures = [], supercluster;
+        let statsChart;
 
-        function handleError(error, message) {
-            console.error(error);
-            alert(message || 'An error occurred. Please try again.');
-        }
+        const CACHE_VERSION_KEY = 'kitGeoJSONTimestamp';
+        const CACHE_DATA_KEY = 'kitGeoJSONData';
+
+        // Initialize Web Worker for data processing
+        const worker = new Worker(URL.createObjectURL(new Blob([`
+            self.onmessage = function(e) {
+                const data = e.data;
+                const processed = data.map(f => ({
+                    type: 'Feature',
+                    properties: {
+                        cluster: false,
+                        buildingId: f.properties.building,
+                        building: f.properties.building,
+                        firstAiderCount: f.properties.firstAiderCount,
+                        kitCount: f.properties.kits.length,
+                        address: f.properties.address,
+                        url: f.properties.url,
+                        kits: f.properties.kits
+                    },
+                    geometry: f.geometry
+                }));
+                self.postMessage(processed);
+            };
+        `], {type: 'application/javascript'})));
 
         function initializeMap() {
-            if (!mapboxgl) {
-                handleError(new Error('Mapbox GL JS not loaded'), 'Map library failed to load. Please check your internet connection and try again.');
-                return;
-            }
-
             mapboxgl.accessToken = MAPBOX_TOKEN;
 
-            try {
-                map = new mapboxgl.Map({
-                    container: 'map',
-                    style: 'mapbox://styles/mapbox/streets-v11',
-                    center: TORONTO_COORDINATES,
-                    zoom: DEFAULT_ZOOM
-                });
+            map = new mapboxgl.Map({
+                container: 'map',
+                style: 'mapbox://styles/mapbox/streets-v11',
+                center: TORONTO_COORDINATES,
+                zoom: DEFAULT_ZOOM
+            });
 
-                map.on('load', onMapLoad);
-                map.on('error', (e) => handleError(e, 'An error occurred while loading the map. Please try refreshing the page.'));
-            } catch (error) {
-                handleError(error, 'Failed to initialize the map. Please check your internet connection and try again.');
-            }
+            map.on('load', onMapLoad);
         }
 
         function onMapLoad() {
             fetchGeoJSONData();
             addEventListeners();
+            initializeStatsChart();
         }
 
         function fetchGeoJSONData() {
+            showLoading(true);
             fetch(GEOJSON_URL)
-                .then(response => {
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    return response.json();
-                })
+                .then(response => response.json())
                 .then(data => {
-                    kitFeatures = data.features;
-                    groupKitsByBuilding();
-                    updateMap();
+                    const cached = getCachedGeoJSON();
+                    if (!cached || cached.timestamp !== data.timestamp) {
+                        cacheGeoJSON(data);
+                        processGeoJSONData(data);
+                    } else {
+                        processGeoJSONData(cached.data);
+                    }
                 })
-                .catch(error => handleError(error, 'Failed to load kit locations. Please check your internet connection and try again.'));
+                .catch(error => {
+                    console.error('Error fetching GeoJSON:', error);
+                    const cached = getCachedGeoJSON();
+                    if (cached) {
+                        processGeoJSONData(cached.data);
+                    } else {
+                        showLoading(false);
+                        alert('Failed to load data. Please try again later.');
+                    }
+                });
         }
 
-        function groupKitsByBuilding() {
-            groupedKits = kitFeatures.reduce((acc, feature) => {
-                const building = feature.properties.building;
-                if (!acc[building]) {
-                    acc[building] = {
-                        kits: [],
-                        coordinates: feature.geometry.coordinates
-                    };
-                }
-                acc[building].kits.push(feature);
-                return acc;
-            }, {});
+        function cacheGeoJSON(data) {
+            localStorage.setItem(CACHE_DATA_KEY, JSON.stringify(data));
+            localStorage.setItem(CACHE_VERSION_KEY, data.timestamp);
+        }
+
+        function getCachedGeoJSON() {
+            const cachedData = localStorage.getItem(CACHE_DATA_KEY);
+            const cachedTimestamp = localStorage.getItem(CACHE_VERSION_KEY);
+            if (cachedData && cachedTimestamp) {
+                return { data: JSON.parse(cachedData), timestamp: cachedTimestamp };
+            }
+            return null;
+        }
+
+        function processGeoJSONData(data) {
+            worker.postMessage(data.features);
+            worker.onmessage = function(e) {
+                kitFeatures = e.data;
+                initializeSupercluster();
+                updateMap();
+                updateStatsPanel();
+                showLoading(false);
+            };
+        }
+
+        function initializeSupercluster() {
+            supercluster = new Supercluster({
+                radius: 40,
+                maxZoom: 16,
+            });
+            supercluster.load(kitFeatures);
         }
 
         function addEventListeners() {
@@ -169,158 +237,270 @@
             document.getElementById('sort-select').addEventListener('change', (e) => updateInfoPanel(e.target.value));
             document.getElementById('search-box').addEventListener('input', debounce(handleSearch, 300));
             document.querySelector('.close-slideout').addEventListener('click', closeSlideout);
+            document.querySelector('.theme-toggle').addEventListener('click', toggleTheme);
 
-            map.on('click', 'unclustered-point', onUnclusteredPointClick);
-            map.on('mouseenter', 'unclustered-point', () => { map.getCanvas().style.cursor = 'pointer'; });
-            map.on('mouseleave', 'unclustered-point', () => { map.getCanvas().style.cursor = ''; });
+            map.on('moveend', updateMap);
         }
 
         function updateMap() {
-            if (!map.getSource('kits')) {
-                addKitSource();
-            }
-            updateKitSource();
+            const bounds = map.getBounds();
+            const zoom = Math.floor(map.getZoom());
+            const clusters = supercluster.getClusters([
+                bounds.getWest(),
+                bounds.getSouth(),
+                bounds.getEast(),
+                bounds.getNorth()
+            ], zoom);
+
+            updateMapSource(clusters);
             updateInfoPanel();
         }
 
-        function addKitSource() {
-            map.addSource('kits', {
-                type: 'geojson',
-                data: { type: 'FeatureCollection', features: [] }
-            });
+        function updateMapSource(clusters) {
+            if (!map.getSource('kits')) {
+                map.addSource('kits', {
+                    type: 'geojson',
+                    data: {
+                        type: 'FeatureCollection',
+                        features: clusters
+                    }
+                });
 
-            map.addLayer({
-                id: 'unclustered-point',
-                type: 'symbol',
-                source: 'kits',
-                layout: {
-                    'icon-image': 'custom-marker',
-                    'icon-size': 0.7,
-                    'icon-allow-overlap': true
-                }
-            });
+                map.addLayer({
+                    id: 'clusters',
+                    type: 'circle',
+                    source: 'kits',
+                    filter: ['has', 'point_count'],
+                    paint: {
+                        'circle-color': [
+                            'step',
+                            ['get', 'point_count'],
+                            '#51bbd6',
+                            100,
+                            '#f1f075',
+                            750,
+                            '#f28cb1'
+                        ],
+                        'circle-radius': [
+                            'step',
+                            ['get', 'point_count'],
+                            20,
+                            100,
+                            30,
+                            750,
+                            40
+                        ]
+                    }
+                });
 
-            map.loadImage(
-                'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-                    <svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'>
-                        <circle cx='20' cy='20' r='18' fill='#27ae60' />
-                        <path d='M10 20h20M20 10v20' stroke='white' stroke-width='4' />
-                    </svg>
-                `),
-                (error, image) => {
-                    if (error) throw error;
-                    map.addImage('custom-marker', image);
-                }
-            );
-        }
+                map.addLayer({
+                    id: 'cluster-count',
+                    type: 'symbol',
+                    source: 'kits',
+                    filter: ['has', 'point_count'],
+                    layout: {
+                        'text-field': '{point_count_abbreviated}',
+                        'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+                        'text-size': 12
+                    }
+                });
 
-        function updateKitSource() {
-            const features = Object.values(groupedKits).map(group => ({
-                type: 'Feature',
-                properties: {
-                    building: group.kits[0].properties.building,
-                    kitCount: group.kits.length
-                },
-                geometry: {
-                    type: 'Point',
-                    coordinates: group.coordinates
-                }
-            }));
+                map.addLayer({
+                    id: 'unclustered-point',
+                    type: 'circle',
+                    source: 'kits',
+                    filter: ['!', ['has', 'point_count']],
+                    paint: {
+                        'circle-color': '#11b4da',
+                        'circle-radius': 8,
+                        'circle-stroke-width': 1,
+                        'circle-stroke-color': '#fff'
+                    }
+                });
 
-            map.getSource('kits').setData({
-                type: 'FeatureCollection',
-                features: features
-            });
+                map.on('click', 'clusters', onClusterClick);
+                map.on('click', 'unclustered-point', onUnclusteredPointClick);
+                map.on('mouseenter', 'clusters', () => { map.getCanvas().style.cursor = 'pointer'; });
+                map.on('mouseleave', 'clusters', () => { map.getCanvas().style.cursor = ''; });
+map.on('mouseenter', 'unclustered-point', () => { map.getCanvas().style.cursor = 'pointer'; });
+                map.on('mouseleave', 'unclustered-point', () => { map.getCanvas().style.cursor = ''; });
+            } else {
+                map.getSource('kits').setData({
+                    type: 'FeatureCollection',
+                    features: clusters
+                });
+            }
         }
 
         function updateInfoPanel(sortBy = 'alphabetical') {
             const kitList = document.getElementById('kit-list');
             kitList.innerHTML = '';
 
-            let sortedBuildings = Object.keys(groupedKits);
-            if (sortBy === 'alphabetical') {
-                sortedBuildings.sort();
-            } else if (sortBy === 'kit-count') {
-                sortedBuildings.sort((a, b) => groupedKits[b].kits.length - groupedKits[a].kits.length);
+            let visibleFeatures = map.queryRenderedFeatures({ layers: ['unclustered-point'] });
+            let buildingData = visibleFeatures.reduce((acc, feature) => {
+                const props = feature.properties;
+                if (!acc[props.buildingId]) {
+                    acc[props.buildingId] = props;
+                }
+                return acc;
+            }, {});
+
+            let sortedBuildings = Object.values(buildingData);
+            
+            switch(sortBy) {
+                case 'alphabetical':
+                    sortedBuildings.sort((a, b) => a.building.localeCompare(b.building));
+                    break;
+                case 'firstAiderCount':
+                    sortedBuildings.sort((a, b) => b.firstAiderCount - a.firstAiderCount);
+                    break;
+                case 'kitCount':
+                    sortedBuildings.sort((a, b) => b.kitCount - a.kitCount);
+                    break;
             }
 
             sortedBuildings.forEach(building => {
-                const group = groupedKits[building];
                 const div = document.createElement('div');
                 div.className = 'kit-item';
-                div.innerHTML = `<strong>${building}</strong><br>${group.kits.length} kit${group.kits.length > 1 ? 's' : ''}`;
+                div.innerHTML = `
+                    <strong>${building.building}</strong><br>
+                    First Aiders: ${building.firstAiderCount}<br>
+                    Kits: ${building.kitCount}
+                `;
                 div.addEventListener('click', () => {
                     map.flyTo({
-                        center: group.coordinates,
+                        center: [building.lng, building.lat],
                         zoom: 18
                     });
-                    showSlideout(building);
+                    showSlideout(building.buildingId);
                 });
                 kitList.appendChild(div);
             });
         }
 
-        function showSlideout(building) {
-            const group = groupedKits[building];
-            const content = document.getElementById('slideout-content');
-            content.innerHTML = `
-                <h2>${building}</h2>
-                <p>Total Kits: ${group.kits.length}</p>
-                <ul>
-                    ${group.kits.map(kit => `
-                        <li>
-                            Floor: ${kit.properties.floor}, Room: ${kit.properties.room}
-                        </li>
-                    `).join('')}
-                </ul>
-            `;
-            document.getElementById('slideout-panel').classList.add('open');
+        function showSlideout(buildingId) {
+            const feature = kitFeatures.find(f => f.properties.buildingId === buildingId);
+            if (feature) {
+                const props = feature.properties;
+                const content = document.getElementById('slideout-content');
+                content.innerHTML = `
+                    <h2>${props.building}</h2>
+                    <p><strong>Address:</strong> ${props.address}</p>
+                    <p><strong>First Aiders:</strong> ${props.firstAiderCount}</p>
+                    <p><strong>Total Kits:</strong> ${props.kitCount}</p>
+                    <p><strong>URL:</strong> <a href="${props.url}" target="_blank">${props.url}</a></p>
+                    <h3>Kit Locations:</h3>
+                    <ul>
+                        ${props.kits.map(kit => `
+                            <li>
+                                Room: ${kit.room}, Floor: ${kit.floor}
+                                ${kit.otherDetails ? `<br>Details: ${kit.otherDetails}` : ''}
+                            </li>
+                        `).join('')}
+                    </ul>
+                    <button id="view-3d">View in 3D</button>
+                    <button id="view-ar">View in AR</button>
+                `;
+                document.getElementById('slideout-panel').classList.add('open');
+                document.getElementById('view-3d').addEventListener('click', () => view3D(props));
+                document.getElementById('view-ar').addEventListener('click', () => viewAR(props));
+            }
+        }
+
+        function view3D(props) {
+            map.flyTo({
+                center: [props.lng, props.lat],
+                zoom: 18,
+                pitch: 60,
+                bearing: -60
+            });
+
+            if (!map.getLayer('3d-buildings')) {
+                map.addLayer({
+                    'id': '3d-buildings',
+                    'source': 'composite',
+                    'source-layer': 'building',
+                    'filter': ['==', 'extrude', 'true'],
+                    'type': 'fill-extrusion',
+                    'minzoom': 15,
+                    'paint': {
+                        'fill-extrusion-color': '#aaa',
+                        'fill-extrusion-height': [
+                            "interpolate", ["linear"], ["zoom"],
+                            15, 0,
+                            15.05, ["get", "height"]
+                        ],
+                        'fill-extrusion-base': [
+                            "interpolate", ["linear"], ["zoom"],
+                            15, 0,
+                            15.05, ["get", "min_height"]
+                        ],
+                        'fill-extrusion-opacity': .6
+                    }
+                }, 'waterway-label');
+            }
+        }
+
+        function viewAR(props) {
+            if (!('xr' in navigator)) {
+                alert('AR is not supported in your browser');
+                return;
+            }
+
+            navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
+                if (supported) {
+                    navigator.xr.requestSession('immersive-ar').then((session) => {
+                        // AR session setup code here
+                        console.log('AR session started');
+                        // You would typically set up the AR scene here,
+                        // placing 3D models of first aid kits at their locations
+                    });
+                } else {
+                    alert('AR is not supported on this device');
+                }
+            });
         }
 
         function closeSlideout() {
             document.getElementById('slideout-panel').classList.remove('open');
         }
 
+        function onClusterClick(e) {
+            const features = map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
+            const clusterId = features[0].properties.cluster_id;
+            const pointCount = features[0].properties.point_count;
+            const clusterSource = map.getSource('kits');
+
+            clusterSource.getClusterExpansionZoom(clusterId, (err, zoom) => {
+                if (err) return;
+
+                map.easeTo({
+                    center: features[0].geometry.coordinates,
+                    zoom: zoom
+                });
+            });
+        }
+
         function onUnclusteredPointClick(e) {
             const coordinates = e.features[0].geometry.coordinates.slice();
-            const building = e.features[0].properties.building;
+            const buildingId = e.features[0].properties.buildingId;
 
             while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
                 coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
             }
 
-            map.flyTo({
-                center: coordinates,
-                zoom: 18
-            });
-
-            showSlideout(building);
+            showSlideout(buildingId);
         }
 
         function handleSearch(e) {
             const searchTerm = e.target.value.toLowerCase();
-            const filteredBuildings = Object.keys(groupedKits).filter(building => 
-                building.toLowerCase().includes(searchTerm)
+            const filteredFeatures = kitFeatures.filter(feature => 
+                feature.properties.building.toLowerCase().includes(searchTerm) ||
+                feature.properties.address.toLowerCase().includes(searchTerm)
             );
-            
-            const filteredFeatures = filteredBuildings.map(building => ({
-                type: 'Feature',
-                properties: {
-                    building: building,
-                    kitCount: groupedKits[building].kits.length
-                },
-                geometry: {
-                    type: 'Point',
-                    coordinates: groupedKits[building].coordinates
-                }
-            }));
 
-            map.getSource('kits').setData({
-                type: 'FeatureCollection',
-                features: filteredFeatures
-            });
-
-            updateInfoPanel(document.getElementById('sort-select').value);
+            supercluster.load(filteredFeatures);
+            updateMap();
         }
 
         function toggleInfoPanel() {
@@ -337,6 +517,48 @@
                 clearTimeout(timeout);
                 timeout = setTimeout(later, wait);
             };
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading-indicator').style.display = show ? 'block' : 'none';
+        }
+
+        function initializeStatsChart() {
+            const ctx = document.getElementById('stats-chart').getContext('2d');
+            statsChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Buildings with Kits', 'Buildings without Kits'],
+                    datasets: [{
+                        data: [0, 0],
+                        backgroundColor: ['#36A2EB', '#FF6384']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        function updateStatsPanel() {
+            const totalBuildings = kitFeatures.length;
+            const buildingsWithKits = kitFeatures.filter(f => f.properties.kitCount > 0).length;
+            const buildingsWithoutKits = totalBuildings - buildingsWithKits;
+
+            statsChart.data.datasets[0].data = [buildingsWithKits, buildingsWithoutKits];
+            statsChart.update();
+
+            document.getElementById('stats-text').innerHTML = `
+                <p>Total Buildings: ${totalBuildings}</p>
+                <p>Buildings with Kits: ${buildingsWithKits}</p>
+                <p>Buildings without Kits: ${buildingsWithoutKits}</p>
+            `;
+        }
+
+        function toggleTheme() {
+            const isDark = map.getStyle().name === 'Mapbox Dark';
+            map.setStyle(isDark ? 'mapbox://styles/mapbox/light-v10' : 'mapbox://styles/mapbox/dark-v10');
         }
 
         // Initialize the map when the page loads
