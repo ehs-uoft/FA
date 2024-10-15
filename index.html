@@ -8,30 +8,61 @@
     <link href='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.css' rel='stylesheet' />
     <style>
         #map { width: 100%; height: 400px; }
+        #error-message { color: red; font-weight: bold; }
+        #log-messages { margin-top: 10px; }
     </style>
 </head>
 <body>
     <div id="map"></div>
-    <div id="error-message" style="color: red;"></div>
+    <div id="error-message"></div>
+    <div id="log-messages"></div>
 
     <script>
-        mapboxgl.accessToken = 'pk.eyJ1IjoiZWhzIiwiYSI6ImNtMjNsYWtlZzA2bnQycW9qb2F3dHJuM2gifQ.Yw2JtBD13UqJFKtTj-SKsQ';
+        mapboxgl.accessToken = 'pk.eyJ1IjoiZWhzIiwiYSI6ImNtMjNsYWtlZzA2bnQycW9qb2F3dHJuM2gifQ.Yw2JtBD13UqJFKtTj-SKsQ'; // Replace with your actual token
         var map = new mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/mapbox/streets-v11',
-            center: [-79.3832, 43.6532], // Default center
-            zoom: 12 // Default zoom
+            center: [-74.5, 40],
+            zoom: 9
         });
 
+        function log(message) {
+            console.log(message);
+            document.getElementById('log-messages').innerHTML += message + '<br>';
+        }
+
+        function showError(message) {
+            console.error(message);
+            document.getElementById('error-message').textContent = message;
+        }
+
         map.on('load', function () {
+            log('Map loaded. Attempting to fetch GeoJSON...');
+            
+            // Replace with your actual GitHub raw file URL
             fetch('https://raw.githubusercontent.com/ehs-uoft/FA/main/geojson.geojson')
                 .then(response => {
+                    log(`Fetch response received. Status: ${response.status}`);
                     if (!response.ok) {
-                        throw new Error('Network response was not ok');
+                        throw new Error(`HTTP error! status: ${response.status}`);
                     }
-                    return response.json();
+                    return response.text(); // Get the raw text first
+                })
+                .then(text => {
+                    log('GeoJSON text received. Attempting to parse...');
+                    try {
+                        return JSON.parse(text);
+                    } catch (e) {
+                        throw new Error('Failed to parse GeoJSON: ' + e.message);
+                    }
                 })
                 .then(data => {
+                    log('GeoJSON parsed successfully. Adding to map...');
+                    
+                    if (!data.type || !data.features) {
+                        throw new Error('Invalid GeoJSON structure');
+                    }
+
                     map.addSource('geojson-source', {
                         type: 'geojson',
                         data: data
@@ -47,6 +78,8 @@
                         }
                     });
 
+                    log('GeoJSON added to map successfully.');
+
                     // Fit the map to the GeoJSON data
                     var bounds = new mapboxgl.LngLatBounds();
                     data.features.forEach(function(feature) {
@@ -57,10 +90,11 @@
                         }
                     });
                     map.fitBounds(bounds, { padding: 20 });
+
+                    log('Map bounds adjusted to fit GeoJSON data.');
                 })
                 .catch(error => {
-                    console.error('Error:', error);
-                    document.getElementById('error-message').textContent = 'Failed to load GeoJSON file. Please check the console for more details.';
+                    showError('Error: ' + error.message);
                 });
         });
     </script>
