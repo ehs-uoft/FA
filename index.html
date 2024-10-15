@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Advanced First Aid Kit Locator</title>
-    <script src='https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js'></script>
-    <link href='https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css' rel='stylesheet' />
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
     <script src="https://unpkg.com/supercluster@8.0.1/dist/supercluster.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
-    <script src='https://unpkg.com/@turf/turf@6/turf.min.js'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src='https://unpkg.com/@turf/turf@6.5.0/turf.min.js'></script>
     <style>
         body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; height: 100%; }
@@ -86,14 +86,6 @@
             background: white; border: none; padding: 10px;
             border-radius: 5px; display: none;
         }
-        .pulse-animation {
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
         @media (max-width: 600px) {
             #info-panel, #slideout-panel {
                 width: 100%; right: 0; top: auto; bottom: 0; max-height: 50vh;
@@ -102,9 +94,6 @@
             #collapse-button {
                 left: 10px; top: -30px; transform: rotate(90deg);
             }
-        }
-        .high-contrast {
-            filter: invert(1) hue-rotate(180deg);
         }
     </style>
 </head>
@@ -147,7 +136,7 @@
         const TORONTO_COORDINATES = [-79.3832, 43.6532];
         const DEFAULT_ZOOM = 14;
 
-        let map, kitFeatures = [], supercluster;
+        let map, kitFeatures = [];
         let is3DMode = false;
 
         function initializeMap() {
@@ -179,8 +168,9 @@
                 })
                 .then(data => {
                     kitFeatures = data.features;
-                    initializeSupercluster();
-                    updateMap();
+                    addMapLayers(data);
+                    updateInfoPanel();
+                    fitMapToData();
                     showLoading(false);
                 })
                 .catch(error => {
@@ -190,12 +180,27 @@
                 });
         }
 
-        function initializeSupercluster() {
-            supercluster = new Supercluster({
-                radius: 40,
-                maxZoom: 16,
+        function addMapLayers(data) {
+            map.addSource('kits', {
+                type: 'geojson',
+                data: data
             });
-            supercluster.load(kitFeatures);
+
+            map.addLayer({
+                id: 'kits-layer',
+                type: 'circle',
+                source: 'kits',
+                paint: {
+                    'circle-radius': 8,
+                    'circle-color': '#11b4da',
+                    'circle-stroke-width': 1,
+                    'circle-stroke-color': '#fff'
+                }
+            });
+
+            map.on('click', 'kits-layer', onKitClick);
+            map.on('mouseenter', 'kits-layer', () => { map.getCanvas().style.cursor = 'pointer'; });
+            map.on('mouseleave', 'kits-layer', () => { map.getCanvas().style.cursor = ''; });
         }
 
         function addEventListeners() {
@@ -211,153 +216,54 @@
             document.getElementById('reset-view').addEventListener('click', resetView);
             document.getElementById('toggle-3d').addEventListener('click', toggle3D);
             document.getElementById('nearby').addEventListener('click', showNearbyLocation);
-
-            map.on('moveend', updateMap);
         }
 
-        function updateMap() {
-            const bounds = map.getBounds();
-            const zoom = Math.floor(map.getZoom());
-            const clusters = supercluster.getClusters([
-                bounds.getWest(),
-                bounds.getSouth(),
-                bounds.getEast(),
-                bounds.getNorth()
-            ], zoom);
-
-            updateMapSource(clusters);
-            updateInfoPanel();
-        }
-
-        function updateMapSource(clusters) {
-            if (!map.getSource('kits')) {
-                map.addSource('kits', {
-                    type: 'geojson',
-                    data: {
-                        type: 'FeatureCollection',
-                        features: clusters
-                    }
-                });
-
-                map.addLayer({
-                    id: 'clusters',
-                    type: 'circle',
-                    source: 'kits',
-                    filter: ['has', 'point_count'],
-                    paint: {
-                        'circle-color': [
-                            'step',
-                            ['get', 'point_count'],
-                            '#51bbd6',
-                            100,
-                            '#f1f075',
-                            750,
-                            '#f28cb1'
-                        ],
-                        'circle-radius': [
-                            'step',
-                            ['get', 'point_count'],
-                            20,
-                            100,
-                            30,
-                            750,
-                            40
-                        ]
-                    }
-                });
-
-                map.addLayer({
-                    id: 'cluster-count',
-                    type: 'symbol',
-                    source: 'kits',
-                    filter: ['has', 'point_count'],
-                    layout: {
-                        'text-field': '{point_count_abbreviated}',
-                        'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-                        'text-size': 12
-                    }
-                });
-
-                map.addLayer({
-                    id: 'unclustered-point',
-                    type: 'circle',
-                    source: 'kits',
-                    filter: ['!', ['has', 'point_count']],
-                    paint: {
-                        'circle-color': '#11b4da',
-                        'circle-radius': 8,
-                        'circle-stroke-width': 1,
-                        'circle-stroke-color': '#fff'
-                    }
-                });
-
-                map.on('click', 'clusters', onClusterClick);
-                map.on('click', 'unclustered-point', onUnclusteredPointClick);
-                map.on('mouseenter', 'clusters', () => { map.getCanvas().style.cursor = 'pointer'; });
-                map.on('mouseleave', 'clusters', () => { map.getCanvas().style.cursor = ''; });
-                map.on('mouseenter', 'unclustered-point', () => { map.getCanvas().style.cursor = 'pointer'; });
-                map.on('mouseleave', 'unclustered-point', () => { map.getCanvas().style.cursor = ''; });
-            } else {
-                map.getSource('kits').setData({
-                    type: 'FeatureCollection',
-                    features: clusters
-                });
-            }
-        }
-
-        function updateInfoPanel(sortBy = function updateInfoPanel(sortBy = 'alphabetical') {
+        function updateInfoPanel(sortBy = 'alphabetical') {
             const kitList = document.getElementById('kit-list');
             kitList.innerHTML = '';
 
-            let visibleFeatures = map.queryRenderedFeatures({ layers: ['unclustered-point'] });
-            let buildingData = visibleFeatures.reduce((acc, feature) => {
-                const props = feature.properties;
-                if (!acc[props.buildingId]) {
-                    acc[props.buildingId] = props;
-                }
-                return acc;
-            }, {});
-
-            let sortedBuildings = Object.values(buildingData);
+            let sortedBuildings = [...kitFeatures];
             
             if (sortBy === 'alphabetical') {
-                sortedBuildings.sort((a, b) => a.building.localeCompare(b.building));
+                sortedBuildings.sort((a, b) => a.properties.building.localeCompare(b.properties.building));
             }
 
-            sortedBuildings.forEach(building => {
+            sortedBuildings.forEach(feature => {
                 const div = document.createElement('div');
                 div.className = 'kit-item';
                 div.innerHTML = `
-                    <strong>${building.building}</strong><br>
-                    Kits: ${building.kitCount}
+                    <strong>${feature.properties.building}</strong><br>
+                    Kits: ${feature.properties.kitCount || 1}
                 `;
                 div.addEventListener('click', () => {
-                    flyToBuilding([building.lng, building.lat]);
-                    showSlideout(building.buildingId);
+                    flyToBuilding(feature.geometry.coordinates);
+                    showSlideout(feature.properties.buildingId || feature.properties.building);
                 });
                 kitList.appendChild(div);
             });
         }
 
         function showSlideout(buildingId) {
-            const feature = kitFeatures.find(f => f.properties.buildingId === buildingId);
+            const feature = kitFeatures.find(f => f.properties.buildingId === buildingId || f.properties.building === buildingId);
             if (feature) {
                 const props = feature.properties;
                 const content = document.getElementById('slideout-content');
                 content.innerHTML = `
                     <h2>${props.building}</h2>
                     <p><strong>Address:</strong> ${props.address}</p>
-                    <p><strong>Total Kits:</strong> ${props.kitCount}</p>
-                    <p><strong>URL:</strong> <a href="${props.url}" target="_blank">${props.url}</a></p>
-                    <h3>Kit Locations:</h3>
-                    <ul>
-                        ${props.kits.map(kit => `
-                            <li>
-                                Room: ${kit.room}, Floor: ${kit.floor}
-                                ${kit.otherDetails ? `<br>Details: ${kit.otherDetails}` : ''}
-                            </li>
-                        `).join('')}
-                    </ul>
+                    <p><strong>Total Kits:</strong> ${props.kitCount || 1}</p>
+                    ${props.url ? `<p><strong>URL:</strong> <a href="${props.url}" target="_blank">${props.url}</a></p>` : ''}
+                    ${props.kits ? `
+                        <h3>Kit Locations:</h3>
+                        <ul>
+                            ${props.kits.map(kit => `
+                                <li>
+                                    Room: ${kit.room}, Floor: ${kit.floor}
+                                    ${kit.otherDetails ? `<br>Details: ${kit.otherDetails}` : ''}
+                                </li>
+                            `).join('')}
+                        </ul>
+                    ` : ''}
                     <button id="report-issue-building">Report Issue</button>
                 `;
                 document.getElementById('slideout-panel').classList.add('open');
@@ -367,6 +273,21 @@
 
                 gsap.from("#slideout-content", {duration: 0.5, opacity: 0, x: 50, ease: "power2.out"});
             }
+        }
+
+        function onKitClick(e) {
+            const coordinates = e.features[0].geometry.coordinates.slice();
+            const props = e.features[0].properties;
+
+            while function onKitClick(e) {
+            const coordinates = e.features[0].geometry.coordinates.slice();
+            const props = e.features[0].properties;
+
+            while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+                coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+            }
+
+            showSlideout(props.buildingId || props.building);
         }
 
         function reportIssue(props) {
@@ -385,7 +306,6 @@
         }
 
         function toggleTextToSpeech() {
-            // Implement text-to-speech functionality
             if ('speechSynthesis' in window) {
                 const speech = new SpeechSynthesisUtterance("Text-to-speech is now active. Use this feature to have information read aloud.");
                 window.speechSynthesis.speak(speech);
@@ -474,59 +394,23 @@
         }
 
         function highlightNearbyKits(nearbyKits) {
-            if (map.getSource('nearby-kits')) {
-                map.getSource('nearby-kits').setData({
-                    type: 'FeatureCollection',
-                    features: nearbyKits
-                });
-            } else {
-                map.addSource('nearby-kits', {
-                    type: 'geojson',
-                    data: {
-                        type: 'FeatureCollection',
-                        features: nearbyKits
+            map.getSource('kits').setData({
+                type: 'FeatureCollection',
+                features: kitFeatures.map(feature => ({
+                    ...feature,
+                    properties: {
+                        ...feature.properties,
+                        highlighted: nearbyKits.some(kit => kit.properties.buildingId === feature.properties.buildingId)
                     }
-                });
-
-                map.addLayer({
-                    id: 'nearby-kits-highlight',
-                    type: 'circle',
-                    source: 'nearby-kits',
-                    paint: {
-                        'circle-color': '#FF9900',
-                        'circle-radius': 12,
-                        'circle-stroke-width': 2,
-                        'circle-stroke-color': '#fff'
-                    }
-                });
-            }
-        }
-
-        function onClusterClick(e) {
-            const features = map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
-            const clusterId = features[0].properties.cluster_id;
-            const pointCount = features[0].properties.point_count;
-            const clusterSource = map.getSource('kits');
-
-            clusterSource.getClusterExpansionZoom(clusterId, (err, zoom) => {
-                if (err) return;
-
-                map.easeTo({
-                    center: features[0].geometry.coordinates,
-                    zoom: zoom
-                });
+                }))
             });
-        }
 
-        function onUnclusteredPointClick(e) {
-            const coordinates = e.features[0].geometry.coordinates.slice();
-            const buildingId = e.features[0].properties.buildingId;
-
-            while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-                coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-            }
-
-            showSlideout(buildingId);
+            map.setPaintProperty('kits-layer', 'circle-color', [
+                'case',
+                ['get', 'highlighted'],
+                '#FF9900',
+                '#11b4da'
+            ]);
         }
 
         function handleSearch(e) {
@@ -536,8 +420,12 @@
                 feature.properties.address.toLowerCase().includes(searchTerm)
             );
 
-            supercluster.load(filteredFeatures);
-            updateMap();
+            map.getSource('kits').setData({
+                type: 'FeatureCollection',
+                features: filteredFeatures
+            });
+
+            updateInfoPanel();
         }
 
         function toggleInfoPanel() {
@@ -550,43 +438,32 @@
         }
 
         function highlightBuilding(buildingId) {
-            const feature = kitFeatures.find(f => f.properties.buildingId === buildingId);
-            if (feature) {
-                if (map.getSource('highlight')) {
-                    map.getSource('highlight').setData({
-                        type: 'FeatureCollection',
-                        features: [feature]
-                    });
-                } else {
-                    map.addSource('highlight', {
-                        type: 'geojson',
-                        data: {
-                            type: 'FeatureCollection',
-                            features: [feature]
-                        }
-                    });
+            map.getSource('kits').setData({
+                type: 'FeatureCollection',
+                features: kitFeatures.map(feature => ({
+                    ...feature,
+                    properties: {
+                        ...feature.properties,
+                        highlighted: feature.properties.buildingId === buildingId || feature.properties.building === buildingId
+                    }
+                }))
+            });
 
-                    map.addLayer({
-                        id: 'highlight-fill',
-                        type: 'circle',
-                        source: 'highlight',
-                        paint: {
-                            'circle-color': '#3498db',
-                            'circle-radius': 15,
-                            'circle-opacity': 0.5
-                        }
-                    });
-                }
-            }
+            map.setPaintProperty('kits-layer', 'circle-color', [
+                'case',
+                ['get', 'highlighted'],
+                '#3498db',
+                '#11b4da'
+            ]);
         }
 
         function clearHighlight() {
-            if (map.getSource('highlight')) {
-                map.getSource('highlight').setData({
-                    type: 'FeatureCollection',
-                    features: []
-                });
-            }
+            map.getSource('kits').setData({
+                type: 'FeatureCollection',
+                features: kitFeatures
+            });
+
+            map.setPaintProperty('kits-layer', 'circle-color', '#11b4da');
         }
 
         function flyToBuilding(coords) {
@@ -599,6 +476,14 @@
                     return t;
                 }
             });
+        }
+
+        function fitMapToData() {
+            const bounds = new mapboxgl.LngLatBounds();
+            kitFeatures.forEach(feature => {
+                bounds.extend(feature.geometry.coordinates);
+            });
+            map.fitBounds(bounds, { padding: 50 });
         }
 
         function showLoading(show) {
