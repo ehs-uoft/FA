@@ -7,25 +7,19 @@
     <script src='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.css' rel='stylesheet' />
     <style>
-        #map { width: 100%; height: 400px; }
-        #error-message { color: red; font-weight: bold; }
-        #log-messages { margin-top: 10px; }
+        #map { width: 100%; height: 400px; border: 1px solid #ccc; }
+        #error-message { color: red; font-weight: bold; margin-top: 10px; }
+        #log-messages { margin-top: 10px; border: 1px solid #ccc; padding: 10px; }
     </style>
 </head>
 <body>
-    <div id="map"></div>
+    <h1>Mapbox GeoJSON Loader</h1>
+    <div id="map">Map should appear here. If you see this text, there might be an issue loading the map.</div>
     <div id="error-message"></div>
-    <div id="log-messages"></div>
+    <div id="log-messages">Log messages will appear here.</div>
 
     <script>
-        mapboxgl.accessToken = 'pk.eyJ1IjoiZWhzIiwiYSI6ImNtMjNsYWtlZzA2bnQycW9qb2F3dHJuM2gifQ.Yw2JtBD13UqJFKtTj-SKsQ'; // Replace with your actual token
-        var map = new mapboxgl.Map({
-            container: 'map',
-            style: 'mapbox://styles/mapbox/streets-v11',
-            center: [-74.5, 40],
-            zoom: 9
-        });
-
+    document.addEventListener('DOMContentLoaded', (event) => {
         function log(message) {
             console.log(message);
             document.getElementById('log-messages').innerHTML += message + '<br>';
@@ -36,104 +30,61 @@
             document.getElementById('error-message').textContent = message;
         }
 
-        function isValidCoordinate(coord) {
-            return Array.isArray(coord) && coord.length === 2 && 
-                   typeof coord[0] === 'number' && typeof coord[1] === 'number';
-        }
+        try {
+            log('Initializing map...');
+            mapboxgl.accessToken = 'pk.eyJ1IjoiZWhzIiwiYSI6ImNtMjNsYWtlZzA2bnQycW9qb2F3dHJuM2gifQ.Yw2JtBD13UqJFKtTj-SKsQ'; // Replace with your actual token
+            var map = new mapboxgl.Map({
+                container: 'map',
+                style: 'mapbox://styles/mapbox/streets-v11',
+                center: [-74.5, 40],
+                zoom: 9
+            });
 
-        map.on('load', function () {
-            log('Map loaded. Attempting to fetch GeoJSON...');
-            
-            fetch(''https://raw.githubusercontent.com/ehs-uoft/FA/main/geojson.geojson')
-                .then(response => {
-                    log(`Fetch response received. Status: ${response.status}`);
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.text();
-                })
-                .then(text => {
-                    log('GeoJSON text received. Attempting to parse...');
-                    try {
+            map.on('load', function () {
+                log('Map loaded. Attempting to fetch GeoJSON...');
+                
+                fetch('https://raw.githubusercontent.com/ehs-uoft/FA/main/geojson.geojson')
+                    .then(response => {
+                        log(`Fetch response received. Status: ${response.status}`);
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.text();
+                    })
+                    .then(text => {
+                        log('GeoJSON text received. Attempting to parse...');
                         return JSON.parse(text);
-                    } catch (e) {
-                        throw new Error('Failed to parse GeoJSON: ' + e.message);
-                    }
-                })
-                .then(data => {
-                    log('GeoJSON parsed successfully. Analyzing structure...');
-                    log(`GeoJSON type: ${data.type}`);
-                    log(`Number of features: ${data.features ? data.features.length : 'N/A'}`);
-                    
-                    if (!data.type || !data.features) {
-                        throw new Error('Invalid GeoJSON structure');
-                    }
+                    })
+                    .then(data => {
+                        log('GeoJSON parsed successfully. Adding to map...');
+                        log(`GeoJSON type: ${data.type}`);
+                        log(`Number of features: ${data.features ? data.features.length : 'N/A'}`);
+                        
+                        map.addSource('geojson-source', {
+                            type: 'geojson',
+                            data: data
+                        });
 
-                    // Log the structure of the first feature
-                    if (data.features.length > 0) {
-                        const firstFeature = data.features[0];
-                        log(`First feature type: ${firstFeature.type}`);
-                        log(`First feature geometry type: ${firstFeature.geometry ? firstFeature.geometry.type : 'N/A'}`);
-                        if (firstFeature.geometry && firstFeature.geometry.coordinates) {
-                            log(`First coordinate: ${JSON.stringify(firstFeature.geometry.coordinates[0])}`);
-                        }
-                    }
-
-                    log('Adding GeoJSON to map...');
-                    map.addSource('geojson-source', {
-                        type: 'geojson',
-                        data: data
-                    });
-
-                    map.addLayer({
-                        'id': 'geojson-layer',
-                        'type': 'fill',
-                        'source': 'geojson-source',
-                        'paint': {
-                            'fill-color': '#088',
-                            'fill-opacity': 0.8
-                        }
-                    });
-
-                    log('GeoJSON added to map successfully.');
-
-                    // Fit the map to the GeoJSON data
-                    var bounds = new mapboxgl.LngLatBounds();
-                    let validCoordinatesFound = false;
-                    data.features.forEach(function(feature) {
-                        if (feature.geometry && feature.geometry.coordinates) {
-                            if (feature.geometry.type === 'Polygon') {
-                                feature.geometry.coordinates[0].forEach(function(coord) {
-                                    if (isValidCoordinate(coord)) {
-                                        bounds.extend(coord);
-                                        validCoordinatesFound = true;
-                                    } else {
-                                        log(`Invalid coordinate found: ${JSON.stringify(coord)}`);
-                                    }
-                                });
-                            } else if (feature.geometry.type === 'Point') {
-                                if (isValidCoordinate(feature.geometry.coordinates)) {
-                                    bounds.extend(feature.geometry.coordinates);
-                                    validCoordinatesFound = true;
-                                } else {
-                                    log(`Invalid point coordinate found: ${JSON.stringify(feature.geometry.coordinates)}`);
-                                }
+                        map.addLayer({
+                            'id': 'geojson-layer',
+                            'type': 'fill',
+                            'source': 'geojson-source',
+                            'paint': {
+                                'fill-color': '#088',
+                                'fill-opacity': 0.8
                             }
-                            // Add handling for other geometry types if needed
-                        }
-                    });
+                        });
 
-                    if (validCoordinatesFound) {
-                        log('Adjusting map bounds to fit GeoJSON data.');
-                        map.fitBounds(bounds, { padding: 20 });
-                    } else {
-                        log('No valid coordinates found to adjust map bounds.');
-                    }
-                })
-                .catch(error => {
-                    showError('Error: ' + error.message);
-                });
-        });
+                        log('GeoJSON added to map successfully.');
+                    })
+                    .catch(error => {
+                        showError('Error: ' + error.message);
+                    });
+            });
+        } catch (error) {
+            showError('Fatal error: ' + error.message);
+        }
+    });
     </script>
 </body>
 </html>
