@@ -3,88 +3,167 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapbox GeoJSON Loader</title>
+    <title>Interactive First Aid Kit Locator</title>
     <script src='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.css' rel='stylesheet' />
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
     <style>
-        #map { width: 100%; height: 400px; border: 1px solid #ccc; }
-        #error-message { color: red; font-weight: bold; margin-top: 10px; }
-        #log-messages { margin-top: 10px; border: 1px solid #ccc; padding: 10px; }
+        body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+        #info-panel {
+            position: absolute; top: 10px; right: 10px; width: 300px;
+            background: rgba(255,255,255,0.9); padding: 15px; border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        #search-box {
+            width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc;
+            border-radius: 4px; box-sizing: border-box;
+        }
+        #kit-info { max-height: 300px; overflow-y: auto; }
+        .kit-item { 
+            background: #f0f0f0; margin-bottom: 10px; padding: 10px; 
+            border-radius: 4px; cursor: pointer; transition: background 0.3s;
+        }
+        .kit-item:hover { background: #e0e0e0; }
+        #legend {
+            position: absolute; bottom: 30px; left: 10px; background: rgba(255,255,255,0.9);
+            padding: 10px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .legend-item { display: flex; align-items: center; margin-bottom: 5px; }
+        .legend-color { width: 20px; height: 20px; margin-right: 10px; border-radius: 50%; }
+        #distance-info {
+            position: absolute; bottom: 10px; left: 50%;
+            transform: translateX(-50%); background: rgba(255,255,255,0.9);
+            padding: 10px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            display: none;
+        }
     </style>
 </head>
 <body>
-    <h1>Mapbox GeoJSON Loader</h1>
-    <div id="map">Map should appear here. If you see this text, there might be an issue loading the map.</div>
-    <div id="error-message"></div>
-    <div id="log-messages">Log messages will appear here.</div>
+    <div id="map"></div>
+    <div id="info-panel">
+        <input type="text" id="search-box" placeholder="Search for a building...">
+        <div id="kit-info"></div>
+    </div>
+    <div id="legend">
+        <h4>Legend</h4>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #00FF00;"></div>
+            <span>Available</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #FF0000;"></div>
+            <span>Needs Resupply</span>
+        </div>
+    </div>
+    <div id="distance-info"></div>
 
     <script>
-    document.addEventListener('DOMContentLoaded', (event) => {
-        function log(message) {
-            console.log(message);
-            document.getElementById('log-messages').innerHTML += message + '<br>';
-        }
+        mapboxgl.accessToken = 'pk.eyJ1IjoiZWhzIiwiYSI6ImNtMjNsYWtlZzA2bnQycW9qb2F3dHJuM2gifQ.Yw2JtBD13UqJFKtTj-SKsQ'; // Replace with your Mapbox token
+        var map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/light-v10',
+            center: [-74.5, 40], // Set this to the center of your data
+            zoom: 9
+        });
 
-        function showError(message) {
-            console.error(message);
-            document.getElementById('error-message').textContent = message;
-        }
-
-        try {
-            log('Initializing map...');
-            mapboxgl.accessToken = 'pk.eyJ1IjoiZWhzIiwiYSI6ImNtMjNsYWtlZzA2bnQycW9qb2F3dHJuM2gifQ.Yw2JtBD13UqJFKtTj-SKsQ'; // Replace with your actual token
-            var map = new mapboxgl.Map({
-                container: 'map',
-                style: 'mapbox://styles/mapbox/streets-v11',
-                center: [-74.5, 40],
-                zoom: 9
-            });
-
-            map.on('load', function () {
-                log('Map loaded. Attempting to fetch GeoJSON...');
-                
-                fetch('https://raw.githubusercontent.com/ehs-uoft/FA/main/geojson.geojson')
-                    .then(response => {
-                        log(`Fetch response received. Status: ${response.status}`);
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
-                        }
-                        return response.text();
-                    })
-                    .then(text => {
-                        log('GeoJSON text received. Attempting to parse...');
-                        return JSON.parse(text);
-                    })
-                    .then(data => {
-                        log('GeoJSON parsed successfully. Adding to map...');
-                        log(`GeoJSON type: ${data.type}`);
-                        log(`Number of features: ${data.features ? data.features.length : 'N/A'}`);
-                        
-                        map.addSource('geojson-source', {
-                            type: 'geojson',
-                            data: data
-                        });
-
-                        map.addLayer({
-                            'id': 'geojson-layer',
-                            'type': 'fill',
-                            'source': 'geojson-source',
-                            'paint': {
-                                'fill-color': '#088',
-                                'fill-opacity': 0.8
-                            }
-                        });
-
-                        log('GeoJSON added to map successfully.');
-                    })
-                    .catch(error => {
-                        showError('Error: ' + error.message);
+        map.on('load', function () {
+            fetch('https://raw.githubusercontent.com/ehs-uoft/FA/main/geojson.geojson') // Replace with the path to your GeoJSON file
+                .then(response => response.json())
+                .then(data => {
+                    map.addSource('first-aid-kits', {
+                        type: 'geojson',
+                        data: data
                     });
-            });
-        } catch (error) {
-            showError('Fatal error: ' + error.message);
-        }
-    });
+
+                    map.addLayer({
+                        'id': 'first-aid-kits-layer',
+                        'type': 'circle',
+                        'source': 'first-aid-kits',
+                        'paint': {
+                            'circle-radius': 8,
+                            'circle-color': [
+                                'match',
+                                ['get', 'status'],
+                                'Needs Resupply', '#FF0000',
+                                '#00FF00' // default color
+                            ],
+                            'circle-opacity': 0.7
+                        }
+                    });
+
+                    // Populate info panel
+                    const kitInfo = document.getElementById('kit-info');
+                    data.features.forEach(feature => {
+                        const div = document.createElement('div');
+                        div.className = 'kit-item';
+                        div.innerHTML = `<strong>${feature.properties.building}</strong><br>${feature.properties.address}`;
+                        div.addEventListener('click', () => {
+                            map.flyTo({
+                                center: feature.geometry.coordinates,
+                                zoom: 15
+                            });
+                        });
+                        kitInfo.appendChild(div);
+                    });
+
+                    // Search functionality
+                    const searchBox = document.getElementById('search-box');
+                    searchBox.addEventListener('input', (e) => {
+                        const searchTerm = e.target.value.toLowerCase();
+                        Array.from(kitInfo.children).forEach(item => {
+                            const text = item.textContent.toLowerCase();
+                            item.style.display = text.includes(searchTerm) ? '' : 'none';
+                        });
+                    });
+
+                    // Click event for kit info
+                    map.on('click', 'first-aid-kits-layer', (e) => {
+                        const coordinates = e.features[0].geometry.coordinates.slice();
+                        const { building, address, description } = e.features[0].properties;
+
+                        new mapboxgl.Popup()
+                            .setLngLat(coordinates)
+                            .setHTML(`<h3>${building}</h3><p>${address}</p><p>${description}</p>`)
+                            .addTo(map);
+                    });
+
+                    // Change cursor on hover
+                    map.on('mouseenter', 'first-aid-kits-layer', () => {
+                        map.getCanvas().style.cursor = 'pointer';
+                    });
+                    map.on('mouseleave', 'first-aid-kits-layer', () => {
+                        map.getCanvas().style.cursor = '';
+                    });
+
+                    // Fit map to data bounds
+                    const bounds = new mapboxgl.LngLatBounds();
+                    data.features.forEach(feature => {
+                        bounds.extend(feature.geometry.coordinates);
+                    });
+                    map.fitBounds(bounds, { padding: 50 });
+
+                    // Distance measurement
+                    let start, end;
+                    map.on('click', (e) => {
+                        if (!start) {
+                            start = e.lngLat;
+                        } else if (!end) {
+                            end = e.lngLat;
+                            const distance = turf.distance(
+                                turf.point([start.lng, start.lat]),
+                                turf.point([end.lng, end.lat]),
+                                {units: 'kilometers'}
+                            );
+                            document.getElementById('distance-info').style.display = 'block';
+                            document.getElementById('distance-info').innerHTML = `Distance: ${distance.toFixed(2)} km`;
+                            // Reset for next measurement
+                            start = null;
+                            end = null;
+                        }
+                    });
+                });
+        });
     </script>
 </body>
 </html>
