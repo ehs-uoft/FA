@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced First Aid Kit Locator</title>
+    <title>UTSG First Aid Kit Locator</title>
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
     <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
-    
     <style>
         body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
-        #map { position: absolute; top: 0; bottom: 0; width: 100%; height: 100%; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
         #info-panel {
             position: absolute; top: 10px; right: 10px; width: 300px;
             background: rgba(255,255,255,0.9); padding: 15px; border-radius: 10px;
@@ -40,9 +39,20 @@
         #legend {
             position: absolute; bottom: 30px; left: 10px; background: rgba(255,255,255,0.9);
             padding: 10px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.2);
-            font-weight: bold; font-size: 14px; display: flex; align-items: center;
+            font-weight: bold; font-size: 14px;
         }
-        #legend img { width: 30px; height: 30px; margin-right: 10px; }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .legend-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 10px;
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
         .mapboxgl-popup-content {
             background: rgba(255,255,255,0.95); border-radius: 10px;
             box-shadow: 0 0 20px rgba(0,0,0,0.2); padding: 20px; max-width: 300px;
@@ -82,18 +92,51 @@
             border: none; border-radius: 5px; cursor: pointer;
             background-color: #3498db; color: white;
         }
-        #accessibility-panel {
-            position: absolute; top: 180px; left: 10px; z-index: 1000;
-            background: white; border: none; padding: 10px;
-            border-radius: 5px; display: none;
+        #font-size-control {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border-radius: 5px;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+            z-index: 1000;
         }
-        .pulse-animation {
-            animation: pulse 2s infinite;
+        #font-size-control button {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0 5px;
         }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
+        .fa-kit-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .fa-kit-table th, .fa-kit-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .fa-kit-table th {
+            background-color: #f2f2f2;
+        }
+        #report-issue-building {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 15px;
+            transition: background-color 0.3s;
+        }
+        #report-issue-building:hover {
+            background-color: #c0392b;
         }
         @media (max-width: 600px) {
             #info-panel, #slideout-panel {
@@ -104,9 +147,6 @@
                 left: 10px; top: -30px; transform: rotate(90deg);
             }
         }
-        .high-contrast {
-            filter: invert(1) hue-rotate(180deg);
-        }
     </style>
 </head>
 <body>
@@ -115,13 +155,10 @@
         <button id="reset-view" class="control-button">Reset View</button>
         <button id="toggle-3d" class="control-button">Toggle 3D</button>
         <button id="nearby" class="control-button">Nearby</button>
-        <button id="accessibility-toggle" class="control-button">Accessibility</button>
     </div>
-    <div id="accessibility-panel">
-        <button id="high-contrast" class="control-button">High Contrast</button>
-        <button id="text-to-speech" class="control-button">Text to Speech</button>
-        <button id="increase-font" class="control-button">Increase Font</button>
-        <button id="decrease-font" class="control-button">Decrease Font</button>
+    <div id="font-size-control">
+        <button id="decrease-font" title="Decrease font size">A-</button>
+        <button id="increase-font" title="Increase font size">A+</button>
     </div>
     <div id="info-panel">
         <button id="collapse-button" aria-label="Toggle info panel">≡</button>
@@ -132,8 +169,14 @@
         <div id="kit-list"></div>
     </div>
     <div id="legend">
-        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='18' fill='%2327ae60' /%3E%3Cpath d='M10 20h20M20 10v20' stroke='white' stroke-width='4' /%3E%3C/svg%3E" alt="First Aid Kit">
-        Location of First Aid Kits
+        <div class="legend-item">
+            <div class="legend-icon" id="fa-kit-icon"></div>
+            First Aid Kit Location
+        </div>
+        <div class="legend-item">
+            <div class="legend-icon" id="user-location-icon"></div>
+            Your Location
+        </div>
     </div>
     <div id="slideout-panel">
         <span class="close-slideout" aria-label="Close panel">&times;</span>
@@ -146,10 +189,11 @@
         const MAPBOX_TOKEN = 'pk.eyJ1IjoiZWhzIiwiYSI6ImNtMjNsYWtlZzA2bnQycW9qb2F3dHJuM2gifQ.Yw2JtBD13UqJFKtTj-SKsQ';
         const GEOJSON_URL = 'https://raw.githubusercontent.com/ehs-uoft/FA/main/geojson.geojson';
         const TORONTO_COORDINATES = [-79.3832, 43.6532];
-        const DEFAULT_ZOOM = 13;
+        const DEFAULT_ZOOM = 15;
 
         let map, kitFeatures = [];
         let is3DMode = false;
+        let userLocationMarker;
 
         function initializeMap() {
             mapboxgl.accessToken = MAPBOX_TOKEN;
@@ -161,6 +205,13 @@
                 zoom: DEFAULT_ZOOM
             });
 
+            // Add navigation controls with custom compass
+            const nav = new mapboxgl.NavigationControl({
+                showCompass: true,
+                visualizePitch: true
+            });
+            map.addControl(nav, 'top-right');
+
             map.on('load', onMapLoad);
         }
 
@@ -168,6 +219,7 @@
             console.log('Map loaded');
             fetchGeoJSONData();
             addEventListeners();
+            showUserLocation();
         }
 
         function fetchGeoJSONData() {
@@ -205,15 +257,22 @@
 
                 map.addLayer({
                     id: 'kit-locations',
-                    type: 'circle',
+                    type: 'symbol',
                     source: 'kits',
-                    paint: {
-                        'circle-radius': 8,
-                        'circle-color': '#27ae60',
-                        'circle-stroke-width': 1,
-                        'circle-stroke-color': '#fff'
+                    layout: {
+                        'icon-image': 'fa-kit-icon',
+                        'icon-size': 0.5
                     }
                 });
+
+               // Custom First Aid Kit icon
+                map.loadImage(
+                    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAAFEElEQVR4nO2ZW0wcVRjH/2d2lqXcSimFlhIIxdqAIoE0QWysjSZGhbRGU6NijPFWH6q+mOiLmvhgjDE2ap+kL/JgTGPEmBhrYsR6CXKTchG6QJGlpaFZWHb2MjPn8zBbuuwul9ll2TXhfMkkc+bM+X7/75wzFw5wXetahxa6wef80D82jvHpkN5JkpPnYRQCAVDIYUclvxa7q+5Be0MzSj0FpvXL3gCXhYMDV9A3PoqV5cBGkUXIGMMOuxOHqvege08j9lXuNsxa0QaaporvxgbROzaMqfAsVMMqBEBY4XHD48GJukYcqHwEDrtKc0jGUVUVFy59jU8v92B+Mc67GELgLLiO5x88gpfqj8HhcKQl0S2hadmYnLmBl//8CDcWb+YkPAEY9f+L8ze/w6eXepIVJkkYaD0XHsUffx1PK/4f89OH8Nnfv2bk1FUBg5MDONd/UZduNlSNw7v9X2FoajBth64K+GL4D0zOTMkVnkL/9BD6xq8Y5hlWYHYhhlO/fAB/dE6u+Fv4o3M41fM+ZiPThnmGFbg4fAU3F29Kfk5SNzVzA5cGLhvmGVZgKPCPpp4qcmZSa74+BQLJEVhYBsBVODb/X8qkHASs+RJyD8C1CPjVbKKkGwzlZuTMJCsQjYh9NFFGVZT+WlVTtQplr4AUuIoSMZtnMiFTVCB5vRKTWlsAZiVQYM8uN2ksZt47LtqWE7iWLmK15mHDPMMKHCxvREnBdlHyLSGwvYhh/871nhnmGVbAlm/DM3uPQkZ6tKoKfKQZg/6/DPMMKwAAxw48g0LHNhnp0aoq8JFmDPr/MswzrAAAHCxvREnBdlHyLSGwvYhh/871nhnmGVbAlm/DM3uPQkZ6tKoKfKQZg/6/DPMMKwAAxw48g0LHNhnp0aoq8JFmDPr/MswzrAAAHK1+EsUFxbIeWisKbC9i2L/zfhQ67YZ5hhUAgGP7n0axc5uUSqwE48i3EI7ufwpOh90wL6P/A/XlNXiu9oj0RQ4AWO6R/TveQLHLY5iTsQKNFXV4o+5F2PJsMh4YyLPl4fW6F9BYXmuYl9FXCGDYVbwTJ+sPoNZXhTx7vqz0AFieHY98D+H5PQfgK9qRMjejCtyOpmmadOrjsliWdfsn9Dpu8+zOPZB0rEQmBjLRuhUQQtxwNgcJAYSUFHx1rA2W49/9Xb0uxPVh7zndOPpwzUHdtqyN2ETvPTvReeY0lN4eKFMBQAjAYoHFWwX7s8/B3twMZrGkHGMFNHHRp1+O3mnXbVUVrdF9T9XwwbkuXAs75QqxWmHxVSHS2QFWUAClpxuithb2Y8eh3L4lSSJdhP2+OYS6Lm6qAM/8HTPx7OfTVX11XkKlpWtCVbWj6o3ZFaEqSq+qquPq2urYyocf6JNKSKg5K0Q8HtNa2zPSYRiIx4MiHA6LaDSqG9PV1SOCCwtC9Pfp9kTb2eWlbldUnP3+Q3U2c/UmQu+//Vx5KIKQj3iPqDR7IPQC/KO/+btm3RXBzk5hf/KptONlrMBt/PX7BXY26A/gPZJPuAyZeMBzgBEavqQLIx1tEF0XIG7e1LWxnDFAF+VWQORkXD6xOy/3ROHr7+qD0XTBa3CRy3qUAAjLAYBgjHDbPauouNfLVs+fOPPVx1KKkFMFbkdVVVJtxVhg3+OSBsk5gTtRFIUp6oq+bdO1rvWs619LJzZdvM/c4QAAAABJRU5ErkJggg==',
+                    (error, image) => {
+                        if (error) throw error;
+                        map.addImage('fa-kit-icon', image);
+                    }
+                );
 
                 map.on('click', 'kit-locations', onKitClick);
                 map.on('mouseenter', 'kit-locations', () => { map.getCanvas().style.cursor = 'pointer'; });
@@ -228,9 +287,6 @@
             document.getElementById('sort-select').addEventListener('change', (e) => updateInfoPanel(e.target.value));
             document.getElementById('search-box').addEventListener('input', debounce(handleSearch, 300));
             document.querySelector('.close-slideout').addEventListener('click', closeSlideout);
-            document.getElementById('accessibility-toggle').addEventListener('click', toggleAccessibilityPanel);
-            document.getElementById('high-contrast').addEventListener('click', toggleHighContrast);
-            document.getElementById('text-to-speech').addEventListener('click', toggleTextToSpeech);
             document.getElementById('increase-font').addEventListener('click', () => changeFontSize(true));
             document.getElementById('decrease-font').addEventListener('click', () => changeFontSize(false));
             document.getElementById('reset-view').addEventListener('click', resetView);
@@ -283,19 +339,27 @@
                 content.innerHTML = `
                     <h2>${props.building}</h2>
                     <p><strong>Address:</strong> ${props.address}</p>
-                    <p><strong>Total Kits:</strong> ${props.kitCount || 1}</p>
-                    ${props.url ? `<p><strong>URL:</strong> <a href="${props.url}" target="_blank">${props.url}</a></p>` : ''}
-                    ${props.kits ? `
-                        <h3>Kit Locations:</h3>
-                        <ul>
-                            ${props.kits.map(kit => `
-                                <li>
-                                    Room: ${kit.room}, Floor: ${kit.floor}
-                                    ${kit.otherDetails ? `<br>Details: ${kit.otherDetails}` : ''}
-                                </li>
-                            `).join('')}
-                        </ul>
-                    ` : ''}
+                    <table class="fa-kit-table">
+                        <thead>
+                            <tr>
+                                <th>First Aid Location</th>
+                                <th>Room #</th>
+                                <th>Floor #</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${props.kits ? props.kits.map(kit => `
+                                <tr>
+                                    <td>${kit.location || 'N/A'}</td>
+                                    <td>${kit.room || 'N/A'}</td>
+                                    <td>${kit.floor || 'N/A'}</td>
+                                    <td>${kit.otherDetails || 'N/A'}</td>
+                                </tr>
+                            `).join('') : '<tr><td colspan="4">No detailed kit information available</td></tr>'}
+                        </tbody>
+                    </table>
+                    ${props.url ? `<p><strong>Certified First Aiders List:</strong> <a href="${props.url}" target="_blank">Click Here</a></p>` : ''}
                     <button id="report-issue-building">Report Issue</button>
                 `;
                 document.getElementById('slideout-panel').classList.add('open');
@@ -311,25 +375,6 @@
             const subject = encodeURIComponent(`Issue Report: First Aid Kit at ${props.building}`);
             const body = encodeURIComponent(`Building: ${props.building}\nAddress: ${props.address}\n\nPlease describe the issue:`);
             window.location.href = `mailto:EHS.office@utoronto.ca?subject=${subject}&body=${body}`;
-        }
-
-        function toggleAccessibilityPanel() {
-            const panel = document.getElementById('accessibility-panel');
-            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-        }
-
-        function toggleHighContrast() {
-            document.body.classList.toggle('high-contrast');
-        }
-
-        function toggleTextToSpeech() {
-            // Implement text-to-speech functionality
-            if ('speechSynthesis' in window) {
-                const speech = new SpeechSynthesisUtterance("Text-to-speech is now active. Use this feature to have information read aloud.");
-                window.speechSynthesis.speak(speech);
-            } else {
-                alert("Sorry, your browser doesn't support text-to-speech!");
-            }
         }
 
         function changeFontSize(increase) {
@@ -348,7 +393,7 @@
             });
         }
 
-      function toggle3D() {
+        function toggle3D() {
             is3DMode = !is3DMode;
             map.setPitch(is3DMode ? 60 : 0);
             map.setBearing(is3DMode ? -60 : 0);
@@ -373,14 +418,25 @@
             }
         }
 
-        function showNearbyLocation() {
+        function showUserLocation() {
             if ('geolocation' in navigator) {
                 navigator.geolocation.getCurrentPosition(position => {
                     const userLocation = [position.coords.longitude, position.coords.latitude];
                     
-                    new mapboxgl.Marker({color: '#FF0000'})
+                    if (!userLocationMarker) {
+                        userLocationMarker = new mapboxgl.Marker({
+                            color: '#FF0000',
+                            scale: 0.8
+                        })
                         .setLngLat(userLocation)
                         .addTo(map);
+
+                        // Add user location to legend
+                        const userLocationIcon = document.getElementById('user-location-icon');
+                        userLocationIcon.style.backgroundImage = 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%23FF0000\' width=\'18px\' height=\'18px\'%3E%3Cpath d=\'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z\'/%3E%3C/svg%3E")';
+                    } else {
+                        userLocationMarker.setLngLat(userLocation);
+                    }
 
                     map.flyTo({
                         center: userLocation,
@@ -409,11 +465,11 @@
         }
 
         function highlightNearbyKits(nearbyKits) {
-            map.setPaintProperty('kit-locations', 'circle-color', [
+            map.setPaintProperty('kit-locations', 'icon-color', [
                 'case',
                 ['in', ['get', 'buildingId'], ['literal', nearbyKits.map(k => k.properties.buildingId)]],
                 '#FF9900',
-                '#27ae60'
+                '#000000'
             ]);
         }
 
@@ -438,15 +494,15 @@
 
         function closeSlideout() {
             document.getElementById('slideout-panel').classList.remove('open');
-            map.setPaintProperty('kit-locations', 'circle-color', '#27ae60');
+            map.setPaintProperty('kit-locations', 'icon-color', '#000000');
         }
 
         function highlightBuilding(buildingId) {
-            map.setPaintProperty('kit-locations', 'circle-color', [
+            map.setPaintProperty('kit-locations', 'icon-color', [
                 'case',
                 ['==', ['get', 'buildingId'], buildingId],
                 '#3498db',
-                '#27ae60'
+                '#000000'
             ]);
         }
 
