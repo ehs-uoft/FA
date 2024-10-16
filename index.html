@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UTSG First Aid Kit Locator</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚑</text></svg>">
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
     <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
@@ -12,11 +13,11 @@
     
     <style>
         :root {
-            --primary-color: #3498db;
-            --secondary-color: #2ecc71;
+            --primary-color: #e74c3c;
+            --secondary-color: #3498db;
             --background-color: #f0f0f0;
             --text-color: #333;
-            --panel-background: rgba(255, 255, 255, 0.9);
+            --panel-background: rgba(255, 255, 255, 0.95);
         }
         
         body { 
@@ -62,7 +63,7 @@
             transition: background-color 0.3s ease;
         }
         #collapse-button:hover {
-            background-color: #2980b9;
+            background-color: #c0392b;
         }
         #search-box {
             width: 100%; 
@@ -145,16 +146,28 @@
             color: var(--text-color);
         }
         #loading-indicator {
-            position: absolute; 
-            top: 50%; 
-            left: 50%; 
-            transform: translate(-50%, -50%);
-            background: var(--panel-background);
-            padding: 20px; 
-            border-radius: 10px;
-            display: none; 
-            z-index: 1003;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: fixed; 
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--primary-color);
+            border-top: 5px solid var(--secondary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
         #control-panel {
             position: absolute; 
@@ -176,7 +189,7 @@
             transition: all 0.3s ease;
         }
         .control-button:hover {
-            background-color: #2980b9;
+            background-color: #c0392b;
             transform: translateY(-2px);
         }
         #font-size-control {
@@ -211,6 +224,45 @@
             border-radius: 5px;
             font-size: 12px;
             z-index: 1000;
+        }
+        #slideout-content {
+            padding: 20px;
+        }
+        #slideout-content h2 {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .fa-kit-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .fa-kit-table th, .fa-kit-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        .fa-kit-table th {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .fa-kit-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        #report-issue-building {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s ease;
+        }
+        #report-issue-building:hover {
+            background-color: #2980b9;
         }
         @media (max-width: 600px) {
             #info-panel, #slideout-panel {
@@ -257,7 +309,9 @@
         <span class="close-slideout" aria-label="Close panel">&times;</span>
         <div id="slideout-content"></div>
     </div>
-    <div id="loading-indicator" aria-live="polite">Loading...</div>
+    <div id="loading-indicator">
+        <div class="spinner"></div>
+    </div>
     <div id="last-updated"></div>
 
     <script>
@@ -329,7 +383,7 @@
                     kitFeatures = data.features;
                     addMapLayers(data);
                     updateInfoPanel();
-                    showLastUpdated(data.lastUpdated);
+                showLastUpdated(data.lastUpdated);
                     showLoading(false);
                 })
                 .catch(error => {
@@ -344,57 +398,13 @@
             if (!map.getSource('kits')) {
                 map.addSource('kits', {
                     type: 'geojson',
-                    data: data,
-                    cluster: true,
-                    clusterMaxZoom: 14,
-                    clusterRadius: 50
-                });
-
-                // Add clusters
-                map.addLayer({
-                    id: 'clusters',
-                    type: 'circle',
-                    source: 'kits',
-                    filter: ['has', 'point_count'],
-                    paint: {
-                        'circle-color': [
-                            'step',
-                            ['get', 'point_count'],
-                            '#51bbd6',
-                            100,
-                            '#f1f075',
-                            750,
-                            '#f28cb1'
-                        ],
-                        'circle-radius': [
-                            'step',
-                            ['get', 'point_count'],
-                            20,
-                            100,
-                            30,
-                            750,
-                            40
-                        ]
-                    }
+                    data: data
                 });
 
                 map.addLayer({
-                    id: 'cluster-count',
+                    id: 'kit-locations',
                     type: 'symbol',
                     source: 'kits',
-                    filter: ['has', 'point_count'],
-                    layout: {
-                        'text-field': '{point_count_abbreviated}',
-                        'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-                        'text-size': 12
-                    }
-                });
-
-                map.addLayer({
-                    id: 'unclustered-point',
-                    type: 'symbol',
-                    source: 'kits',
-                filter: ['!', ['has', 'point_count']],
                     layout: {
                         'icon-image': 'first-aid',
                         'icon-size': 1,
@@ -404,32 +414,17 @@
 
                 // Load custom icon
                 map.loadImage(
-                    'https://cdn0.iconfinder.com/data/icons/medical-services-2/256/First_Aid-512.png',
+                    'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/First_Aid_kit_icon.svg/240px-First_Aid_kit_icon.svg.png',
                     (error, image) => {
                         if (error) throw error;
                         map.addImage('first-aid', image);
+                        map.setLayoutProperty('kit-locations', 'icon-image', 'first-aid');
                     }
                 );
 
-                // Inspect a cluster on click
-                map.on('click', 'clusters', (e) => {
-                    const features = map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
-                    const clusterId = features[0].properties.cluster_id;
-                    map.getSource('kits').getClusterExpansionZoom(clusterId, (err, zoom) => {
-                        if (err) return;
-                        
-                        map.easeTo({
-                            center: features[0].geometry.coordinates,
-                            zoom: zoom
-                        });
-                    });
-                });
-
-                map.on('click', 'unclustered-point', onKitClick);
-                map.on('mouseenter', 'clusters', () => { map.getCanvas().style.cursor = 'pointer'; });
-                map.on('mouseleave', 'clusters', () => { map.getCanvas().style.cursor = ''; });
-                map.on('mouseenter', 'unclustered-point', () => { map.getCanvas().style.cursor = 'pointer'; });
-                map.on('mouseleave', 'unclustered-point', () => { map.getCanvas().style.cursor = ''; });
+                map.on('click', 'kit-locations', onKitClick);
+                map.on('mouseenter', 'kit-locations', () => { map.getCanvas().style.cursor = 'pointer'; });
+                map.on('mouseleave', 'kit-locations', () => { map.getCanvas().style.cursor = ''; });
             } else {
                 map.getSource('kits').setData(data);
             }
@@ -624,7 +619,7 @@
             const legend = document.getElementById('legend');
             legend.innerHTML = `
                 <div class="legend-item">
-                    <img src="https://cdn0.iconfinder.com/data/icons/medical-services-2/256/First_Aid-512.png" alt="First Aid Kit" style="width: 24px; height: 24px;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/First_Aid_kit_icon.svg/240px-First_Aid_kit_icon.svg.png" alt="First Aid Kit" style="width: 24px; height: 24px;">
                     First Aid Kit Location
                 </div>
                 <div class="legend-item">
@@ -646,12 +641,8 @@
         }
 
         function highlightNearbyKits(nearbyKits) {
-            map.setPaintProperty('unclustered-point', 'icon-color', [
-                'case',
-                ['in', ['get', 'buildingId'], ['literal', nearbyKits.map(k => k.properties.buildingId)]],
-                '#FF9900',
-                '#000000'
-            ]);
+            const nearbyIds = nearbyKits.map(k => k.properties.buildingId);
+            map.setFilter('kit-locations', ['in', ['get', 'buildingId'], ['literal', nearbyIds]]);
         }
 
         function handleSearch(e) {
@@ -675,16 +666,11 @@
 
         function closeSlideout() {
             document.getElementById('slideout-panel').classList.remove('open');
-            map.setPaintProperty('unclustered-point', 'icon-color', '#000000');
+            map.setFilter('kit-locations', null);
         }
 
         function highlightBuilding(buildingId) {
-            map.setPaintProperty('unclustered-point', 'icon-color', [
-                'case',
-                ['==', ['get', 'buildingId'], buildingId],
-                '#3498db',
-                '#000000'
-            ]);
+            map.setFilter('kit-locations', ['==', ['get', 'buildingId'], buildingId]);
         }
 
         function flyToBuilding(coords) {
@@ -719,7 +705,7 @@
         }
 
         function showLoading(show) {
-            document.getElementById('loading-indicator').style.display = show ? 'block' : 'none';
+            document.getElementById('loading-indicator').style.display = show ? 'flex' : 'none';
         }
 
         function debounce(func, wait) {
