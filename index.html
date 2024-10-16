@@ -8,43 +8,87 @@
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
     <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    
     <style>
-        body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
-        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
-        #info-panel {
-            position: absolute; top: 10px; right: 10px; width: 300px;
-            background: rgba(255,255,255,0.9); padding: 15px; border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.2); max-height: 80vh; overflow-y: auto;
-            transition: transform 0.3s ease-in-out;
+        body { 
+            margin: 0; 
+            padding: 0; 
+            font-family: 'Arial', sans-serif;
+            color: #333;
         }
-        #info-panel.collapsed { transform: translateX(290px); }
+        #map { 
+            position: absolute; 
+            top: 0; 
+            bottom: 0; 
+            width: 100%; 
+        }
+        #info-panel {
+            position: absolute; 
+            top: 10px; 
+            right: 10px; 
+            width: 300px;
+            background: rgba(255,255,255,0.95); 
+            padding: 20px; 
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1); 
+            max-height: 80vh; 
+            overflow-y: auto;
+            transition: all 0.3s ease-in-out;
+            z-index: 1001;
+        }
+        #info-panel.collapsed { 
+            transform: translateX(290px); 
+        }
         #collapse-button {
-            position: absolute; left: -30px; top: 10px; background: white;
-            border: none; border-radius: 5px 0 0 5px; padding: 5px;
-            box-shadow: -5px 0 10px rgba(0,0,0,0.1); cursor: pointer;
+            position: absolute; 
+            left: -30px; 
+            top: 10px; 
+            background: white;
+            border: none; 
+            border-radius: 5px 0 0 5px; 
+            padding: 5px;
+            box-shadow: -5px 0 10px rgba(0,0,0,0.1); 
+            cursor: pointer;
         }
         #search-box {
-            width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc;
-            border-radius: 20px; box-sizing: border-box; font-size: 16px;
+            width: 100%; 
+            padding: 10px; 
+            margin-bottom: 10px; 
+            border: 1px solid #ddd;
+            border-radius: 5px; 
+            box-sizing: border-box; 
+            font-size: 14px;
         }
         .kit-item { 
-            background: #f0f0f0; margin-bottom: 10px; padding: 15px; 
-            border-radius: 10px; cursor: pointer; transition: all 0.3s;
+            background: #f8f8f8; 
+            margin-bottom: 10px; 
+            padding: 15px; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            transition: all 0.3s;
+            border: 1px solid #eee;
         }
         .kit-item:hover { 
-            background: #e0e0e0; transform: translateY(-2px);
+            background: #f0f0f0; 
+            transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
         #legend {
-            position: absolute; bottom: 30px; left: 10px; background: rgba(255,255,255,0.9);
-            padding: 10px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.2);
-            font-weight: bold; font-size: 14px;
+            position: absolute; 
+            bottom: 30px; 
+            left: 10px; 
+            background: rgba(255,255,255,0.95);
+            padding: 15px; 
+            border-radius: 10px; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            font-size: 14px;
+            z-index: 1000;
         }
         .legend-item {
             display: flex;
             align-items: center;
-            margin-bottom: 5px;
+            margin-bottom: 10px;
         }
         .legend-icon {
             width: 24px;
@@ -53,98 +97,122 @@
             background-size: contain;
             background-repeat: no-repeat;
         }
-        .mapboxgl-popup-content {
-            background: rgba(255,255,255,0.95); border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.2); padding: 20px; max-width: 300px;
-        }
-        .mapboxgl-popup-content h3 {
-            margin: 0 0 10px 0; color: #333;
-            border-bottom: 2px solid #3498db; padding-bottom: 5px;
-        }
-        .mapboxgl-popup-content p { margin: 5px 0; color: #666; }
         #sort-select {
-            margin-bottom: 10px; padding: 5px;
-            border-radius: 5px; border: 1px solid #ccc;
+            margin-bottom: 15px; 
+            padding: 8px;
+            border-radius: 5px; 
+            border: 1px solid #ddd;
+            font-size: 14px;
+            width: 100%;
         }
         #slideout-panel {
-            position: fixed; right: -400px; top: 0; bottom: 0; width: 400px;
-            background: white; box-shadow: -2px 0 5px rgba(0,0,0,0.1);
-            transition: right 0.3s ease-in-out; overflow-y: auto; padding: 20px;
-            box-sizing: border-box; z-index: 1000;
+            position: fixed; 
+            right: -400px; 
+            top: 0; 
+            bottom: 0; 
+            width: 400px;
+            background: white; 
+            box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+            transition: right 0.3s ease-in-out; 
+            overflow-y: auto; 
+            padding: 20px;
+            box-sizing: border-box; 
+            z-index: 1002;
         }
-        #slideout-panel.open { right: 0; }
+        #slideout-panel.open { 
+            right: 0; 
+        }
         .close-slideout {
-            position: absolute; top: 10px; right: 10px; cursor: pointer;
-            font-size: 20px; color: #333;
+            position: absolute; 
+            top: 10px; 
+            right: 10px; 
+            cursor: pointer;
+            font-size: 20px; 
+            color: #333;
         }
         #loading-indicator {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(255,255,255,0.8); padding: 20px; border-radius: 10px;
-            display: none; z-index: 1000;
+            position: absolute; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%);
+            background: rgba(255,255,255,0.9); 
+            padding: 20px; 
+            border-radius: 10px;
+            display: none; 
+            z-index: 1003;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
         }
         #control-panel {
-            position: absolute; top: 10px; left: 10px; z-index: 1000;
-            background: white; border: none; padding: 10px;
-            border-radius: 5px; display: flex; flex-direction: column;
+            position: absolute; 
+            top: 10px; 
+            left: 10px; 
+            z-index: 1000;
+            display: flex; 
+            flex-direction: column;
         }
         .control-button {
-            margin-bottom: 5px; padding: 5px 10px;
-            border: none; border-radius: 5px; cursor: pointer;
-            background-color: #3498db; color: white;
+            margin-bottom: 5px; 
+            padding: 10px;
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer;
+            background-color: white; 
+            color: #333;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        .control-button:hover {
+            background-color: #f0f0f0;
+            transform: translateY(-2px);
         }
         #font-size-control {
             position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
+            bottom: 10px;
+            left: 10px;
             background: white;
             border-radius: 5px;
             padding: 5px;
             display: flex;
             align-items: center;
             z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         #font-size-control button {
             background: none;
             border: none;
-            font-size: 20px;
+            font-size: 16px;
             cursor: pointer;
-            padding: 0 5px;
+            padding: 5px 10px;
+            color: #333;
         }
-        .fa-kit-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
+        #font-size-control button:hover {
+            background-color: #f0f0f0;
         }
-        .fa-kit-table th, .fa-kit-table td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        .fa-kit-table th {
-            background-color: #f2f2f2;
-        }
-        #report-issue-building {
-            background-color: #e74c3c;
-            color: white;
-            border: none;
-            padding: 10px 15px;
+        #last-updated {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.9);
+            padding: 5px 10px;
             border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            margin-top: 15px;
-            transition: background-color 0.3s;
-        }
-        #report-issue-building:hover {
-            background-color: #c0392b;
+            font-size: 12px;
+            z-index: 1000;
         }
         @media (max-width: 600px) {
             #info-panel, #slideout-panel {
-                width: 100%; right: 0; top: auto; bottom: 0; max-height: 50vh;
+                width: 100%; 
+                right: 0; 
+                top: auto; 
+                bottom: 0; 
+                max-height: 50vh;
             }
-            #info-panel.collapsed { transform: translateY(calc(100% - 40px)); }
+            #info-panel.collapsed { 
+                transform: translateY(calc(100% - 40px)); 
+            }
             #collapse-button {
-                left: 10px; top: -30px; transform: rotate(90deg);
+                left: 10px; 
+                top: -30px; 
+                transform: rotate(90deg);
             }
         }
     </style>
@@ -152,19 +220,21 @@
 <body>
     <div id="map"></div>
     <div id="control-panel">
-        <button id="reset-view" class="control-button">Reset View</button>
-        <button id="toggle-3d" class="control-button">Toggle 3D</button>
-        <button id="nearby" class="control-button">Nearby</button>
+        <button id="reset-view" class="control-button" title="Reset View"><i class="fas fa-home"></i></button>
+        <button id="toggle-3d" class="control-button" title="Toggle 3D"><i class="fas fa-cube"></i></button>
+        <button id="nearby" class="control-button" title="Show Nearby"><i class="fas fa-location-arrow"></i></button>
     </div>
     <div id="font-size-control">
-        <button id="decrease-font" title="Decrease font size">A-</button>
-        <button id="increase-font" title="Increase font size">A+</button>
+        <button id="decrease-font" title="Decrease font size"><i class="fas fa-minus"></i></button>
+        <button id="increase-font" title="Increase font size"><i class="fas fa-plus"></i></button>
     </div>
     <div id="info-panel">
         <button id="collapse-button" aria-label="Toggle info panel">≡</button>
         <input type="text" id="search-box" placeholder="Search for a building..." aria-label="Search for a building">
         <select id="sort-select" aria-label="Sort buildings">
             <option value="alphabetical">Sort Alphabetically</option>
+            <option value="kitCount">Sort by Kit Count</option>
+            <option value="distance">Sort by Distance</option>
         </select>
         <div id="kit-list"></div>
     </div>
@@ -183,12 +253,13 @@
         <div id="slideout-content"></div>
     </div>
     <div id="loading-indicator" aria-live="polite">Loading...</div>
+    <div id="last-updated"></div>
 
     <script>
     (function() {
         const MAPBOX_TOKEN = 'pk.eyJ1IjoiZWhzIiwiYSI6ImNtMjNsYWtlZzA2bnQycW9qb2F3dHJuM2gifQ.Yw2JtBD13UqJFKtTj-SKsQ';
         const GEOJSON_URL = 'https://raw.githubusercontent.com/ehs-uoft/FA/main/geojson.geojson';
-        const TORONTO_COORDINATES = [-79.3832, 43.6532];
+        const UNIVERSITY_OF_TORONTO_COORDINATES = [-79.3957, 43.6629];
         const DEFAULT_ZOOM = 15;
 
         let map, kitFeatures = [];
@@ -200,12 +271,11 @@
 
             map = new mapboxgl.Map({
                 container: 'map',
-                style: 'mapbox://styles/mapbox/streets-v11',
-                center: TORONTO_COORDINATES,
+                style: 'mapbox://styles/mapbox/light-v10',
+                center: UNIVERSITY_OF_TORONTO_COORDINATES,
                 zoom: DEFAULT_ZOOM
             });
 
-            // Add navigation controls with custom compass
             const nav = new mapboxgl.NavigationControl({
                 showCompass: true,
                 visualizePitch: true
@@ -220,6 +290,10 @@
             fetchGeoJSONData();
             addEventListeners();
             showUserLocation();
+            
+            // Remove unnecessary map labels
+            map.setLayoutProperty('poi-label', 'visibility', 'none');
+            map.setLayoutProperty('transit-label', 'visibility', 'none');
         }
 
         function fetchGeoJSONData() {
@@ -237,7 +311,7 @@
                     kitFeatures = data.features;
                     addMapLayers(data);
                     updateInfoPanel();
-                    fitMapToData();
+                    showLastUpdated(data.lastUpdated);
                     showLoading(false);
                 })
                 .catch(error => {
@@ -255,28 +329,27 @@
                     data: data
                 });
 
-                map.addLayer({
-                    id: 'kit-locations',
-                    type: 'symbol',
-                    source: 'kits',
-                    layout: {
-                        'icon-image': 'fa-kit-icon',
-                        'icon-size': 0.5
-                    }
-                });
-
-               // Custom First Aid Kit icon
                 map.loadImage(
                     'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAAFEElEQVR4nO2ZW0wcVRjH/2d2lqXcSimFlhIIxdqAIoE0QWysjSZGhbRGU6NijPFWH6q+mOiLmvhgjDE2ap+kL/JgTGPEmBhrYsR6CXKTchG6QJGlpaFZWHb2MjPn8zBbuuwul9ll2TXhfMkkc+bM+X7/75wzFw5wXetahxa6wef80D82jvHpkN5JkpPnYRQCAVDIYUclvxa7q+5Be0MzSj0FpvXL3gCXhYMDV9A3PoqV5cBGkUXIGMMOuxOHqvege08j9lXuNsxa0QaaporvxgbROzaMqfAsVMMqBEBY4XHD48GJukYcqHwEDrtKc0jGUVUVFy59jU8v92B+Mc67GELgLLiO5x88gpfqj8HhcKQl0S2hadmYnLmBl//8CDcWb+YkPAEY9f+L8ze/w6eXepIVJkkYaD0XHsUffx1PK/4f89OH8Nnfv2bk1FUBg5MDONd/UZduNlSNw7v9X2FoajBth64K+GL4D0zOTMkVnkL/9BD6xq8Y5hlWYHYhhlO/fAB/dE6u+Fv4o3M41fM+ZiPThnmGFbg4fAU3F29Kfk5SNzVzA5cGLhvmGVZgKPCPpp4qcmZSa74+BQLJEVhYBsBVODb/X8qkHASs+RJyD8C1CPjVbKKkGwzlZuTMJCsQjYh9NFFGVZT+WlVTtQplr4AUuIoSMZtnMiFTVCB5vRKTWlsAZiVQYM8uN2ksZt47LtqWE7iWLmK15mHDPMMKHCxvREnBdlHyLSGwvYhh/871nhnmGVbAlm/DM3uPQkZ6tKoKfKQZg/6/DPMMKwAAxw48g0LHNhnp0aoq8JFmDPr/MswzrAAAHCxvREnBdlHyLSGwvYhh/871nhnmGVbAlm/DM3uPQkZ6tKoKfKQZg/6/DPMMKwAAxw48g0LHNhnp0aoq8JFmDPr/MswzrAAAHK1+EsUFxbIeWisKbC9i2L/zfhQ67YZ5hhUAgGP7n0axc5uUSqwE48i3EI7ufwpOh90wL6P/A/XlNXiu9oj0RQ4AWO6R/TveQLHLY5iTsQKNFXV4o+5F2PJsMh4YyLPl4fW6F9BYXmuYl9FXCGDYVbwTJ+sPoNZXhTx7vqz0AFieHY98D+H5PQfgK9qRMjejCtyOpmmadOrjsliWdfsn9Dpu8+zOPZB0rEQmBjLRuhUQQtxwNgcJAYSUFHx1rA2W49/9Xb0uxPVh7zndOPpwzUHdtqyN2ETvPTvReeY0lN4eKFMBQAjAYoHFWwX7s8/B3twMZrGkHGMFNHHRp1+O3mnXbVUVrdF9T9XwwbkuXAs75QqxWmHxVSHS2QFWUAClpxuithb2Y8eh3L4lSSJdhP2+OYS6Lm6qAM/8HTPx7OfTVX11XkKlpWtCVbWj6o3ZFaEqSq+qquPq2urYyocf6JNKSKg5K0Q8HtNa2zPSYRiIx4MiHA6LaDSqG9PV1SOCCwtC9Pfp9kTb2eWlbldUnP3+Q3U2c/UmQu+//Vx5KIKQj3iPqDR7IPQC/KO/+btm3RXBzk5hf/KptONlrMBt/PX7BXY26A/gPZJPuAyZeMBzgBEavqQLIx1tEF0XIG7e1LWxnDFAF+VWQORkXD6xOy/3ROHr7+qD0XTBa3CRy3qUAAjLAYBgjHDbPauouNfLVs+fOPPVx1KKkFMFbkdVVVJtxVhg3+OSBsk5gTtRFIUp6oq+bdO1rvWs619LJzZdvM/c4QAAAABJRU5ErkJggg==',
                     (error, image) => {
                         if (error) throw error;
                         map.addImage('fa-kit-icon', image);
+                        
+                        map.addLayer({
+                            id: 'kit-locations',
+                            type: 'symbol',
+                            source: 'kits',
+                            layout: {
+                                'icon-image': 'fa-kit-icon',
+                                'icon-size': 0.5
+                            }
+                        });
+
+                        map.on('click', 'kit-locations', onKitClick);
+                        map.on('mouseenter', 'kit-locations', () => { map.getCanvas().style.cursor = 'pointer'; });
+                        map.on('mouseleave', 'kit-locations', () => { map.getCanvas().style.cursor = ''; });
                     }
                 );
-
-                map.on('click', 'kit-locations', onKitClick);
-                map.on('mouseenter', 'kit-locations', () => { map.getCanvas().style.cursor = 'pointer'; });
-                map.on('mouseleave', 'kit-locations', () => { map.getCanvas().style.cursor = ''; });
             } else {
                 map.getSource('kits').setData(data);
             }
@@ -301,8 +374,23 @@
 
             let sortedBuildings = [...kitFeatures];
             
-            if (sortBy === 'alphabetical') {
-                sortedBuildings.sort((a, b) => a.properties.building.localeCompare(b.properties.building));
+            switch(sortBy) {
+                case 'alphabetical':
+                    sortedBuildings.sort((a, b) => a.properties.building.localeCompare(b.properties.building));
+                    break;
+                case 'kitCount':
+                    sortedBuildings.sort((a, b) => (b.properties.kitCount || 1) - (a.properties.kitCount || 1));
+                    break;
+                case 'distance':
+                    if (userLocationMarker) {
+                        const userLocation = userLocationMarker.getLngLat();
+                        sortedBuildings.sort((a, b) => {
+                            const distA = turf.distance(turf.point([userLocation.lng, userLocation.lat]), turf.point(a.geometry.coordinates));
+                            const distB = turf.distance(turf.point([userLocation.lng, userLocation.lat]), turf.point(b.geometry.coordinates));
+                            return distA - distB;
+                        });
+                    }
+                    break;
             }
 
             sortedBuildings.forEach(feature => {
@@ -386,7 +474,7 @@
 
         function resetView() {
             map.flyTo({
-                center: TORONTO_COORDINATES,
+                center: UNIVERSITY_OF_TORONTO_COORDINATES,
                 zoom: DEFAULT_ZOOM,
                 pitch: 0,
                 bearing: 0
@@ -498,7 +586,7 @@
         }
 
         function highlightBuilding(buildingId) {
-            map.setPaintProperty('kit-locations', 'icon-color', [
+            map.setPaintProperty('kit-locations', 'map.setPaintProperty('kit-locations', 'icon-color', [
                 'case',
                 ['==', ['get', 'buildingId'], buildingId],
                 '#3498db',
@@ -518,12 +606,23 @@
             });
         }
 
-        function fitMapToData() {
-            const bounds = new mapboxgl.LngLatBounds();
-            kitFeatures.forEach(feature => {
-                bounds.extend(feature.geometry.coordinates);
-            });
-            map.fitBounds(bounds, { padding: 50 });
+        function showLastUpdated(lastUpdated) {
+            const lastUpdatedElement = document.getElementById('last-updated');
+            if (lastUpdated) {
+                lastUpdatedElement.textContent = `Last Updated: ${new Date(lastUpdated).toLocaleDateString()}`;
+            } else {
+                // If lastUpdated is not in the GeoJSON, fetch the last commit date from GitHub
+                fetch('https://api.github.com/repos/ehs-uoft/FA/commits?path=geojson.geojson&page=1&per_page=1')
+                    .then(response => response.json())
+                    .then(data => {
+                        const lastCommitDate = new Date(data[0].commit.author.date).toLocaleDateString();
+                        lastUpdatedElement.textContent = `Last Updated: ${lastCommitDate}`;
+                    })
+                    .catch(error => {
+                        console.error('Error fetching last commit date:', error);
+                        lastUpdatedElement.textContent = 'Last Updated: Unknown';
+                    });
+            }
         }
 
         function showLoading(show) {
