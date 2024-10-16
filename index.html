@@ -13,8 +13,8 @@
     
     <style>
         :root {
-            --primary-color: #e74c3c;
-            --secondary-color: #3498db;
+            --primary-color: #1a5f7a;
+            --secondary-color: #57c5b6;
             --background-color: #f0f0f0;
             --text-color: #333;
             --panel-background: rgba(255, 255, 255, 0.95);
@@ -63,7 +63,7 @@
             transition: background-color 0.3s ease;
         }
         #collapse-button:hover {
-            background-color: #c0392b;
+            background-color: var(--secondary-color);
         }
         #search-box {
             width: 100%; 
@@ -189,7 +189,7 @@
             transition: all 0.3s ease;
         }
         .control-button:hover {
-            background-color: #c0392b;
+            background-color: var(--secondary-color);
             transform: translateY(-2px);
         }
         #font-size-control {
@@ -262,7 +262,7 @@
             transition: background-color 0.3s ease;
         }
         #report-issue-building:hover {
-            background-color: #2980b9;
+            background-color: var(--primary-color);
         }
         @media (max-width: 600px) {
             #info-panel, #slideout-panel {
@@ -383,7 +383,7 @@
                     kitFeatures = data.features;
                     addMapLayers(data);
                     updateInfoPanel();
-                showLastUpdated(data.lastUpdated);
+                    showLastUpdated(data.lastUpdated);
                     showLoading(false);
                 })
                 .catch(error => {
@@ -407,20 +407,24 @@
                     source: 'kits',
                     layout: {
                         'icon-image': 'first-aid',
-                        'icon-size': 1,
+                        'icon-size': 0.5,
                         'icon-allow-overlap': true
                     }
                 });
 
-                // Load custom icon
-                map.loadImage(
-                    'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/First_Aid_kit_icon.svg/240px-First_Aid_kit_icon.svg.png',
-                    (error, image) => {
-                        if (error) throw error;
-                        map.addImage('first-aid', image);
-                        map.setLayoutProperty('kit-locations', 'icon-image', 'first-aid');
-                    }
-                );
+                // Create a custom First Aid Kit icon
+                const firstAidIcon = document.createElement('img');
+                firstAidIcon.onload = function() {
+                    map.addImage('first-aid', firstAidIcon);
+                    map.setLayoutProperty('kit-locations', 'icon-image', 'first-aid');
+                    updateLegend();
+                }
+                firstAidIcon.src = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+                        <rect width="24" height="24" rx="4" fill="#1a5f7a"/>
+                        <path d="M10 7v4H6v2h4v4h2v-4h4v-2h-4V7h-2z" fill="white"/>
+                    </svg>
+                `);
 
                 map.on('click', 'kit-locations', onKitClick);
                 map.on('mouseenter', 'kit-locations', () => { map.getCanvas().style.cursor = 'pointer'; });
@@ -428,8 +432,6 @@
             } else {
                 map.getSource('kits').setData(data);
             }
-
-            updateLegend();
         }
 
         function addEventListeners() {
@@ -590,7 +592,7 @@
                     
                     if (!userLocationMarker) {
                         userLocationMarker = new mapboxgl.Marker({
-                            color: '#3498db'
+                            color: '#57c5b6'
                         })
                         .setLngLat(userLocation)
                         .addTo(map);
@@ -619,12 +621,15 @@
             const legend = document.getElementById('legend');
             legend.innerHTML = `
                 <div class="legend-item">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/First_Aid_kit_icon.svg/240px-First_Aid_kit_icon.svg.png" alt="First Aid Kit" style="width: 24px; height: 24px;">
-                    First Aid Kit Location
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+                        <rect width="24" height="24" rx="4" fill="#1a5f7a"/>
+                        <path d="M10 7v4H6v2h4v4h2v-4h4v-2h-4V7h-2z" fill="white"/>
+                    </svg>
+                    <span style="margin-left: 10px;">First Aid Kit Location</span>
                 </div>
                 <div class="legend-item">
-                    <div style="width: 24px; height: 24px; background-color: #3498db; border-radius: 50%;"></div>
-                    Your Location
+                    <div style="width: 24px; height: 24px; background-color: #57c5b6; border-radius: 50%;"></div>
+                    <span style="margin-left: 10px;">Your Location</span>
                 </div>
             `;
         }
