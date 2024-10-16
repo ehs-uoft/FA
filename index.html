@@ -11,11 +11,20 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     
     <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --background-color: #f0f0f0;
+            --text-color: #333;
+            --panel-background: rgba(255, 255, 255, 0.9);
+        }
+        
         body { 
             margin: 0; 
             padding: 0; 
-            font-family: 'Arial', sans-serif;
-            color: #333;
+            font-family: 'Roboto', 'Arial', sans-serif;
+            color: var(--text-color);
+            background-color: var(--background-color);
         }
         #map { 
             position: absolute; 
@@ -28,28 +37,32 @@
             top: 10px; 
             right: 10px; 
             width: 300px;
-            background: rgba(255,255,255,0.95); 
+            background: var(--panel-background);
             padding: 20px; 
             border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1); 
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
             max-height: 80vh; 
             overflow-y: auto;
             transition: all 0.3s ease-in-out;
             z-index: 1001;
         }
         #info-panel.collapsed { 
-            transform: translateX(290px); 
+            transform: translateX(310px); 
         }
         #collapse-button {
             position: absolute; 
-            left: -30px; 
+            left: -40px; 
             top: 10px; 
-            background: white;
+            background: var(--primary-color);
+            color: white;
             border: none; 
             border-radius: 5px 0 0 5px; 
-            padding: 5px;
-            box-shadow: -5px 0 10px rgba(0,0,0,0.1); 
+            padding: 10px;
             cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #collapse-button:hover {
+            background-color: #2980b9;
         }
         #search-box {
             width: 100%; 
@@ -61,27 +74,28 @@
             font-size: 14px;
         }
         .kit-item { 
-            background: #f8f8f8; 
+            background: white; 
             margin-bottom: 10px; 
             padding: 15px; 
             border-radius: 5px; 
             cursor: pointer; 
             transition: all 0.3s;
             border: 1px solid #eee;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
         .kit-item:hover { 
-            background: #f0f0f0; 
+            background: #f9f9f9; 
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         #legend {
             position: absolute; 
             bottom: 30px; 
             left: 10px; 
-            background: rgba(255,255,255,0.95);
+            background: var(--panel-background);
             padding: 15px; 
             border-radius: 10px; 
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             font-size: 14px;
             z-index: 1000;
         }
@@ -111,7 +125,7 @@
             top: 0; 
             bottom: 0; 
             width: 400px;
-            background: white; 
+            background: var(--panel-background);
             box-shadow: -2px 0 5px rgba(0,0,0,0.1);
             transition: right 0.3s ease-in-out; 
             overflow-y: auto; 
@@ -128,19 +142,19 @@
             right: 10px; 
             cursor: pointer;
             font-size: 20px; 
-            color: #333;
+            color: var(--text-color);
         }
         #loading-indicator {
             position: absolute; 
             top: 50%; 
             left: 50%; 
             transform: translate(-50%, -50%);
-            background: rgba(255,255,255,0.9); 
+            background: var(--panel-background);
             padding: 20px; 
             border-radius: 10px;
             display: none; 
             z-index: 1003;
-            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         #control-panel {
             position: absolute; 
@@ -156,26 +170,26 @@
             border: none; 
             border-radius: 5px; 
             cursor: pointer;
-            background-color: white; 
-            color: #333;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             transition: all 0.3s ease;
         }
         .control-button:hover {
-            background-color: #f0f0f0;
+            background-color: #2980b9;
             transform: translateY(-2px);
         }
         #font-size-control {
             position: absolute;
-            bottom: 50px;
-            left: 10px;
-            background: white;
+            bottom: 10px;
+            right: 180px;
+            background: var(--panel-background);
             border-radius: 5px;
             padding: 5px;
             display: flex;
             align-items: center;
             z-index: 1000;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         #font-size-control button {
             background: none;
@@ -183,16 +197,16 @@
             font-size: 16px;
             cursor: pointer;
             padding: 5px 10px;
-            color: #333;
+            color: var(--text-color);
         }
         #font-size-control button:hover {
-            background-color: #f0f0f0;
+            background-color: rgba(0, 0, 0, 0.05);
         }
         #last-updated {
             position: absolute;
             bottom: 10px;
             right: 10px;
-            background: rgba(255,255,255,0.9);
+            background: var(--panel-background);
             padding: 5px 10px;
             border-radius: 5px;
             font-size: 12px;
@@ -211,29 +225,9 @@
             }
             #collapse-button {
                 left: 10px; 
-                top: -30px; 
+                top: -40px; 
                 transform: rotate(90deg);
             }
-        }
-        @keyframes pulse {
-            0% {
-                transform: scale(1);
-                opacity: 1;
-            }
-            50% {
-                transform: scale(1.2);
-                opacity: 0.7;
-            }
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-        .pulse {
-            animation: pulse 2s infinite;
-        }
-        .mapboxgl-ctrl-logo {
-            display: none !important;
         }
     </style>
 </head>
@@ -345,25 +339,6 @@
                 });
         }
 
-        function getFAKitIcon() {
-            return `
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                <circle cx="12" cy="12" r="11" fill="#2ecc71" stroke="#27ae60" stroke-width="2"/>
-                <path d="M7 12h10M12 7v10" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-            `;
-        }
-
-        function getUserLocationIcon() {
-            return `
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                <circle cx="12" cy="12" r="8" fill="#3498db" opacity="0.4" class="pulse"/>
-                <circle cx="12" cy="12" r="4" fill="#3498db"/>
-                <circle cx="12" cy="12" r="2" fill="#ffffff"/>
-            </svg>
-            `;
-        }
-
         function addMapLayers(data) {
             console.log('Adding map layers');
             if (!map.getSource('kits')) {
@@ -375,65 +350,66 @@
                     clusterRadius: 50
                 });
 
-                const faKitIcon = getFAKitIcon();
-                const faKitUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(faKitIcon)}`;
-
-                map.loadImage(faKitUrl, (error, image) => {
-                    if (error) throw error;
-                    map.addImage('fa-kit-icon', image);
-                    
-                    // Add clusters
-                    map.addLayer({
-                        id: 'clusters',
-                        type: 'circle',
-                        source: 'kits',
-                        filter: ['has', 'point_count'],
-                        paint: {
-                            'circle-color': [
-                                'step',
-                                ['get', 'point_count'],
-                                '#51bbd6',
-                                100,
-                                '#f1f075',
-                                750,
-                                '#f28cb1'
-                            ],
-                            'circle-radius': [
-                                'step',
-                                ['get', 'point_count'],
-                                20,
-                                100,
-                                30,
-                                750,
-                                40
-                            ]
-                        }
-                    });
-
-                    map.addLayer({
-                        id: 'cluster-count',
-                        type: 'symbol',
-                        source: 'kits',
-                        filter: ['has', 'point_count'],
-                        layout: {
-                            'text-field': '{point_count_abbreviated}',
-                            'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-                            'text-size': 12
-                        }
-                    });
-
-                    map.addLayer({
-                        id: 'unclustered-point',
-                        type: 'symbol',
-                        source: 'kits',
-                        filter: ['!', ['has', 'point_count']],
-                        layout: {
-                            'icon-image': 'fa-kit-icon',
-                            'icon-size': 0.8,
-                            'icon-allow-overlap': true
-                        }
-                    });
+                // Add clusters
+                map.addLayer({
+                    id: 'clusters',
+                    type: 'circle',
+                    source: 'kits',
+                    filter: ['has', 'point_count'],
+                    paint: {
+                        'circle-color': [
+                            'step',
+                            ['get', 'point_count'],
+                            '#51bbd6',
+                            100,
+                            '#f1f075',
+                            750,
+                            '#f28cb1'
+                        ],
+                        'circle-radius': [
+                            'step',
+                            ['get', 'point_count'],
+                            20,
+                            100,
+                            30,
+                            750,
+                            40
+                        ]
+                    }
                 });
+
+                map.addLayer({
+                    id: 'cluster-count',
+                    type: 'symbol',
+                    source: 'kits',
+                    filter: ['has', 'point_count'],
+                    layout: {
+                        'text-field': '{point_count_abbreviated}',
+                        'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+                        'text-size': 12
+                    }
+                });
+
+                map.addLayer({
+                    id: 'unclustered-point',
+                    type: 'symbol',
+                    source: 'kits',
+                filter: ['!', ['has', 'point_count']],
+                    layout: {
+                        'icon-image': 'first-aid',
+                        'icon-size': 1,
+                        'icon-allow-overlap': true
+                    }
+                });
+
+                // Load custom icon
+                map.loadImage(
+                    'https://cdn0.iconfinder.com/data/icons/medical-services-2/256/First_Aid-512.png',
+                    (error, image) => {
+                        if (error) throw error;
+                        map.addImage('first-aid', image);
+                    }
+                );
 
                 // Inspect a cluster on click
                 map.on('click', 'clusters', (e) => {
@@ -457,6 +433,8 @@
             } else {
                 map.getSource('kits').setData(data);
             }
+
+            updateLegend();
         }
 
         function addEventListeners() {
@@ -615,19 +593,13 @@
                 navigator.geolocation.getCurrentPosition(position => {
                     const userLocation = [position.coords.longitude, position.coords.latitude];
                     
-                    const userLocationIcon = getUserLocationIcon();
-                    const userLocationUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(userLocationIcon)}`;
-
                     if (!userLocationMarker) {
                         userLocationMarker = new mapboxgl.Marker({
-                            element: createCustomMarkerElement(userLocationUrl),
-                            scale: 1,
-                            anchor: 'center'
+                            color: '#3498db'
                         })
                         .setLngLat(userLocation)
                         .addTo(map);
 
-                        // Update legend
                         updateLegend();
                     } else {
                         userLocationMarker.setLngLat(userLocation);
@@ -648,24 +620,15 @@
             }
         }
 
-        function createCustomMarkerElement(iconUrl) {
-            const el = document.createElement('div');
-            el.style.backgroundImage = `url(${iconUrl})`;
-            el.style.width = '24px';
-            el.style.height = '24px';
-            el.style.backgroundSize = '100%';
-            return el;
-        }
-
         function updateLegend() {
             const legend = document.getElementById('legend');
             legend.innerHTML = `
                 <div class="legend-item">
-                    <div class="legend-icon" style="background-image: url(data:image/svg+xml;charset=utf-8,${encodeURIComponent(getFAKitIcon())})"></div>
+                    <img src="https://cdn0.iconfinder.com/data/icons/medical-services-2/256/First_Aid-512.png" alt="First Aid Kit" style="width: 24px; height: 24px;">
                     First Aid Kit Location
                 </div>
                 <div class="legend-item">
-                    <div class="legend-icon pulse" style="background-image: url(data:image/svg+xml;charset=utf-8,${encodeURIComponent(getUserLocationIcon())})"></div>
+                    <div style="width: 24px; height: 24px; background-color: #3498db; border-radius: 50%;"></div>
                     Your Location
                 </div>
             `;
@@ -766,7 +729,7 @@
                     clearTimeout(timeout);
                     func(...args);
                 };
-               clearTimeout(timeout);
+                clearTimeout(timeout);
                 timeout = setTimeout(later, wait);
             };
         }
