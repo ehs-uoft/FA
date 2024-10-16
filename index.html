@@ -167,7 +167,7 @@
         }
         #font-size-control {
             position: absolute;
-            bottom: 10px;
+            bottom: 50px;
             left: 10px;
             background: white;
             border-radius: 5px;
@@ -214,6 +214,26 @@
                 top: -30px; 
                 transform: rotate(90deg);
             }
+        }
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 0.7;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        .mapboxgl-ctrl-logo {
+            display: none !important;
         }
     </style>
 </head>
@@ -337,14 +357,14 @@
         function getUserLocationIcon() {
             return `
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                <circle cx="12" cy="12" r="8" fill="#3498db" opacity="0.4"/>
+                <circle cx="12" cy="12" r="8" fill="#3498db" opacity="0.4" class="pulse"/>
                 <circle cx="12" cy="12" r="4" fill="#3498db"/>
                 <circle cx="12" cy="12" r="2" fill="#ffffff"/>
             </svg>
             `;
         }
 
-    function addMapLayers(data) {
+        function addMapLayers(data) {
             console.log('Adding map layers');
             if (!map.getSource('kits')) {
                 map.addSource('kits', {
@@ -645,7 +665,7 @@
                     First Aid Kit Location
                 </div>
                 <div class="legend-item">
-                    <div class="legend-icon" style="background-image: url(data:image/svg+xml;charset=utf-8,${encodeURIComponent(getUserLocationIcon())})"></div>
+                    <div class="legend-icon pulse" style="background-image: url(data:image/svg+xml;charset=utf-8,${encodeURIComponent(getUserLocationIcon())})"></div>
                     Your Location
                 </div>
             `;
@@ -722,7 +742,7 @@
                 lastUpdatedElement.textContent = `Last Updated: ${new Date(lastUpdated).toLocaleDateString()}`;
             } else {
                 // If lastUpdated is not in the GeoJSON, fetch the last commit date from GitHub
-               fetch('https://api.github.com/repos/ehs-uoft/FA/commits?path=geojson.geojson&page=1&per_page=1')
+                fetch('https://api.github.com/repos/ehs-uoft/FA/commits?path=geojson.geojson&page=1&per_page=1')
                     .then(response => response.json())
                     .then(data => {
                         const lastCommitDate = new Date(data[0].commit.author.date).toLocaleDateString();
@@ -746,7 +766,7 @@
                     clearTimeout(timeout);
                     func(...args);
                 };
-                clearTimeout(timeout);
+               clearTimeout(timeout);
                 timeout = setTimeout(later, wait);
             };
         }
