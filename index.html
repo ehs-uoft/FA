@@ -114,14 +114,6 @@
             background-size: contain;
             background-repeat: no-repeat;
         }
-        #sort-select {
-            margin-bottom: 15px; 
-            padding: 8px;
-            border-radius: 5px; 
-            border: 1px solid var(--border-color);
-            font-size: 14px;
-            width: 100%;
-        }
         #slideout-panel {
             position: fixed; 
             right: -400px; 
@@ -266,6 +258,17 @@
         #report-issue-building:hover {
             background-color: var(--primary-color);
         }
+        .mapboxgl-popup-content {
+            background-color: var(--panel-background);
+            border-radius: 5px;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            padding: 15px;
+        }
+        .mapboxgl-popup-close-button {
+            color: var(--text-color);
+            font-size: 16px;
+            padding: 5px;
+        }
         @media (max-width: 600px) {
             #info-panel, #slideout-panel {
                 width: 100%; 
@@ -291,6 +294,7 @@
             }
         }
     </style>
+
 </head>
 <body>
     <div id="map"></div>
@@ -300,17 +304,12 @@
         <button id="nearby" class="control-button" title="Show Nearby"><i class="fas fa-location-arrow"></i></button>
     </div>
     <div id="font-size-control">
-        <button id="decrease-font" title="Decrease font size"><i class="fas fa-minus"></i></button>
-        <button id="increase-font" title="Increase font size"><i class="fas fa-plus"></i></button>
+        <button id="decrease-font" title="Decrease font size">A-</button>
+        <button id="increase-font" title="Increase font size">A+</button>
     </div>
     <div id="info-panel">
         <button id="collapse-button" aria-label="Toggle info panel">≡</button>
         <input type="text" id="search-box" placeholder="Search for a building..." aria-label="Search for a building">
-        <select id="sort-select" aria-label="Sort buildings">
-            <option value="alphabetical">Sort Alphabetically</option>
-            <option value="kitCount">Sort by Kit Count</option>
-            <option value="distance">Sort by Distance</option>
-        </select>
         <div id="kit-list"></div>
     </div>
     <div id="legend"></div>
@@ -360,7 +359,6 @@
             console.log('Map loaded');
             fetchGeoJSONData();
             addEventListeners();
-            showUserLocation();
             
             // Remove unnecessary map labels
             map.setLayoutProperty('poi-label', 'visibility', 'none');
@@ -380,7 +378,7 @@
             });
         }
 
-function fetchGeoJSONData() {
+        function fetchGeoJSONData() {
             console.log('Fetching GeoJSON data');
             showLoading(true);
             fetch(GEOJSON_URL)
@@ -433,7 +431,7 @@ function fetchGeoJSONData() {
                 }
                 firstAidIcon.src = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                        <rect width="24" height="24" rx="4" fill="#1a5f7a"/>
+                        <rect width="24" height="24" rx="4" fill="#ff0000"/>
                         <path d="M10 7v4H6v2h4v4h2v-4h4v-2h-4V7h-2z" fill="white"/>
                     </svg>
                 `);
@@ -448,7 +446,6 @@ function fetchGeoJSONData() {
 
         function addEventListeners() {
             document.getElementById('collapse-button').addEventListener('click', toggleInfoPanel);
-            document.getElementById('sort-select').addEventListener('change', (e) => updateInfoPanel(e.target.value));
             document.getElementById('search-box').addEventListener('input', debounce(handleSearch, 300));
             document.querySelector('.close-slideout').addEventListener('click', closeSlideout);
             document.getElementById('increase-font').addEventListener('click', () => changeFontSize(true));
@@ -458,38 +455,19 @@ function fetchGeoJSONData() {
             document.getElementById('nearby').addEventListener('click', showNearbyLocation);
         }
 
-        function updateInfoPanel(sortBy = 'alphabetical') {
+        function updateInfoPanel() {
             console.log('Updating info panel');
             const kitList = document.getElementById('kit-list');
             kitList.innerHTML = '';
 
-            let sortedBuildings = [...kitFeatures];
+            let sortedBuildings = [...kitFeatures].sort((a, b) => a.properties.building.localeCompare(b.properties.building));
             
-            switch(sortBy) {
-                case 'alphabetical':
-                    sortedBuildings.sort((a, b) => a.properties.building.localeCompare(b.properties.building));
-                    break;
-                case 'kitCount':
-                    sortedBuildings.sort((a, b) => (b.properties.firstAidKits?.length || 0) - (a.properties.firstAidKits?.length || 0));
-                    break;
-                case 'distance':
-                    if (userLocationMarker) {
-                        const userLocation = userLocationMarker.getLngLat();
-                        sortedBuildings.sort((a, b) => {
-                            const distA = turf.distance(turf.point([userLocation.lng, userLocation.lat]), turf.point(a.geometry.coordinates));
-                            const distB = turf.distance(turf.point([userLocation.lng, userLocation.lat]), turf.point(b.geometry.coordinates));
-                            return distA - distB;
-                        });
-                    }
-                    break;
-            }
-
-            sortedBuildings.forEach(feature => {
+            sortedBuildings.slice(0, 5).forEach(feature => {
                 const div = document.createElement('div');
                 div.className = 'kit-item';
                 div.innerHTML = `
                     <strong>${feature.properties.building}</strong><br>
-                    Kits: ${feature.properties.firstAidKits?.length || 1}
+                    ${feature.properties.address || ''}
                 `;
                 div.addEventListener('click', () => {
                     flyToBuilding(feature.geometry.coordinates);
@@ -506,6 +484,11 @@ function fetchGeoJSONData() {
             while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
                 coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
             }
+
+            new mapboxgl.Popup()
+                .setLngLat(coordinates)
+                .setHTML(`<strong>${props.building}</strong><br>${props.address || ''}`)
+                .addTo(map);
 
             showSlideout(props.building);
         }
@@ -595,7 +578,7 @@ function fetchGeoJSONData() {
             }
         }
 
-        function showUserLocation() {
+        function showNearbyLocation() {
             if ('geolocation' in navigator) {
                 navigator.geolocation.getCurrentPosition(position => {
                     const userLocation = [position.coords.longitude, position.coords.latitude];
@@ -608,14 +591,7 @@ function fetchGeoJSONData() {
                         .setLngLat(userLocation)
                         .addTo(map);
 
-                        // Add a popup to the user location marker
-                        new mapboxgl.Popup()
-                            .setLngLat(userLocation)
-                            .setHTML('<strong>YOU ARE HERE</strong>')
-                            .addTo(map);
-
-                        updateLegend();
-                    } else {
+                        updateLegend();} else {
                         userLocationMarker.setLngLat(userLocation);
                     }
 
@@ -639,15 +615,17 @@ function fetchGeoJSONData() {
             legend.innerHTML = `
                 <div class="legend-item">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                        <rect width="24" height="24" rx="4" fill="#1a5f7a"/>
+                        <rect width="24" height="24" rx="4" fill="#ff0000"/>
                         <path d="M10 7v4H6v2h4v4h2v-4h4v-2h-4V7h-2z" fill="white"/>
                     </svg>
                     <span style="margin-left: 10px;">First Aid Kit Location</span>
                 </div>
+                ${userLocationMarker ? `
                 <div class="legend-item">
                     <div style="width: 24px; height: 24px; background-color: #57c5b6; border-radius: 50%;"></div>
                     <span style="margin-left: 10px;">Your Location</span>
                 </div>
+                ` : ''}
             `;
         }
 
