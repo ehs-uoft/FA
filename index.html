@@ -12,275 +12,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     
     <style>
-        :root {
-            --primary-color: #1a5f7a;
-            --secondary-color: #57c5b6;
-            --background-color: #f0f0f0;
-            --text-color: #333;
-            --panel-background: rgba(255, 255, 255, 0.95);
-        }
-        
-        body { 
-            margin: 0; 
-            padding: 0; 
-            font-family: 'Roboto', 'Arial', sans-serif;
-            color: var(--text-color);
-            background-color: var(--background-color);
-        }
-        #map { 
-            position: absolute; 
-            top: 0; 
-            bottom: 0; 
-            width: 100%; 
-        }
-        #info-panel {
-            position: absolute; 
-            top: 10px; 
-            right: 10px; 
-            width: 300px;
-            background: var(--panel-background);
-            padding: 20px; 
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
-            max-height: 80vh; 
-            overflow-y: auto;
-            transition: all 0.3s ease-in-out;
-            z-index: 1001;
-        }
-        #info-panel.collapsed { 
-            transform: translateX(310px); 
-        }
-        #collapse-button {
-            position: absolute; 
-            left: -40px; 
-            top: 10px; 
-            background: var(--primary-color);
-            color: white;
-            border: none; 
-            border-radius: 5px 0 0 5px; 
-            padding: 10px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-        #collapse-button:hover {
-            background-color: var(--secondary-color);
-        }
-        #search-box {
-            width: 100%; 
-            padding: 10px; 
-            margin-bottom: 10px; 
-            border: 1px solid #ddd;
-            border-radius: 5px; 
-            box-sizing: border-box; 
-            font-size: 14px;
-        }
-        .kit-item { 
-            background: white; 
-            margin-bottom: 10px; 
-            padding: 15px; 
-            border-radius: 5px; 
-            cursor: pointer; 
-            transition: all 0.3s;
-            border: 1px solid #eee;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-        .kit-item:hover { 
-            background: #f9f9f9; 
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        #legend {
-            position: absolute; 
-            bottom: 30px; 
-            left: 10px; 
-            background: var(--panel-background);
-            padding: 15px; 
-            border-radius: 10px; 
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            font-size: 14px;
-            z-index: 1000;
-        }
-        .legend-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        .legend-icon {
-            width: 24px;
-            height: 24px;
-            margin-right: 10px;
-            background-size: contain;
-            background-repeat: no-repeat;
-        }
-        #sort-select {
-            margin-bottom: 15px; 
-            padding: 8px;
-            border-radius: 5px; 
-            border: 1px solid #ddd;
-            font-size: 14px;
-            width: 100%;
-        }
-        #slideout-panel {
-            position: fixed; 
-            right: -400px; 
-            top: 0; 
-            bottom: 0; 
-            width: 400px;
-            background: var(--panel-background);
-            box-shadow: -2px 0 5px rgba(0,0,0,0.1);
-            transition: right 0.3s ease-in-out; 
-            overflow-y: auto; 
-            padding: 20px;
-            box-sizing: border-box; 
-            z-index: 1002;
-        }
-        #slideout-panel.open { 
-            right: 0; 
-        }
-        .close-slideout {
-            position: absolute; 
-            top: 10px; 
-            right: 10px; 
-            cursor: pointer;
-            font-size: 20px; 
-            color: var(--text-color);
-        }
-        #loading-indicator {
-            position: fixed; 
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid var(--primary-color);
-            border-top: 5px solid var(--secondary-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        #control-panel {
-            position: absolute; 
-            top: 10px; 
-            left: 10px; 
-            z-index: 1000;
-            display: flex; 
-            flex-direction: column;
-        }
-        .control-button {
-            margin-bottom: 5px; 
-            padding: 10px;
-            border: none; 
-            border-radius: 5px; 
-            cursor: pointer;
-            background-color: var(--primary-color);
-            color: white;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-        }
-        .control-button:hover {
-            background-color: var(--secondary-color);
-            transform: translateY(-2px);
-        }
-        #font-size-control {
-            position: absolute;
-            bottom: 10px;
-            right: 180px;
-            background: var(--panel-background);
-            border-radius: 5px;
-            padding: 5px;
-            display: flex;
-            align-items: center;
-            z-index: 1000;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        #font-size-control button {
-            background: none;
-            border: none;
-            font-size: 16px;
-            cursor: pointer;
-            padding: 5px 10px;
-            color: var(--text-color);
-        }
-        #font-size-control button:hover {
-            background-color: rgba(0, 0, 0, 0.05);
-        }
-        #last-updated {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            background: var(--panel-background);
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 12px;
-            z-index: 1000;
-        }
-        #slideout-content {
-            padding: 20px;
-        }
-        #slideout-content h2 {
-            color: var(--primary-color);
-            border-bottom: 2px solid var(--primary-color);
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-        .fa-kit-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        .fa-kit-table th, .fa-kit-table td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
-        }
-        .fa-kit-table th {
-            background-color: var(--primary-color);
-            color: white;
-        }
-        .fa-kit-table tr:nth-child(even) {
-            background-color: #f2f2f2;
-        }
-        #report-issue-building {
-            background-color: var(--secondary-color);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: background-color 0.3s ease;
-        }
-        #report-issue-building:hover {
-            background-color: var(--primary-color);
-        }
-        @media (max-width: 600px) {
-            #info-panel, #slideout-panel {
-                width: 100%; 
-                right: 0; 
-                top: auto; 
-                bottom: 0; 
-                max-height: 50vh;
-            }
-            #info-panel.collapsed { 
-                transform: translateY(calc(100% - 40px)); 
-            }
-            #collapse-button {
-                left: 10px; 
-                top: -40px; 
-                transform: rotate(90deg);
-            }
-        }
+        /* Your existing styles here */
     </style>
 </head>
 <body>
@@ -458,7 +190,7 @@
                     sortedBuildings.sort((a, b) => a.properties.building.localeCompare(b.properties.building));
                     break;
                 case 'kitCount':
-                    sortedBuildings.sort((a, b) => (b.properties.kitCount || 1) - (a.properties.kitCount || 1));
+                    sortedBuildings.sort((a, b) => (b.properties.firstAidKits?.length || 0) - (a.properties.firstAidKits?.length || 0));
                     break;
                 case 'distance':
                     if (userLocationMarker) {
@@ -477,11 +209,11 @@
                 div.className = 'kit-item';
                 div.innerHTML = `
                     <strong>${feature.properties.building}</strong><br>
-                    Kits: ${feature.properties.kitCount || 1}
+                    Kits: ${feature.properties.firstAidKits?.length || 1}
                 `;
                 div.addEventListener('click', () => {
                     flyToBuilding(feature.geometry.coordinates);
-                    showSlideout(feature.properties.buildingId || feature.properties.building);
+                    showSlideout(feature.properties.building);
                 });
                 kitList.appendChild(div);
             });
@@ -495,35 +227,33 @@
                 coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
             }
 
-            showSlideout(props.buildingId || props.building);
+            showSlideout(props.building);
         }
 
         function showSlideout(buildingId) {
-            const feature = kitFeatures.find(f => f.properties.buildingId === buildingId || f.properties.building === buildingId);
+            const feature = kitFeatures.find(f => f.properties.building === buildingId);
             if (feature) {
                 const props = feature.properties;
                 const content = document.getElementById('slideout-content');
                 content.innerHTML = `
                     <h2>${props.building}</h2>
-                    <p><strong>Address:</strong> ${props.address}</p>
+                    <p><strong>Address:</strong> ${props.address || 'N/A'}</p>
                     <table class="fa-kit-table">
                         <thead>
                             <tr>
-                                <th>First Aid Location</th>
                                 <th>Room #</th>
                                 <th>Floor #</th>
-                                <th>Details</th>
+                                <th>Other Details</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${props.kits ? props.kits.map(kit => `
+                            ${props.firstAidKits ? props.firstAidKits.map(kit => `
                                 <tr>
-                                    <td>${kit.location || 'N/A'}</td>
                                     <td>${kit.room || 'N/A'}</td>
                                     <td>${kit.floor || 'N/A'}</td>
                                     <td>${kit.otherDetails || 'N/A'}</td>
                                 </tr>
-                            `).join('') : '<tr><td colspan="4">No detailed kit information available</td></tr>'}
+                            `).join('') : '<tr><td colspan="3">No detailed kit information available</td></tr>'}
                         </tbody>
                     </table>
                     ${props.url ? `<p><strong>Certified First Aiders List:</strong> <a href="${props.url}" target="_blank">Click Here</a></p>` : ''}
@@ -585,17 +315,24 @@
             }
         }
 
-        function showUserLocation() {
+function showUserLocation() {
             if ('geolocation' in navigator) {
                 navigator.geolocation.getCurrentPosition(position => {
                     const userLocation = [position.coords.longitude, position.coords.latitude];
                     
                     if (!userLocationMarker) {
                         userLocationMarker = new mapboxgl.Marker({
-                            color: '#57c5b6'
+                            color: '#57c5b6',
+                            draggable: false
                         })
                         .setLngLat(userLocation)
                         .addTo(map);
+
+                        // Add a popup to the user location marker
+                        new mapboxgl.Popup()
+                            .setLngLat(userLocation)
+                            .setHTML('<strong>YOU ARE HERE</strong>')
+                            .addTo(map);
 
                         updateLegend();
                     } else {
@@ -646,15 +383,15 @@
         }
 
         function highlightNearbyKits(nearbyKits) {
-            const nearbyIds = nearbyKits.map(k => k.properties.buildingId);
-            map.setFilter('kit-locations', ['in', ['get', 'buildingId'], ['literal', nearbyIds]]);
+            const nearbyIds = nearbyKits.map(k => k.properties.building);
+            map.setFilter('kit-locations', ['in', ['get', 'building'], ['literal', nearbyIds]]);
         }
 
         function handleSearch(e) {
             const searchTerm = e.target.value.toLowerCase();
             const filteredFeatures = kitFeatures.filter(feature => 
                 feature.properties.building.toLowerCase().includes(searchTerm) ||
-                feature.properties.address.toLowerCase().includes(searchTerm)
+                (feature.properties.address && feature.properties.address.toLowerCase().includes(searchTerm))
             );
 
             map.getSource('kits').setData({
@@ -675,7 +412,7 @@
         }
 
         function highlightBuilding(buildingId) {
-            map.setFilter('kit-locations', ['==', ['get', 'buildingId'], buildingId]);
+            map.setFilter('kit-locations', ['==', ['get', 'building'], buildingId]);
         }
 
         function flyToBuilding(coords) {
