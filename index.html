@@ -12,15 +12,15 @@
     <meta name="format-detection" content="telephone=no">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><path d=%22M50 10c-17.6 0-32 14.4-32 32 0 24 32 48 32 48s32-24 32-48c0-17.6-14.4-32-32-32zm0 44c-6.6 0-12-5.4-12-12s5.4-12 12-12 12 5.4 12 12-5.4 12-12 12z%22 fill=%22%23e74c3c%22/></svg>">
     
-    <!-- Preload critical resources -->
     <link rel="preload" href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" as="style">
     <link rel="preload" href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js" as="script">
     <link rel="preconnect" href="https://api.mapbox.com">
     <link rel="preconnect" href="https://events.mapbox.com">
+    
+    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 
-    <!-- Critical CSS loaded first -->
     <style>
-        /* Critical path CSS */
         :root {
             --primary-color: #2c3e50;
             --secondary-color: #3498db;
@@ -35,7 +35,6 @@
             --transition-speed: 0.3s;
         }
 
-        /* Reset and base styles */
         *, *::before, *::after {
             box-sizing: border-box;
             margin: 0;
@@ -62,7 +61,6 @@
             height: 100%;
         }
 
-        /* Critical layout containers */
         #map { 
             position: absolute; 
             top: 0; 
@@ -98,42 +96,14 @@
             will-change: transform;
         }
 
-        /* Performance optimized animations */
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-    </style>
 
-    <!-- Non-critical CSS loaded asynchronously -->
-    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css">
-    
-    <!-- Deferred Font Awesome loading -->
-    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></noscript>
-
-    <!-- Non-critical styles loaded after critical content -->
-    <style>
-        /* Main content styles */
-        #info-panel {
-            position: absolute; 
-            top: 0; 
-            right: 0; 
-            width: 380px;
-            height: 100vh;
-            background: var(--panel-background);
-            box-shadow: -2px 0 10px var(--shadow-color); 
-            transform: translateX(0);
-            transition: transform var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 1001;
-            display: flex;
-            flex-direction: column;
-            overscroll-behavior: contain;
-            contain: layout size;
-            will-change: transform;
-        }
-
-        #info-panel.collapsed { 
-            transform: translateX(380px); 
+        .loading-text {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: var(--primary-color);
         }
 
         #error-message {
@@ -159,10 +129,26 @@
             to { opacity: 1; transform: translate(-50%, 0); }
         }
 
-        .loading-text {
-            margin-top: 15px;
-            font-size: 0.9rem;
-            color: var(--primary-color);
+        #info-panel {
+            position: absolute; 
+            top: 0; 
+            right: 0; 
+            width: 380px;
+            height: 100vh;
+            background: var(--panel-background);
+            box-shadow: -2px 0 10px var(--shadow-color); 
+            transform: translateX(0);
+            transition: transform var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1001;
+            display: flex;
+            flex-direction: column;
+            overscroll-behavior: contain;
+            contain: layout size;
+            will-change: transform;
+        }
+
+        #info-panel.collapsed { 
+            transform: translateX(380px); 
         }
 
         #collapse-button {
@@ -187,271 +173,248 @@
             background-color: var(--secondary-color);
         }
 
-      .panel-header {
-        padding: 20px;
-        background: var(--primary-color);
-        color: white;
-        flex-shrink: 0;
-    }
-
-    .panel-header h2 {
-        margin: 0;
-        font-size: 1.5em;
-        font-weight: 500;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    #search-box {
-        margin: 15px 20px;
-        padding: 12px;
-        border: 2px solid var(--border-color);
-        border-radius: 8px;
-        font-size: 1rem;
-        background: white;
-        transition: border-color var(--transition-speed) ease,
-                    box-shadow var(--transition-speed) ease;
-        width: calc(100% - 40px);
-        box-sizing: border-box;
-        -webkit-appearance: none;
-        appearance: none;
-    }
-
-    #search-box:focus {
-        outline: none;
-        border-color: var(--secondary-color);
-        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-    }
-
-    #kit-list {
-        flex-grow: 1;
-        overflow-y: auto;
-        padding: 0 20px;
-        -webkit-overflow-scrolling: touch;
-        scroll-behavior: smooth;
-        overscroll-behavior: contain;
-        contain: content;
-    }
-
-    .kit-item { 
-        background: white; 
-        margin-bottom: 15px; 
-        padding: 15px;
-        border-radius: 8px;
-        cursor: pointer; 
-        transition: transform var(--transition-speed) ease,
-                    box-shadow var(--transition-speed) ease,
-                    border-color var(--transition-speed) ease;
-        border: 1px solid var(--border-color);
-        box-shadow: 0 2px 4px var(--shadow-color);
-        position: relative;
-        will-change: transform;
-        contain: layout style;
-    }
-
-    .kit-item:hover { 
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px var(--shadow-color);
-        border-color: var(--secondary-color);
-    }
-
-    .kit-item h3 {
-        font-size: 1.3em;
-        font-weight: 600;
-        margin: 0 0 10px 0;
-        color: var(--primary-color);
-        line-height: 1.3;
-    }
-
-    .kit-item p {
-        font-size: 1.1em;
-        margin: 0;
-        color: #666;
-        line-height: 1.4;
-    }
-
-    .mapboxgl-popup {
-        max-width: 300px !important;
-        z-index: 1003;
-    }
-
-    .mapboxgl-popup-content {
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px var(--shadow-color);
-        font-size: 1rem;
-    }
-
-    .mapboxgl-popup-content h3 {
-        font-size: 1.4em;
-        margin: 0 0 10px 0;
-        color: var(--primary-color);
-        line-height: 1.3;
-    }
-
-    .mapboxgl-popup-content p {
-        font-size: 1.1em;
-        margin: 0;
-        color: #666;
-        line-height: 1.4;
-    }
-
-    #font-controls {
-        position: absolute;
-        bottom: 20px;
-        right: 400px;
-        background: var(--panel-background);
-        padding: 8px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px var(--shadow-color);
-        z-index: 1000;
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        contain: content;
-    }
-
-    .font-control-btn {
-        background: var(--primary-color);
-        color: white;
-        border: none;
-        padding: 8px 12px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 1rem;
-        transition: background-color var(--transition-speed) ease;
-        touch-action: manipulation;
-        -webkit-tap-highlight-color: transparent;
-        will-change: background-color;
-    }
-
-    .font-control-btn:hover {
-        background: var(--secondary-color);
-    }
-
-    /* Mapbox controls styling */
-    .mapboxgl-ctrl-top-left {
-        left: 50px !important;
-    }
-
-    .mapboxgl-ctrl-group {
-        background-color: var(--panel-background) !important;
-        border-radius: 12px !important;
-        box-shadow: 0 2px 8px var(--shadow-color) !important;
-        margin-top: 15px !important;
-        overflow: hidden;
-    }
-
-    .mapboxgl-ctrl-group button {
-        width: 45px !important;
-        height: 45px !important;
-        display: flex !important;
-        align-items: center;
-        justify-content: center;
-        transition: background-color var(--transition-speed) ease;
-    }
-
-    /* Performance optimized media queries */
-    @media (max-width: 1024px) {
-        #info-panel {
-            width: 320px;
+        .panel-header {
+            padding: 20px;
+            background: var(--primary-color);
+            color: white;
+            flex-shrink: 0;
         }
 
-        #info-panel.collapsed {
-            transform: translateX(320px);
+        .panel-header h2 {
+            margin: 0;
+            font-size: 1.5em;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        #search-box {
+            margin: 15px 20px;
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: white;
+            transition: border-color var(--transition-speed) ease,
+                        box-shadow var(--transition-speed) ease;
+            width: calc(100% - 40px);
+            box-sizing: border-box;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        #search-box:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        #kit-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 0 20px;
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+            overscroll-behavior: contain;
+            contain: content;
+        }
+
+        .kit-item { 
+            background: white; 
+            margin-bottom: 15px; 
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer; 
+            transition: transform var(--transition-speed) ease,
+                        box-shadow var(--transition-speed) ease,
+                        border-color var(--transition-speed) ease;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 4px var(--shadow-color);
+            position: relative;
+            will-change: transform;
+            contain: layout style;
+        }
+
+        .kit-item:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px var(--shadow-color);
+            border-color: var(--secondary-color);
         }
 
         .kit-item h3 {
-            font-size: 1.2em;
+            font-size: 1.3em;
+            font-weight: 600;
+            margin: 0 0 10px 0;
+            color: var(--primary-color);
+            line-height: 1.3;
         }
 
         .kit-item p {
-            font-size: 1em;
+            font-size: 1.1em;
+            margin: 0;
+            color: #666;
+            line-height: 1.4;
         }
 
         #font-controls {
-            right: 340px;
-        }
-    }
-
-    @media (max-width: 768px) {
-        #info-panel {
-            width: 100%;
-            height: 50vh;
-            top: auto;
-            bottom: 0;
-            transform: translateY(0);
-        }
-
-        #info-panel.collapsed {
-            transform: translateY(calc(100% - 60px));
-        }
-
-        #collapse-button {
-            left: 10px;
-            top: -45px;
-            transform: rotate(180deg);
-        }
-
-        .panel-header {
-            padding: 15px;
-        }
-
-        #font-controls {
-            right: 10px;
-            bottom: calc(50vh + 20px);
-        }
-
-        .mapboxgl-ctrl-group button {
-            width: 40px !important;
-            height: 40px !important;
-        }
-    }
-
-    /* Touch device optimizations */
-    @media (hover: none) {
-        .kit-item:active {
-            transform: translateY(-2px);
-            background-color: var(--hover-color);
+            position: absolute;
+            bottom: 20px;
+            right: 400px;
+            background: var(--panel-background);
+            padding: 8px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            contain: content;
         }
 
         .font-control-btn {
-            padding: 12px 15px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color var(--transition-speed) ease;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            will-change: background-color;
         }
-    }
 
-    /* Dark mode support */
-    @media (prefers-color-scheme: dark) {
+        .font-control-btn:hover {
+            background: var(--secondary-color);
+        }
+
+        .mapboxgl-popup {
+            max-width: 300px !important;
+            z-index: 1003;
+        }
+
         .mapboxgl-popup-content {
-            background-color: #333;
-            color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px var(--shadow-color);
+            font-size: 1rem;
         }
 
-        .kit-item {
-            background: #2c2c2c;
-            border-color: #444;
+        .mapboxgl-ctrl-group {
+            background-color: var(--panel-background) !important;
+            border-radius: 12px !important;
+            box-shadow: 0 2px 8px var(--shadow-color) !important;
+            margin-top: 15px !important;
+            overflow: hidden;
         }
 
-        .kit-item h3 {
-            color: #fff;
+        .mapboxgl-ctrl-group button {
+            width: 45px !important;
+            height: 45px !important;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            transition: background-color var(--transition-speed) ease;
         }
 
-        .kit-item p {
-            color: #ccc;
-        }
-    }
+        @media (max-width: 1024px) {
+            #info-panel {
+                width: 320px;
+            }
 
-    /* Reduced motion support */
-    @media (prefers-reduced-motion: reduce) {
-        * {
-            animation-duration: 0.01ms !important;
-            animation-iteration-count: 1 !important;
-            transition-duration: 0.01ms !important;
-            scroll-behavior: auto !important;
+            #info-panel.collapsed {
+                transform: translateX(320px);
+            }
+
+            .kit-item h3 {
+                font-size: 1.2em;
+            }
+
+            .kit-item p {
+                font-size: 1em;
+            }
+
+            #font-controls {
+                right: 340px;
+            }
         }
-    }
-</style>
+
+        @media (max-width: 768px) {
+            #info-panel {
+                width: 100%;
+                height: 50vh;
+                top: auto;
+                bottom: 0;
+                transform: translateY(0);
+            }
+
+            #info-panel.collapsed {
+                transform: translateY(calc(100% - 60px));
+            }
+
+            #collapse-button {
+                left: 10px;
+                top: -45px;
+                transform: rotate(180deg);
+            }
+
+            .panel-header {
+                padding: 15px;
+            }
+
+            #font-controls {
+                right: 10px;
+                bottom: calc(50vh + 20px);
+            }
+
+            .mapboxgl-ctrl-group button {
+                width: 40px !important;
+                height: 40px !important;
+            }
+        }
+
+        @media (hover: none) {
+            .kit-item:active {
+                transform: translateY(-2px);
+                background-color: var(--hover-color);
+            }
+
+            .font-control-btn {
+                padding: 12px 15px;
+            }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .mapboxgl-popup-content {
+                background-color: #333;
+                color: #fff;
+            }
+
+            .kit-item {
+                background: #2c2c2c;
+                border-color: #444;
+            }
+
+            .kit-item h3 {
+                color: #fff;
+            }
+
+            .kit-item p {
+                color: #ccc;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+    </style>
 </head>
 <body>
     <div id="map"></div>
@@ -478,581 +441,704 @@
         <div id="kit-list"></div>
     </div>
 
-<!-- Scripts section -->
-<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
-<script>
-// Performance monitoring initialization
-const perf = {
-    marks: new Map(),
-    start: (name) => {
-        perf.marks.set(name, performance.now());
-    },
-    end: (name) => {
-        const start = perf.marks.get(name);
-        if (start) {
-            const duration = performance.now() - start;
-            console.log(`${name}: ${duration.toFixed(2)}ms`);
-            perf.marks.delete(name);
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+    <script>
+    // Performance monitoring initialization
+    const perf = {
+        marks: new Map(),
+        start: (name) => {
+            perf.marks.set(name, performance.now());
+        },
+        end: (name) => {
+            const start = perf.marks.get(name);
+            if (start) {
+                const duration = performance.now() - start;
+                console.log(`${name}: ${duration.toFixed(2)}ms`);
+                perf.marks.delete(name);
+            }
         }
-    }
-};
-
-(function() {
-    'use strict';
-
-    // Constants
-    const MAPBOX_TOKEN = 'pk.eyJ1IjoiZWhzIiwiYSI6ImNtMjNsYWtlZzA2bnQycW9qb2F3dHJuM2gifQ.Yw2JtBD13UqJFKtTj-SKsQ';
-    const GEOJSON_URL = 'https://raw.githubusercontent.com/ehs-uoft/FA/main/geojson.geojson';
-    const UNIVERSITY_OF_TORONTO_COORDINATES = [-79.3957, 43.6629];
-    const MAP_BOUNDS = [
-        [-79.4057, 43.6529], // Southwest coordinates
-        [-79.3857, 43.6729]  // Northeast coordinates
-    ];
-    const LOAD_TIMEOUT = 15000; // 15 seconds
-    
-    // State management
-    const state = {
-        map: null,
-        kitFeatures: [],
-        mapLoaded: false,
-        dataLoaded: false,
-        loadingTimeout: null,
-        currentFontSize: 1,
-        searchDebounceTimeout: null,
-        errorTimeout: null
     };
 
-    // DOM Elements Cache
-    const elements = {
-        map: null,
-        loading: null,
-        error: null,
-        infoPanel: null,
-        searchBox: null,
-        kitList: null
-    };
+    (function() {
+        'use strict';
 
-    // Initialize DOM elements cache
-    function cacheElements() {
-        elements.map = document.getElementById('map');
-        elements.loading = document.getElementById('loading-indicator');
-        elements.error = document.getElementById('error-message');
-        elements.infoPanel = document.getElementById('info-panel');
-        elements.searchBox = document.getElementById('search-box');
-        elements.kitList = document.getElementById('kit-list');
-    }
+        // Constants
+        const MAPBOX_TOKEN = 'pk.eyJ1IjoiZWhzIiwiYSI6ImNtMjNsYWtlZzA2bnQycW9qb2F3dHJuM2gifQ.Yw2JtBD13UqJFKtTj-SKsQ';
+        const GEOJSON_URL = 'https://raw.githubusercontent.com/ehs-uoft/FA/main/geojson.geojson';
+        const UNIVERSITY_OF_TORONTO_COORDINATES = [-79.3957, 43.6629];
+        const MAP_BOUNDS = [
+            [-79.4057, 43.6529], // Southwest coordinates
+            [-79.3857, 43.6729]  // Northeast coordinates
+        ];
+        const LOAD_TIMEOUT = 15000; // 15 seconds
+        
+        // State management
+        const state = {
+            map: null,
+            kitFeatures: [],
+            mapLoaded: false,
+            dataLoaded: false,
+            loadingTimeout: null,
+            currentFontSize: 1,
+            searchDebounceTimeout: null,
+            errorTimeout: null
+        };
 
-    // Error handling
-    function showError(message, duration = 5000) {
-        if (state.errorTimeout) {
-            clearTimeout(state.errorTimeout);
+        // DOM Elements Cache
+        const elements = {
+            map: null,
+            loading: null,
+            error: null,
+            infoPanel: null,
+            searchBox: null,
+            kitList: null
+        };
+
+        // Initialize DOM elements cache
+        function cacheElements() {
+            elements.map = document.getElementById('map');
+            elements.loading = document.getElementById('loading-indicator');
+            elements.error = document.getElementById('error-message');
+            elements.infoPanel = document.getElementById('info-panel');
+            elements.searchBox = document.getElementById('search-box');
+            elements.kitList = document.getElementById('kit-list');
         }
-        
-        elements.error.textContent = message;
-        elements.error.style.display = 'block';
-        
-        state.errorTimeout = setTimeout(() => {
-            elements.error.style.display = 'none';
-        }, duration);
-    }
 
-    // Loading management
-    function showLoading(show) {
-        elements.loading.style.display = show ? 'flex' : 'none';
-    }
-
-    function checkLoadingComplete() {
-        if (state.mapLoaded && state.dataLoaded) {
-            if (state.loadingTimeout) {
-                clearTimeout(state.loadingTimeout);
+        // Error handling
+        function showError(message, duration = 5000) {
+            if (state.errorTimeout) {
+                clearTimeout(state.errorTimeout);
             }
-            showLoading(false);
-            perf.end('totalLoad');
+            
+            elements.error.textContent = message;
+            elements.error.style.display = 'block';
+            
+            state.errorTimeout = setTimeout(() => {
+                elements.error.style.display = 'none';
+            }, duration);
         }
-    }
 
-    // Map initialization
-    async function initializeMap() {
-        perf.start('mapInit');
-        
-        try {
-            // Set loading timeout
-            state.loadingTimeout = setTimeout(() => {
-                showLoading(false);
-                showError('Loading is taking longer than expected. Please refresh the page.');
-            }, LOAD_TIMEOUT);
-
-            // Initialize map
-            mapboxgl.accessToken = MAPBOX_TOKEN;
-
-            const mapOptions = {
-                container: 'map',
-                style: 'mapbox://styles/mapbox/light-v11',
-                center: UNIVERSITY_OF_TORONTO_COORDINATES,
-                zoom: 15,
-                minZoom: 14,
-                maxBounds: MAP_BOUNDS,
-                preserveDrawingBuffer: true,
-                trackResize: true,
-                renderWorldCopies: false,
-                optimizeForTerrain: true,
-                maxPitch: 60,
-                antialias: true
-            };
-
-            // Add touch-specific options
-            if ('ontouchstart' in window) {
-                Object.assign(mapOptions, {
-                    dragRotate: false,
-                    touchPitch: false
-                });
-            }
-
-            state.map = new mapboxgl.Map(mapOptions);
-
-            // Add map event listeners
-            state.map.once('load', () => {
-                state.mapLoaded = true;
-                perf.end('mapInit');
-                onMapLoad();
-                checkLoadingComplete();
-            });
-
-            state.map.on('error', (e) => {
-                console.error('Map error:', e);
-                showError('Error loading map. Please check your internet connection.');
-                showLoading(false);
-            });
-
-        } catch (error) {
-            console.error('Map initialization error:', error);
-            showError('Failed to initialize map. Please refresh the page.');
-            showLoading(false);
+        // Loading management
+        function showLoading(show) {
+            elements.loading.style.display = show ? 'flex' : 'none';
         }
-    }
 
-    // GeoJSON data fetching
-    async function fetchGeoJSONData() {
-        perf.start('dataFetch');
-        
-        try {
-            const response = await fetch(GEOJSON_URL, {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'Cache-Control': 'no-cache'
+        function checkLoadingComplete() {
+            if (state.mapLoaded && state.dataLoaded) {
+                if (state.loadingTimeout) {
+                    clearTimeout(state.loadingTimeout);
                 }
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                showLoading(false);
+                perf.end('totalLoad');
             }
-
-            const data = await response.json();
-
-            if (!data || !data.features || !Array.isArray(data.features)) {
-                throw new Error('Invalid data format');
-            }
-
-            state.kitFeatures = data.features;
-            state.dataLoaded = true;
-            
-            perf.end('dataFetch');
-            
-            if (state.mapLoaded) {
-                addMapLayers(data);
-                updateVisibleBuildings();
-            }
-            
-            checkLoadingComplete();
-
-        } catch (error) {
-            console.error('Error fetching GeoJSON:', error);
-            showError('Failed to load location data. Please try again later.');
-            showLoading(false);
         }
-    }
-    // Building details and UI updates
-    function showBuildingDetails(feature) {
-        perf.start('showDetails');
-        
-        // Fly to building with optimized animation
-        const coordinates = feature.geometry.coordinates;
-        state.map.flyTo({
-            center: coordinates,
-            zoom: 17,
-            speed: 1.2,
-            curve: 1.42,
-            essential: true,
-            easing(t) {
-                return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-            }
-        });
 
-        // Highlight building in list
-        requestAnimationFrame(() => {
-            const listItems = elements.kitList.querySelectorAll('.kit-item');
-            const buildingName = feature.properties.building;
+        // Map initialization
+        async function initializeMap() {
+            perf.start('mapInit');
             
-            listItems.forEach(item => {
-                const isMatch = item.querySelector('h3').textContent === buildingName;
-                item.style.borderColor = isMatch ? 'var(--accent-color)' : 'var(--border-color)';
-                
-                if (isMatch) {
-                    item.scrollIntoView({ 
-                        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
-                        block: 'nearest'
+            try {
+                // Set loading timeout
+                state.loadingTimeout = setTimeout(() => {
+                    showLoading(false);
+                    showError('Loading is taking longer than expected. Please refresh the page.');
+                }, LOAD_TIMEOUT);
+
+                // Initialize map
+                mapboxgl.accessToken = MAPBOX_TOKEN;
+
+                const mapOptions = {
+                    container: 'map',
+                    style: 'mapbox://styles/mapbox/light-v11',
+                    center: UNIVERSITY_OF_TORONTO_COORDINATES,
+                    zoom: 15,
+                    minZoom: 14,
+                    maxBounds: MAP_BOUNDS,
+                    preserveDrawingBuffer: true,
+                    trackResize: true,
+                    renderWorldCopies: false,
+                    optimizeForTerrain: true,
+                    maxPitch: 60,
+                    antialias: true
+                };
+
+                // Add touch-specific options
+                if ('ontouchstart' in window) {
+                    Object.assign(mapOptions, {
+                        dragRotate: false,
+                        touchPitch: false
                     });
                 }
-            });
-        });
 
-        perf.end('showDetails');
-    }
+                state.map = new mapboxgl.Map(mapOptions);
 
-    // Visible buildings update with optimization
-    function updateVisibleBuildings() {
-        perf.start('updateVisible');
-        
-        if (!state.map || !state.map.getSource('kits')) return;
-
-        // Get current map bounds
-        const bounds = state.map.getBounds();
-        
-        // Filter visible features
-        const visibleFeatures = state.kitFeatures.filter(feature => {
-            const [lng, lat] = feature.geometry.coordinates;
-            return lng >= bounds.getWest() &&
-                   lng <= bounds.getEast() &&
-                   lat >= bounds.getSouth() &&
-                   lat <= bounds.getNorth();
-        });
-
-        // Update panel with visible features
-        requestAnimationFrame(() => {
-            updateInfoPanel(visibleFeatures);
-        });
-
-        perf.end('updateVisible');
-    }
-
-    // Info panel updates
-    function updateInfoPanel(features) {
-        perf.start('updatePanel');
-
-        const fragment = document.createDocumentFragment();
-        
-        if (features.length === 0) {
-            const noResults = document.createElement('div');
-            noResults.className = 'no-results';
-            noResults.textContent = 'No buildings found in this area';
-            fragment.appendChild(noResults);
-        } else {
-            features
-                .sort((a, b) => a.properties.building.localeCompare(b.properties.building))
-                .forEach(feature => {
-                    const div = document.createElement('div');
-                    div.className = 'kit-item';
-                    div.innerHTML = `
-                        <h3>${feature.properties.building}</h3>
-                        <p>${feature.properties.address || 'No address available'}</p>
-                    `;
-                    
-                    // Use event delegation instead of individual listeners
-                    div.dataset.coordinates = JSON.stringify(feature.geometry.coordinates);
-                    div.dataset.buildingData = JSON.stringify(feature);
-                    
-                    fragment.appendChild(div);
-                });
-        }
-
-        // Batch DOM updates
-        elements.kitList.innerHTML = '';
-        elements.kitList.appendChild(fragment);
-
-        perf.end('updatePanel');
-    }
-
-    // Search functionality with optimizations
-    function handleSearch(e) {
-        const searchTerm = e.target.value.toLowerCase().trim();
-        
-        // Clear previous timeout
-        if (state.searchDebounceTimeout) {
-            clearTimeout(state.searchDebounceTimeout);
-        }
-
-        // Debounce search
-        state.searchDebounceTimeout = setTimeout(() => {
-            perf.start('search');
-
-            const filteredFeatures = searchTerm === '' ? 
-                state.kitFeatures : 
-                state.kitFeatures.filter(feature => {
-                    const props = feature.properties;
-                    return props.building.toLowerCase().includes(searchTerm) ||
-                           (props.address && props.address.toLowerCase().includes(searchTerm));
+                // Add map event listeners
+                state.map.once('load', () => {
+                    state.mapLoaded = true;
+                    perf.end('mapInit');
+                    onMapLoad();
+                    checkLoadingComplete();
                 });
 
-            // Update map source
-            if (state.map.getSource('kits')) {
-                state.map.getSource('kits').setData({
-                    type: 'FeatureCollection',
-                    features: filteredFeatures
+                state.map.on('error', (e) => {
+                    console.error('Map error:', e);
+                    showError('Error loading map. Please check your internet connection.');
+                    showLoading(false);
                 });
+
+            } catch (error) {
+                console.error('Map initialization error:', error);
+                showError('Failed to initialize map. Please refresh the page.');
+                showLoading(false);
             }
+        }
 
-            // Update panel
+        // GeoJSON data fetching
+        async function fetchGeoJSONData() {
+            perf.start('dataFetch');
+            
+            try {
+                const response = await fetch(GEOJSON_URL, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (!data || !data.features || !Array.isArray(data.features)) {
+                    throw new Error('Invalid data format');
+                }
+
+                state.kitFeatures = data.features;
+                state.dataLoaded = true;
+                
+                perf.end('dataFetch');
+                
+                if (state.mapLoaded) {
+                    addMapLayers(data);
+                    updateVisibleBuildings();
+                }
+                
+                checkLoadingComplete();
+
+            } catch (error) {
+                console.error('Error fetching GeoJSON:', error);
+                showError('Failed to load location data. Please try again later.');
+                showLoading(false);
+            }
+        }
+
+        // Building details and UI updates
+        function showBuildingDetails(feature) {
+            perf.start('showDetails');
+            
+            // Fly to building with optimized animation
+            const coordinates = feature.geometry.coordinates;
+            state.map.flyTo({
+                center: coordinates,
+                zoom: 17,
+                speed: 1.2,
+                curve: 1.42,
+                essential: true,
+                easing(t) {
+                    return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+                }
+            });
+
+            // Highlight building in list
             requestAnimationFrame(() => {
-                updateInfoPanel(filteredFeatures);
+                const listItems = elements.kitList.querySelectorAll('.kit-item');
+                const buildingName = feature.properties.building;
+                
+                listItems.forEach(item => {
+                    const isMatch = item.querySelector('h3').textContent === buildingName;
+                    item.style.borderColor = isMatch ? 'var(--accent-color)' : 'var(--border-color)';
+                    
+                    if (isMatch) {
+                        item.scrollIntoView({ 
+                            behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+                            block: 'nearest'
+                        });
+                    }
+                });
             });
 
-            perf.end('search');
-        }, 300);
-    }
+            perf.end('showDetails');
+        }
 
-    // Font size controls
-    function updateFontSize(increase) {
-        state.currentFontSize = increase ? 
-            Math.min(state.currentFontSize + 0.2, 2) : 
-            Math.max(state.currentFontSize - 0.2, 0.6);
+        // Add map layers
+        function addMapLayers(data) {
+            // Add source
+            state.map.addSource('kits', {
+                type: 'geojson',
+                data: data,
+                cluster: true,
+                clusterMaxZoom: 14,
+                clusterRadius: 50
+            });
 
-        requestAnimationFrame(() => {
-            // Update map text sizes
-            if (state.map.getLayer('kit-labels')) {
-                state.map.setLayoutProperty(
-                    'kit-labels',
-                    'text-size',
-                    [
-                        'interpolate',
-                        ['linear'],
-                        ['zoom'],
-                        14, 10 * state.currentFontSize,
-                        16, 12 * state.currentFontSize,
-                        18, 14 * state.currentFontSize
+            // Add cluster layer
+            state.map.addLayer({
+                id: 'clusters',
+                type: 'circle',
+                source: 'kits',
+                filter: ['has', 'point_count'],
+                paint: {
+                    'circle-color': [
+                        'step',
+                        ['get', 'point_count'],
+                        '#51bbd6',
+                        100,
+                        '#f1f075',
+                        750,
+                        '#f28cb1'
+                    ],
+                    'circle-radius': [
+                        'step',
+                        ['get', 'point_count'],
+                        20,
+                        100,
+                        30,
+                        750,
+                        40
                     ]
-                );
-            }
-
-            // Update interface font sizes
-            document.documentElement.style.setProperty('--base-font-size', `${16 * state.currentFontSize}px`);
-
-            // Update popup text if any are open
-            document.querySelectorAll('.mapboxgl-popup-content').forEach(popup => {
-                popup.style.fontSize = `${state.currentFontSize}rem`;
+                }
             });
-        });
-    }
 
-    // Event delegation for kit list
-    function handleKitListClick(e) {
-        const kitItem = e.target.closest('.kit-item');
-        if (!kitItem) return;
+            // Add cluster count layer
+            state.map.addLayer({
+                id: 'cluster-count',
+                type: 'symbol',
+                source: 'kits',
+                filter: ['has', 'point_count'],
+                layout: {
+                    'text-field': '{point_count_abbreviated}',
+                    'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+                    'text-size': 12
+                }
+            });
 
-        const coordinates = JSON.parse(kitItem.dataset.coordinates);
-        const buildingData = JSON.parse(kitItem.dataset.buildingData);
-        
-        flyToBuilding(coordinates);
-        showBuildingDetails(buildingData);
-    }
+            // Add unclustered point layer
+            state.map.addLayer({
+                id: 'unclustered-point',
+                type: 'circle',
+                source: 'kits',
+                filter: ['!', ['has', 'point_count']],
+                paint: {
+                    'circle-color': '#11b4da',
+                    'circle-radius': 8,
+                    'circle-stroke-width': 1,
+                    'circle-stroke-color': '#fff'
+                }
+            });
 
-    <!-- Completing the JavaScript -->
-<script>
-    // Navigation Controls
-    function addMapControls() {
-        // Add navigation control with optimized settings
-        const nav = new mapboxgl.NavigationControl({
-            visualizePitch: true,
-            showCompass: true
-        });
-        state.map.addControl(nav, 'top-left');
+            // Handle cluster click
+            state.map.on('click', 'clusters', (e) => {
+                const features = state.map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
+                const clusterId = features[0].properties.cluster_id;
+                state.map.getSource('kits').getClusterExpansionZoom(
+                    clusterId,
+                    (err, zoom) => {
+                        if (err) return;
 
-        // Add fullscreen control
-        state.map.addControl(
-            new mapboxgl.FullscreenControl({
-                container: document.documentElement
-            }),
-            'top-left'
-        );
+                        state.map.easeTo({
+                            center: features[0].geometry.coordinates,
+                            zoom: zoom
+                        });
+                    }
+                );
+            });
 
-        // Add scale control
-        const scale = new mapboxgl.ScaleControl({
-            maxWidth: 100,
-            unit: 'metric'
-        });
-        state.map.addControl(scale, 'bottom-left');
+            // Handle unclustered point click
+            state.map.on('click', 'unclustered-point', (e) => {
+                const coordinates = e.features[0].geometry.coordinates.slice();
+                const properties = e.features[0].properties;
 
-        // Add geolocate control
-        const geolocate = new mapboxgl.GeolocateControl({
-            positionOptions: {
-                enableHighAccuracy: true
-            },
-            trackUserLocation: true,
-            showUserHeading: true
-        });
-        state.map.addControl(geolocate, 'top-left');
-    }
+                while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+                    coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+                }
 
-    // Fly to building with optimized animation
-    function flyToBuilding(coordinates) {
-        state.map.flyTo({
-            center: coordinates,
-            zoom: 17,
-            speed: 1.2,
-            curve: 1.42,
-            essential: true,
-            easing(t) {
-                return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+                new mapboxgl.Popup()
+                    .setLngLat(coordinates)
+                    .setHTML(`
+                        <h3>${properties.building}</h3>
+                        <p>${properties.address || 'No address available'}</p>
+                    `)
+                    .addTo(state.map);
+            });
+
+            // Change cursor on hover
+            state.map.on('mouseenter', 'clusters', () => {
+                state.map.getCanvas().style.cursor = 'pointer';
+            });
+            state.map.on('mouseleave', 'clusters', () => {
+                state.map.getCanvas().style.cursor = '';
+            });
+
+            state.map.on('mouseenter', 'unclustered-point', () => {
+                state.map.getCanvas().style.cursor = 'pointer';
+            });
+            state.map.on('mouseleave', 'unclustered-point', () => {
+                state.map.getCanvas().style.cursor = '';
+            });
+        }
+
+        // Visible buildings update
+        function updateVisibleBuildings() {
+            perf.start('updateVisible');
+            
+            if (!state.map || !state.map.getSource('kits')) return;
+
+            // Get current map bounds
+            const bounds = state.map.getBounds();
+            
+            // Filter visible features
+            const visibleFeatures = state.kitFeatures.filter(feature => {
+                const [lng, lat] = feature.geometry.coordinates;
+                return lng >= bounds.getWest() &&
+                       lng <= bounds.getEast() &&
+                       lat >= bounds.getSouth() &&
+                       lat <= bounds.getNorth();
+            });
+
+            // Update panel with visible features
+            requestAnimationFrame(() => {
+                updateInfoPanel(visibleFeatures);
+            });
+
+            perf.end('updateVisible');
+        }
+
+        // Info panel updates
+        function updateInfoPanel(features) {
+            perf.start('updatePanel');
+
+            const fragment = document.createDocumentFragment();
+            
+            if (features.length === 0) {
+                const noResults = document.createElement('div');
+                noResults.className = 'no-results';
+                noResults.textContent = 'No buildings found in this area';
+                fragment.appendChild(noResults);
+            } else {
+                features
+                    .sort((a, b) => a.properties.building.localeCompare(b.properties.building))
+                    .forEach(feature => {
+                        const div = document.createElement('div');
+                        div.className = 'kit-item';
+                        div.innerHTML = `
+                            <h3>${feature.properties.building}</h3>
+                            <p>${feature.properties.address || 'No address available'}</p>
+                        `;
+                        
+                        div.dataset.coordinates = JSON.stringify(feature.geometry.coordinates);
+                        div.dataset.buildingData = JSON.stringify(feature);
+                        
+                        fragment.appendChild(div);
+                    });
             }
-        });
-    }
 
-    // Event Listeners Setup
-    function setupEventListeners() {
-        // Map movement events
-        state.map.on('moveend', debounce(updateVisibleBuildings, 100));
-        state.map.on('zoomend', debounce(updateVisibleBuildings, 100));
+            elements.kitList.innerHTML = '';
+            elements.kitList.appendChild(fragment);
 
-        // Panel toggle
-        document.getElementById('collapse-button').addEventListener('click', () => {
-            elements.infoPanel.classList.toggle('collapsed');
-        });
+            perf.end('updatePanel');
+        }
 
-        // Search
-        elements.searchBox.addEventListener('input', debounce(handleSearch, 300));
+        // Search functionality
+        function handleSearch(e) {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            
+            if (state.searchDebounceTimeout) {
+                clearTimeout(state.searchDebounceTimeout);
+            }
+
+            state.searchDebounceTimeout = setTimeout(() => {
+                perf.start('search');
+
+                const filteredFeatures = searchTerm === '' ? 
+                    state.kitFeatures : 
+                    state.kitFeatures.filter(feature => {
+                        const props = feature.properties;
+                        return props.building.toLowerCase().includes(searchTerm) ||
+                               (props.address && props.address.toLowerCase().includes(searchTerm));
+                    });
+
+                if (state.map.getSource('kits')) {
+                    state.map.getSource('kits').setData({
+                        type: 'FeatureCollection',
+                        features: filteredFeatures
+                    });
+                }
+
+                requestAnimationFrame(() => {
+                    updateInfoPanel(filteredFeatures);
+                });
+
+                perf.end('search');
+            }, 300);
+        }
 
         // Font size controls
-        document.getElementById('increase-font').addEventListener('click', () => updateFontSize(true));
-        document.getElementById('decrease-font').addEventListener('click', () => updateFontSize(false));
+        function updateFontSize(increase) {
+            state.currentFontSize = increase ? 
+                Math.min(state.currentFontSize + 0.2, 2) : 
+                Math.max(state.currentFontSize - 0.2, 0.6);
 
-        // Kit list delegation
-        elements.kitList.addEventListener('click', handleKitListClick);
+            requestAnimationFrame(() => {
+                // Update map text sizes
+                if (state.map.getLayer('kit-labels')) {
+                    state.map.setLayoutProperty(
+                        'kit-labels',
+                        'text-size',
+                        [
+                            'interpolate',
+                            ['linear'],
+                            ['zoom'],
+                            14, 10 * state.currentFontSize,
+                            16, 12 * state.currentFontSize,
+                            18, 14 * state.currentFontSize
+                        ]
+                    );
+                }
 
-        // Keyboard shortcuts
-        document.addEventListener('keydown', handleKeyboardShortcuts);
+                // Update interface font sizes
+                document.documentElement.style.setProperty('--base-font-size', `${16 * state.currentFontSize}px`);
 
-        // Window resize
-        window.addEventListener('resize', debounce(() => {
-            if (state.map) {
-                state.map.resize();
-                updateLayoutForScreenSize();
-            }
-        }, 250));
+                // Update popup text if any are open
+                document.querySelectorAll('.mapboxgl-popup-content').forEach(popup => {
+                    popup.style.fontSize = `${state.currentFontSize}rem`;
+                });
+            });
+        }
 
-        // Device orientation change
-        window.addEventListener('orientationchange', () => {
-            setTimeout(() => {
+        // Event delegation for kit list
+        function handleKitListClick(e) {
+            const kitItem = e.target.closest('.kit-item');
+            if (!kitItem) return;
+
+            const coordinates = JSON.parse(kitItem.dataset.coordinates);
+            const buildingData = JSON.parse(kitItem.dataset.buildingData);
+            
+            flyToBuilding(coordinates);
+            showBuildingDetails(buildingData);
+        }
+
+        // Navigation Controls
+        function addMapControls() {
+            // Add navigation control with optimized settings
+            const nav = new mapboxgl.NavigationControl({
+                visualizePitch: true,
+                showCompass: true
+            });
+            state.map.addControl(nav, 'top-left');
+
+            // Add fullscreen control
+            state.map.addControl(
+                new mapboxgl.FullscreenControl({
+                    container: document.documentElement
+                }),
+                'top-left'
+            );
+
+            // Add scale control
+            const scale = new mapboxgl.ScaleControl({
+                maxWidth: 100,
+                unit: 'metric'
+            });
+            state.map.addControl(scale, 'bottom-left');
+
+            // Add geolocate control
+            const geolocate = new mapboxgl.GeolocateControl({
+                positionOptions: {
+                    enableHighAccuracy: true
+                },
+                trackUserLocation: true,
+                showUserHeading: true
+            });
+            state.map.addControl(geolocate, 'top-left');
+        }
+
+        // Fly to building with optimized animation
+        function flyToBuilding(coordinates) {
+            state.map.flyTo({
+                center: coordinates,
+                zoom: 17,
+                speed: 1.2,
+                curve: 1.42,
+                essential: true,
+                easing(t) {
+                    return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+                }
+            });
+        }
+
+        // Event Listeners Setup
+        function setupEventListeners() {
+            // Map movement events
+            state.map.on('moveend', debounce(updateVisibleBuildings, 100));
+            state.map.on('zoomend', debounce(updateVisibleBuildings, 100));
+
+            // Panel toggle
+            document.getElementById('collapse-button').addEventListener('click', () => {
+                elements.infoPanel.classList.toggle('collapsed');
+            });
+
+            // Search
+            elements.searchBox.addEventListener('input', debounce(handleSearch, 300));
+
+            // Font size controls
+            document.getElementById('increase-font').addEventListener('click', () => updateFontSize(true));
+            document.getElementById('decrease-font').addEventListener('click', () => updateFontSize(false));
+
+            // Kit list delegation
+            elements.kitList.addEventListener('click', handleKitListClick);
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', handleKeyboardShortcuts);
+
+            // Window resize
+            window.addEventListener('resize', debounce(() => {
                 if (state.map) {
                     state.map.resize();
                     updateLayoutForScreenSize();
                 }
-            }, 200);
-        });
+            }, 250));
 
-        // Handle visibility change
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-    }
+            // Device orientation change
+            window.addEventListener('orientationchange', () => {
+                setTimeout(() => {
+                    if (state.map) {
+                        state.map.resize();
+                        updateLayoutForScreenSize();
+                    }
+                }, 200);
+            });
 
-    // Keyboard shortcuts handler
-    function handleKeyboardShortcuts(e) {
-        if (e.key === 'Escape') {
-            elements.infoPanel.classList.add('collapsed');
-        } else if (e.key === 'f' && (e.ctrlKey || e.metaKey)) {
-            e.preventDefault();
-            elements.searchBox.focus();
+            // Handle visibility change
+            document.addEventListener('visibilitychange', handleVisibilityChange);
         }
-    }
 
-    // Visibility change handler
-    function handleVisibilityChange() {
-        if (document.hidden) {
-            // Pause expensive operations
+        // Keyboard shortcuts handler
+        function handleKeyboardShortcuts(e) {
+            if (e.key === 'Escape') {
+                elements.infoPanel.classList.add('collapsed');
+            } else if (e.key === 'f' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                elements.searchBox.focus();
+            }
+        }
+
+        // Visibility change handler
+        function handleVisibilityChange() {
+            if (document.hidden) {
+                // Pause expensive operations
+                if (state.searchDebounceTimeout) {
+                    clearTimeout(state.searchDebounceTimeout);
+                }
+            } else {
+                // Resume and refresh data if needed
+                updateVisibleBuildings();
+            }
+        }
+
+        // Update layout based on screen size
+        function updateLayoutForScreenSize() {
+            const isMobile = window.innerWidth <= 768;
+            const isLandscape = window.innerWidth > window.innerHeight;
+
+            // Adjust controls position
+            document.documentElement.style.fontSize = isMobile ? '14px' : '16px';
+
+            // Update map padding based on panel state
+            const panel = elements.infoPanel;
+            const isCollapsed = panel.classList.contains('collapsed');
+            
+            state.map.setPadding({
+                right: (!isMobile && !isCollapsed) ? 380 : 0,
+                bottom: (isMobile && !isCollapsed && !isLandscape) ? window.innerHeight / 2 : 0
+            });
+        }
+
+        // Map Load Handler
+        function onMapLoad() {
+            addMapControls();
+            updateLayoutForScreenSize();
+            
+            if (state.dataLoaded && state.kitFeatures.length > 0) {
+                addMapLayers({
+                    type: 'FeatureCollection',
+                    features: state.kitFeatures
+                });
+                updateVisibleBuildings();
+            }
+        }
+
+        // Debounce utility
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func.apply(this, args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Resource cleanup
+        function cleanup() {
             if (state.searchDebounceTimeout) {
                 clearTimeout(state.searchDebounceTimeout);
             }
+            if (state.loadingTimeout) {
+                clearTimeout(state.loadingTimeout);
+            }
+            if (state.errorTimeout) {
+                clearTimeout(state.errorTimeout);
+            }
+        }
+
+        // Application initialization
+        function initializeApplication() {
+            perf.start('totalLoad');
+            
+            // Cache DOM elements
+            cacheElements();
+
+            // Start loading sequence
+            showLoading(true);
+
+            // Initialize map and fetch data in parallel
+            Promise.all([
+                initializeMap(),
+                fetchGeoJSONData()
+            ]).catch(error => {
+                console.error('Initialization error:', error);
+                showError('Failed to initialize application. Please refresh the page.');
+            });
+
+            // Setup event listeners
+            setupEventListeners();
+
+            // Clean up resources on page unload
+            window.addEventListener('beforeunload', cleanup);
+        }
+
+        // Start the application when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeApplication);
         } else {
-            // Resume and refresh data if needed
-            updateVisibleBuildings();
+            initializeApplication();
         }
-    }
-
-    // Update layout based on screen size
-    function updateLayoutForScreenSize() {
-        const isMobile = window.innerWidth <= 768;
-        const isLandscape = window.innerWidth > window.innerHeight;
-
-        // Adjust controls position
-        document.documentElement.style.fontSize = isMobile ? '14px' : '16px';
-
-        // Update map padding based on panel state
-        const panel = elements.infoPanel;
-        const isCollapsed = panel.classList.contains('collapsed');
-        
-        state.map.setPadding({
-            right: (!isMobile && !isCollapsed) ? 380 : 0,
-            bottom: (isMobile && !isCollapsed && !isLandscape) ? window.innerHeight / 2 : 0
-        });
-    }
-
-    // Debounce utility
-    function debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout);
-                func.apply(this, args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
-    }
-
-    // Resource cleanup
-    function cleanup() {
-        if (state.searchDebounceTimeout) {
-            clearTimeout(state.searchDebounceTimeout);
-        }
-        if (state.loadingTimeout) {
-            clearTimeout(state.loadingTimeout);
-        }
-        if (state.errorTimeout) {
-            clearTimeout(state.errorTimeout);
-        }
-    }
-
-    // Application initialization
-    function initializeApplication() {
-        perf.start('totalLoad');
-        
-        // Cache DOM elements
-        cacheElements();
-
-        // Start loading sequence
-        showLoading(true);
-
-        // Initialize map and fetch data in parallel
-        Promise.all([
-            initializeMap(),
-            fetchGeoJSONData()
-        ]).catch(error => {
-            console.error('Initialization error:', error);
-            showError('Failed to initialize application. Please refresh the page.');
-        });
-
-        // Setup event listeners
-        setupEventListeners();
-
-        // Clean up resources on page unload
-        window.addEventListener('beforeunload', cleanup);
-    }
-
-    // Start the application when DOM is ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initializeApplication);
-    } else {
-        initializeApplication();
-    }
-})();
-</script>
+    })();
+    </script>
 </body>
 </html>
