@@ -7,8 +7,7 @@
     <title>UTSG First Aid Kit Locator</title>
     <meta name="description" content="Locate first aid kits across the University of Toronto St. George campus">
     <meta name="theme-color" content="#2c3e50">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="format-detection" content="telephone=no">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><path d=%22M50 10c-17.6 0-32 14.4-32 32 0 24 32 48 32 48s32-24 32-48c0-17.6-14.4-32-32-32zm0 44c-6.6 0-12-5.4-12-12s5.4-12 12-12 12 5.4 12 12-5.4 12-12 12z%22 fill=%22%23e74c3c%22/></svg>">
     
@@ -737,144 +736,142 @@ const perf = {
         }
     }
 // Add map layers
-    function addMapLayers(data) {
-        // Create a canvas element
-const canvas = document.createElement('canvas');
-canvas.width = 32;
-canvas.height = 32;
-const ctx = canvas.getContext('2d');
+        function addMapLayers(data) {
+            // Create a canvas element
+            const canvas = document.createElement('canvas');
+            canvas.width = 32;
+            canvas.height = 32;
+            const ctx = canvas.getContext('2d');
 
-// Draw the first aid icon
-ctx.beginPath();
-ctx.arc(16, 16, 14, 0, 2 * Math.PI); // Circle
-ctx.fillStyle = '#006400';
-ctx.fill();
+            // Draw the first aid icon
+            ctx.beginPath();
+            ctx.arc(16, 16, 14, 0, Math.PI * 2);
+            ctx.fillStyle = '#006400';
+            ctx.fill();
 
-// Draw the white cross
-ctx.fillStyle = 'white';
-// Horizontal bar
-ctx.fillRect(8, 14, 16, 4);
-// Vertical bar
-ctx.fillRect(14, 8, 4, 16);
+            // Draw the white cross
+            ctx.fillStyle = 'white';
+            ctx.fillRect(8, 14, 16, 4);
+            ctx.fillRect(14, 8, 4, 16);
 
-// Create the image
-state.map.addImage('first-aid', { 
-    width: 32, 
-    height: 32, 
-    data: new Uint8Array(ctx.getImageData(0, 0, 32, 32).data)
-});
-                
-                // Add source
-                state.map.addSource('kits', {
-                    type: 'geojson',
-                    data: data,
-                    cluster: true,
-                    clusterMaxZoom: 14,
-                    clusterRadius: 50
-                });
+            // Add the image to the map
+            state.map.addImage('first-aid', { 
+                width: 32, 
+                height: 32, 
+                data: new Uint8Array(ctx.getImageData(0, 0, 32, 32).data)
+            });
 
-                // Add cluster layer
-                state.map.addLayer({
-                    id: 'clusters',
-                    type: 'circle',
-                    source: 'kits',
-                    filter: ['has', 'point_count'],
-                    paint: {
-                        'circle-color': [
-                            'step',
-                            ['get', 'point_count'],
-                            '#51bbd6',
-                            100,
-                            '#f1f075',
-                            750,
-                            '#f28cb1'
-                        ],
-                        'circle-radius': [
-                            'step',
-                            ['get', 'point_count'],
-                            20,
-                            100,
-                            30,
-                            750,
-                            40
-                        ]
+            // Add source
+            state.map.addSource('kits', {
+                type: 'geojson',
+                data: data,
+                cluster: true,
+                clusterMaxZoom: 14,
+                clusterRadius: 50
+            });
+
+            // Add cluster layer
+            state.map.addLayer({
+                id: 'clusters',
+                type: 'circle',
+                source: 'kits',
+                filter: ['has', 'point_count'],
+                paint: {
+                    'circle-color': [
+                        'step',
+                        ['get', 'point_count'],
+                        '#51bbd6',
+                        100,
+                        '#f1f075',
+                        750,
+                        '#f28cb1'
+                    ],
+                    'circle-radius': [
+                        'step',
+                        ['get', 'point_count'],
+                        20,
+                        100,
+                        30,
+                        750,
+                        40
+                    ]
+                }
+            });
+
+            // Add cluster count layer
+            state.map.addLayer({
+                id: 'cluster-count',
+                type: 'symbol',
+                source: 'kits',
+                filter: ['has', 'point_count'],
+                layout: {
+                    'text-field': '{point_count_abbreviated}',
+                    'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+                    'text-size': 12
+                }
+            });
+
+            // Add unclustered point layer
+            state.map.addLayer({
+                id: 'unclustered-point',
+                type: 'symbol',
+                source: 'kits',
+                filter: ['!', ['has', 'point_count']],
+                layout: {
+                    'icon-image': 'first-aid',
+                    'icon-size': 0.8,
+                    'icon-allow-overlap': true
+                }
+            });
+
+            // Add event listeners
+            state.map.on('click', 'clusters', (e) => {
+                const features = state.map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
+                const clusterId = features[0].properties.cluster_id;
+                state.map.getSource('kits').getClusterExpansionZoom(
+                    clusterId,
+                    (err, zoom) => {
+                        if (err) return;
+                        state.map.easeTo({
+                            center: features[0].geometry.coordinates,
+                            zoom: zoom
+                        });
                     }
-                });
+                );
+            });
 
-                // Add cluster count layer
-                state.map.addLayer({
-                    id: 'cluster-count',
-                    type: 'symbol',
-                    source: 'kits',
-                    filter: ['has', 'point_count'],
-                    layout: {
-                        'text-field': '{point_count_abbreviated}',
-                        'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-                        'text-size': 12
-                    }
-                });
+            state.map.on('click', 'unclustered-point', (e) => {
+                const coordinates = e.features[0].geometry.coordinates.slice();
+                const properties = e.features[0].properties;
 
-                // Add unclustered point layer
-                state.map.addLayer({
-                    id: 'unclustered-point',
-                    type: 'symbol',
-                    source: 'kits',
-                    filter: ['!', ['has', 'point_count']],
-                    layout: {
-                        'icon-image': 'first-aid',
-                        'icon-size': 0.8,
-                        'icon-allow-overlap': true
-                    }
-                });
+                while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+                    coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+                }
 
-                // Add event listeners
-                state.map.on('click', 'clusters', (e) => {
-                    const features = state.map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
-                    const clusterId = features[0].properties.cluster_id;
-                    state.map.getSource('kits').getClusterExpansionZoom(
-                        clusterId,
-                        (err, zoom) => {
-                            if (err) return;
-                            state.map.easeTo({
-                                center: features[0].geometry.coordinates,
-                                zoom: zoom
-                            });
-                        }
-                    );
-                });
+                new mapboxgl.Popup()
+                    .setLngLat(coordinates)
+                    .setHTML(`
+                        <h3>${properties.building}</h3>
+                        <p>${properties.address || 'No address available'}</p>
+                    `)
+                    .addTo(state.map);
+            });
 
-                state.map.on('click', 'unclustered-point', (e) => {
-                    const coordinates = e.features[0].geometry.coordinates.slice();
-                    const properties = e.features[0].properties;
+            // Change cursor on hover
+            state.map.on('mouseenter', 'clusters', () => {
+                state.map.getCanvas().style.cursor = 'pointer';
+            });
+            state.map.on('mouseleave', 'clusters', () => {
+                state.map.getCanvas().style.cursor = '';
+            });
 
-                    while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-                        coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-                    }
-
-                    new mapboxgl.Popup()
-                        .setLngLat(coordinates)
-                        .setHTML(`
-                            <h3>${properties.building}</h3>
-                            <p>${properties.address || 'No address available'}</p>
-                        `)
-                        .addTo(state.map);
-                });
-
-                // Change cursor on hover
-                state.map.on('mouseenter', 'clusters', () => {
-                    state.map.getCanvas().style.cursor = 'pointer';
-                });
-                state.map.on('mouseleave', 'clusters', () => {
-                    state.map.getCanvas().style.cursor = '';
-                });
-
-                state.map.on('mouseenter', 'unclustered-point', () => {
-                    state.map.getCanvas().style.cursor = 'pointer';
-                });
-                state.map.on('mouseleave', 'unclustered-point', () => {
-                    state.map.getCanvas().style.cursor = '';
-                });
-            }
+            state.map.on('mouseenter', 'unclustered-point', () => {
+                state.map.getCanvas().style.cursor = 'pointer';
+            });
+            state.map.on('mouseleave', 'unclustered-point', () => {
+                state.map.getCanvas().style.cursor = '';
+            });
+        }
         );
     }    
     function addMapControls() {
