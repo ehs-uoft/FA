@@ -414,6 +414,67 @@
                 scroll-behavior: auto !important;
             }
         }
+
+.map-legend {
+    position: absolute;
+    bottom: 30px;
+    right: 400px;
+    background: white;
+    padding: 10px;
+    border-radius: 4px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    z-index: 1000;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin: 5px 0;
+}
+
+.legend-marker {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+}
+
+.legend-marker.first-aid {
+    background: #006400;
+    border-radius: 50%;
+    position: relative;
+}
+
+.legend-marker.first-aid:after {
+    content: '+';
+    color: white;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.legend-marker.cluster {
+    background: #51bbd6;
+    border-radius: 50%;
+}
+#last-updated {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    z-index: 1000;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+@media (max-width: 768px) {
+    #last-updated {
+        bottom: calc(50vh + 20px);  /* Adjusts for mobile view when panel is open */
+    }
+}    
     </style>
 </head>
 <body>
@@ -440,7 +501,17 @@
                spellcheck="false">
         <div id="kit-list"></div>
     </div>
-
+<div id="legend" class="map-legend">
+    <h4>Legend</h4>
+    <div class="legend-item">
+        <div class="legend-marker first-aid"></div>
+        <span>First Aid Kit Location</span>
+    </div>
+    <div class="legend-item">
+        <div class="legend-marker cluster"></div>
+        <span>Multiple Locations</span>
+    </div>
+</div>
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
     <script>
     // Performance monitoring initialization
@@ -635,6 +706,41 @@
             }
         }
 
+        async function fetchGeoJSONData() {
+    try {
+        const response = await fetch(GEOJSON_URL);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        // After successful data load:
+        updateLastModifiedDate();  // Add this line here
+        return data;
+    } catch (error) {
+        console.error('Error fetching GeoJSON:', error);
+        showError('Failed to load location data. Please try again later.');
+        showLoading(false);
+    }
+}
+async function getLastModifiedDate() {
+    try {
+        const response = await fetch('https://api.github.com/repos/ehs-uoft/FA/commits?path=geojson.geojson&page=1&per_page=1');
+        const [latestCommit] = await response.json();
+        const date = new Date(latestCommit.commit.committer.date);
+        return date.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+    } catch (error) {
+        console.error('Error fetching last modified date:', error);
+        return 'Date unavailable';
+    }
+}
+        async function updateLastModifiedDate() {
+    const dateString = await getLastModifiedDate();
+    document.getElementById('last-updated').textContent = `Last Updated: ${dateString}`;
+}
         // Building details and UI updates
         function showBuildingDetails(feature) {
             perf.start('showDetails');
@@ -676,6 +782,27 @@
         // Add map layers
         function addMapLayers(data) {
             // Add source
+            state.map.addSource('kits', {
+                type: 'geojson',
+                data: data,
+                cluster: true,
+                clusterMaxZoom: 14,
+                clusterRadius: 50
+            });
+// First load the custom image
+    state.map.loadImage(
+        'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(`
+            <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="16" cy="16" r="14" fill="#006400"/>
+                <rect x="8" y="14" width="16" height="4" fill="white"/>
+                <rect x="14" y="8" width="4" height="16" fill="white"/>
+            </svg>
+        `),
+        (error, image) => {
+            if (error) throw error;
+            state.map.addImage('first-aid', image);
+            
+            // Then add source and layers
             state.map.addSource('kits', {
                 type: 'geojson',
                 data: data,
@@ -726,18 +853,17 @@
             });
 
             // Add unclustered point layer
-            state.map.addLayer({
-                id: 'unclustered-point',
-                type: 'circle',
-                source: 'kits',
-                filter: ['!', ['has', 'point_count']],
-                paint: {
-                    'circle-color': '#11b4da',
-                    'circle-radius': 8,
-                    'circle-stroke-width': 1,
-                    'circle-stroke-color': '#fff'
-                }
-            });
+       state.map.addLayer({
+    id: 'unclustered-point',
+    type: 'symbol',
+    source: 'kits',
+    filter: ['!', ['has', 'point_count']],
+    layout: {
+        'icon-image': 'first-aid',
+        'icon-size': 0.8,
+        'icon-allow-overlap': true
+    }
+});
 
             // Handle cluster click
             state.map.on('click', 'clusters', (e) => {
@@ -964,7 +1090,37 @@
             });
             state.map.addControl(geolocate, 'top-left');
         }
+ // Add 3D toggle button
+    const toggle3DButton = document.createElement('button');
+    toggle3DButton.className = 'mapboxgl-ctrl-icon custom-ctrl-button';
+    toggle3DButton.innerHTML = '3D';
+    toggle3DButton.onclick = () => {
+        const current = state.map.getPitch();
+        state.map.easeTo({
+            pitch: current === 0 ? 60 : 0,
+            duration: 1000
+        });
+    };
 
+    // Add reset view button
+    const resetViewButton = document.createElement('button');
+    resetViewButton.className = 'mapboxgl-ctrl-icon custom-ctrl-button';
+    resetViewButton.innerHTML = 'Reset';
+    resetViewButton.onclick = () => {
+        state.map.flyTo({
+            center: UNIVERSITY_OF_TORONTO_COORDINATES,
+            zoom: 15,
+            pitch: 0,
+            bearing: 0
+        });
+    };
+
+    const customControls = document.createElement('div');
+    customControls.className = 'mapboxgl-ctrl mapboxgl-ctrl-group';
+    customControls.appendChild(toggle3DButton);
+    customControls.appendChild(resetViewButton);
+    state.map.addControl({ onAdd: () => customControls, onRemove: () => {} }, 'top-left');
+}
         // Fly to building with optimized animation
         function flyToBuilding(coordinates) {
             state.map.flyTo({
@@ -1140,5 +1296,6 @@
         }
     })();
     </script>
+    <div id="last-updated">Last Updated: Loading...</div>
 </body>
 </html>
