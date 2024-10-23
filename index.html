@@ -351,48 +351,28 @@ body {
     transition: background-color var(--transition-speed) ease;
 }
 
-.modal-overlay {
+.building-details-panel {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-    z-index: 2000;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s, visibility 0.3s;
-}
-
-.modal-overlay.active {
-    opacity: 1;
-    visibility: visible;
-}
-
-.modal-container {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0.9);
-    width: 90%;
-    max-width: 1200px;
-    height: 80vh;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    left: 0;
+    width: 100%;
+    background: var(--panel-background);
+    box-shadow: 0 -2px 10px var(--shadow-color);
+    transform: translateY(100%);
+    transition: transform var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1002;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-    transition: transform 0.3s;
+    overscroll-behavior: contain;
+    contain: layout size;
+    will-change: transform;
 }
 
-.modal-overlay.active .modal-container {
-    transform: translate(-50%, -50%) scale(1);
+.building-details-panel.visible {
+    transform: translateY(0);
 }
 
-.modal-header {
+.building-details-panel .panel-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -401,7 +381,13 @@ body {
     color: white;
 }
 
-.modal-close {
+.building-details-panel .panel-content {
+    padding: 20px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.building-details-panel .close-button {
     background: rgba(0, 0, 0, 0.1);
     border: none;
     color: white;
@@ -415,100 +401,11 @@ body {
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease;
-    margin-left: 16px;
 }
 
-.modal-close:hover {
+.building-details-panel .close-button:hover {
     background: rgba(0, 0, 0, 0.2);
     transform: scale(1.05);
-}
-
-.modal-content {
-    flex: 1;
-    display: flex;
-    min-height: 0;
-}
-
-.modal-sidebar {
-    width: 300px;
-    background: #f8f9fa;
-    padding: 20px;
-    border-right: 1px solid var(--border-color);
-    overflow-y: auto;
-}
-
-.modal-main {
-    flex: 1;
-    position: relative;
-    background: white;
-}
-
-.building-info-frame {
-    width: 100%;
-    height: 100%;
-    border: none;
-}
-
-.kit-details-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-    background: white;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 4px var(--shadow-color);
-}
-
-.kit-details-table td {
-    padding: 15px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.kit-details-table tr:last-child td {
-    border-bottom: none;
-}
-
-.building-url {
-    display: inline-block;
-    margin-top: 5px;
-    color: var(--secondary-color);
-    text-decoration: none;
-    padding: 5px 10px;
-    border: 1px solid var(--secondary-color);
-    border-radius: 4px;
-    transition: all 0.2s ease;
-}
-
-.building-url:hover {
-    background: var(--secondary-color);
-    color: white;
-}
-
-.table-container {
-    margin-top: 20px;
-    padding: 0 20px;
-    display: none;
-}
-
-.table-container.visible {
-    display: block;
-}
-
-#kit-list.with-table {
-    height: calc(50% - 120px);
-}
-
-#last-updated {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: white;
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-size: 0.9em;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    z-index: 1000;
 }
 
 @media (max-width: 1024px) {
@@ -518,10 +415,6 @@ body {
 
     #info-panel.collapsed {
         transform: translateX(320px);
-    }
-
-    .modal-sidebar {
-        width: 250px;
     }
 
     #font-controls {
@@ -561,119 +454,9 @@ body {
     }
 
     #font-controls {
-        right: 10px;
-        bottom: calc(50vh + 20px);
-    }
+        right: 10
 
-    .modal-container {
-        width: 95%;
-        height: 90vh;
-    }
-
-    .modal-content {
-        flex-direction: column;
-    }
-
-    .modal-sidebar {
-        width: 100%;
-        max-height: 200px;
-    }
-
-    #last-updated {
-        bottom: calc(50vh + 20px);
-    }
-}
-
-@media (hover: none) {
-    .kit-item:active {
-        transform: translateY(-2px);
-        background-color: var(--hover-color);
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    * {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
-    }
-}
-</style>
-</head>
-<body>
-    <div id="map"></div>
-    <div id="error-message"></div>
-    <div id="loading-indicator">
-        <div class="spinner"></div>
-        <div class="loading-text">Loading map data...</div>
-    </div>
-    
-    <div id="font-controls">
-        <button class="font-control-btn" id="decrease-font" title="Decrease font size">A-</button>
-        <button class="font-control-btn" id="increase-font" title="Increase font size">A+</button>
-    </div>
-    
-    <div id="info-panel">
-        <button id="collapse-button" aria-label="Toggle info panel">
-            <i class="fas fa-chevron-left"></i>
-        </button>
-        <div class="panel-header">
-            <h2>First Aid Kit Locations</h2>
-        </div>
-        <input type="text" 
-               id="search-box" 
-               placeholder="Search for a building..." 
-               aria-label="Search for a building"
-               autocomplete="off"
-               spellcheck="false">
-        <div id="kit-list"></div>
-        <div class="table-container">
-           <table class="kit-details-table">
-    <tbody>
-        <!-- Table content will be dynamically populated -->
-    </tbody>
-</table>
-        </div>
-    </div>
-
-    <div id="last-updated">Last Updated: Loading...</div>
-
-    <div class="modal-overlay">
-        <div class="modal-container">
-            <div class="modal-header">
-                <h3>Building Information</h3>
-                <button class="modal-close" aria-label="Close modal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-content">
-                <div class="modal-sidebar">
-                    <div class="modal-nav">
-                        <button class="modal-nav-button" data-action="back">
-                            <i class="fas fa-arrow-left"></i> Back
-                        </button>
-                        <button class="modal-nav-button" data-action="refresh">
-                            <i class="fas fa-sync"></i> Refresh
-                        </button>
-                    </div>
-                    <div class="building-quick-info">
-                        <!-- Will be populated dynamically -->
-                    </div>
-                </div>
-                <div class="modal-main">
-                    <iframe class="building-info-frame" title="Building Information"></iframe>
-                    <div class="loading-spinner">
-                        <div class="spinner"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
-<script>
-// Performance monitoring
+    // Performance monitoring
 const perf = {
     marks: new Map(),
     start: (name) => {
@@ -725,65 +508,10 @@ const perf = {
         infoPanel: null,
         searchBox: null,
         kitList: null,
-        tableContainer: null
-    };
-
-    // Modal Management
-    const modal = {
-        overlay: document.querySelector('.modal-overlay'),
-        container: document.querySelector('.modal-container'),
-        frame: document.querySelector('.building-info-frame'),
-        spinner: document.querySelector('.modal-main .loading-spinner'),
-        quickInfo: document.querySelector('.building-quick-info'),
-        
-        show(building) {
-            state.currentBuilding = building;
-            this.updateQuickInfo(building);
-            this.loadBuildingUrl(building.properties.url);
-            this.overlay.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        },
-        
-        hide() {
-            this.overlay.classList.remove('active');
-            document.body.style.overflow = '';
-            state.modalHistory = [];
-            state.currentBuilding = null;
-        },
-        
-        updateQuickInfo(building) {
-            const props = building.properties;
-            this.quickInfo.innerHTML = `
-                <h4>${props.building}</h4>
-                <div class="info-item">
-                    <span class="info-label">Address:</span> ${props.address || 'N/A'}
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Floor:</span> ${props.floor || 'N/A'}
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Room:</span> ${props.room || 'N/A'}
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Access:</span> ${props.access_hours || 'N/A'}
-                </div>
-            `;
-        },
-        
-        loadBuildingUrl(url) {
-            if (!url) return;
-            
-            this.spinner.style.display = 'block';
-            this.frame.style.opacity = '0';
-            
-            this.frame.onload = () => {
-                this.spinner.style.display = 'none';
-                this.frame.style.opacity = '1';
-                state.modalHistory.push(url);
-            };
-            
-            this.frame.src = url;
-        }
+        tableContainer: null,
+        buildingDetailsPanel: null,
+        buildingName: null,
+        buildingDetailsContent: null
     };
 
     // Cache DOM elements
@@ -795,6 +523,9 @@ const perf = {
         elements.searchBox = document.getElementById('search-box');
         elements.kitList = document.getElementById('kit-list');
         elements.tableContainer = document.querySelector('.table-container');
+        elements.buildingDetailsPanel = document.getElementById('building-details-panel');
+        elements.buildingName = document.getElementById('building-name');
+        elements.buildingDetailsContent = document.getElementById('building-details-content');
     }
 
     // Error handling
@@ -904,7 +635,7 @@ const perf = {
         }
     }
 
-// GeoJSON data fetching
+    // GeoJSON data fetching
     async function fetchGeoJSONData() {
         perf.start('dataFetch');
         
@@ -1159,7 +890,6 @@ const perf = {
         state.map.addControl({ onAdd: () => customControls, onRemove: () => {} }, 'top-left');
     }
 
-    // Building details handling
     function showBuildingDetails(feature) {
         perf.start('showDetails');
         
@@ -1197,20 +927,41 @@ const perf = {
         // Update UI elements
         updateBuildingSelection(feature);
         updateDetailsTable(feature);
-        
+        showBuildingDetailsPanel(feature);
+
         perf.end('showDetails');
+    }
+
+    function showBuildingDetailsPanel(feature) {
+        const buildingName = document.getElementById('building-name');
+        const detailsContent = document.getElementById('building-details-content');
+        const detailsPanel = document.getElementById('building-details-panel');
+
+        buildingName.textContent = feature.properties.building;
+
+        detailsContent.innerHTML = `
+            <p>${feature.properties.address || 'No address available'}</p>
+            <p>${feature.properties.location_details || 'No specific location details available'}</p>
+            <p>${feature.properties.floor ? `Floor: ${feature.properties.floor}` : ''}</p>
+            <p>${feature.properties.room ? `Room: ${feature.properties.room}` : ''}</p>
+            ${feature.properties.url ? `
+            <a href="${feature.properties.url}" class="building-url" target="_blank">View First Aiders List</a>
+            ` : ''}
+        `;
+
+        detailsPanel.classList.add('visible');
     }
 
     function updateBuildingSelection(feature) {
         const listItems = elements.kitList.querySelectorAll('.kit-item');
         const buildingName = feature.properties.building;
-        
+
         listItems.forEach(item => {
             const isMatch = item.querySelector('h3').textContent === buildingName;
             item.classList.toggle('selected', isMatch);
-            
+
             if (isMatch) {
-                item.scrollIntoView({ 
+                item.scrollIntoView({
                     behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
                     block: 'nearest'
                 });
@@ -1222,36 +973,34 @@ const perf = {
         elements.kitList.classList.add('with-table');
     }
 
-   function updateDetailsTable(feature) {
-    const tableBody = document.querySelector('.kit-details-table tbody');
-    const props = feature.properties;
+    function updateDetailsTable(feature) {
+        const tableBody = document.querySelector('.kit-details-table tbody');
+        const props = feature.properties;
 
-    // Update layout and content
-    tableBody.innerHTML = `
-        <tr>
-            <td colspan="2">
-                <strong style="font-size: 1.2em;">${props.building}</strong><br>
-                <span style="color: #666;">${props.address || 'No address available'}</span>
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2">
-                ${props.location_details || 'No specific location details available'}<br>
-                ${props.floor ? `Floor: ${props.floor}<br>` : ''}
-                ${props.room ? `Room: ${props.room}` : ''}
-            </td>
-        </tr>
-        ${props.url ? `
-        <tr>
-            <td colspan="2">
-                <a href="${props.url}" class="building-url" target="_blank">View First Aiders List</a>
-            </td>
-        </tr>
-        ` : ''}
-    `;
-}
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="2">
+                    <strong style="font-size: 1.2em;">${props.building}</strong><br>
+                    <span style="color: #666;">${props.address || 'No address available'}</span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    ${props.location_details || 'No specific location details available'}<br>
+                    ${props.floor ? `Floor: ${props.floor}<br>` : ''}
+                    ${props.room ? `Room: ${props.room}` : ''}
+                </td>
+            </tr>
+            ${props.url ? `
+            <tr>
+                <td colspan="2">
+                    <a href="${props.url}" class="building-url" target="_blank">View First Aiders List</a>
+                </td>
+            </tr>
+            ` : ''}
+        `;
+    }
 
-    // Search functionality
     function handleSearch(e) {
         const searchTerm = e.target.value.toLowerCase().trim();
         
@@ -1295,7 +1044,6 @@ const perf = {
         }, 300);
     }
 
-    // Info panel updates
     function updateInfoPanel(features) {
         perf.start('updatePanel');
 
@@ -1337,7 +1085,6 @@ const perf = {
         perf.end('updatePanel');
     }
 
-    // Font size controls
     function updateFontSize(increase) {
         state.currentFontSize = increase ? 
             Math.min(state.currentFontSize + 0.2, 2) : 
@@ -1349,11 +1096,10 @@ const perf = {
         });
     }
 
-// Event handlers setup
-function setupEventListeners() {
-    // Map movement events
-    state.map.on('moveend', debounce(updateVisibleBuildings, 100));   
-    state.map.on('zoomend', debounce(updateVisibleBuildings, 100));
+    function setupEventListeners() {
+        // Map movement events
+        state.map.on('moveend', debounce(updateVisibleBuildings, 100));   
+        state.map.on('zoomend', debounce(updateVisibleBuildings, 100));
 
         // Panel toggle
         document.getElementById('collapse-button').addEventListener('click', () => {
@@ -1376,81 +1122,21 @@ function setupEventListeners() {
             showBuildingDetails(buildingData);
         });
 
-        // Modal event listeners
-        document.querySelector('.modal-close').addEventListener('click', () => modal.hide());
-        
-        document.querySelector('.modal-nav').addEventListener('click', (e) => {
-            const action = e.target.closest('.modal-nav-button')?.dataset.action;
-            if (!action) return;
-            
-            if (action === 'back') {
-                if (state.modalHistory.length > 1) {
-                    state.modalHistory.pop(); // Remove current
-                    modal.loadBuildingUrl(state.modalHistory.pop()); // Load previous
-                } else {
-                    modal.hide();
-                }
-            } else if (action === 'refresh') {
-                modal.loadBuildingUrl(modal.frame.src);
-            }
+        // Building details panel event listeners
+        const detailsPanel = document.getElementById('building-details-panel');
+        const closeDetailsButton = document.getElementById('close-details-panel');
+
+        closeDetailsButton.addEventListener('click', () => {
+            detailsPanel.classList.remove('visible');
         });
 
-        // Close modal on overlay click
-        modal.overlay.addEventListener('click', (e) => {
-            if (e.target === modal.overlay) {
-                modal.hide();
-            }
-        });
-
-        // View building info button delegation
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('view-building-info')) {
-                if (state.selectedBuilding && state.selectedBuilding.properties.url) {
-                    modal.show(state.selectedBuilding);
-                }
-            }
-        });
-
-        // Keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                modal.hide();
-                elements.infoPanel.classList.add('collapsed');
-            } else if (e.key === 'f' && (e.ctrlKey || e.metaKey)) {
-                e.preventDefault();
-                elements.searchBox.focus();
-            }
-        });
-
-        // Window resize
-        window.addEventListener('resize', debounce(() => {
-            if (state.map) {
-                updateLayoutForScreenSize();
-            }
-        }, 250));
-
-        // Device orientation change
-        window.addEventListener('orientationchange', () => {
-            setTimeout(() => {
-                if (state.map) {
-                    updateLayoutForScreenSize();
-                }
-            }, 200);
-        });
-
-        // Visibility change
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                if (state.searchDebounceTimeout) {
-                    clearTimeout(state.searchDebounceTimeout);
-                }
-            } else {
-                updateVisibleBuildings();
+        detailsPanel.addEventListener('click', (e) => {
+            if (e.target === detailsPanel) {
+                detailsPanel.classList.remove('visible');
             }
         });
     }
 
-    // Layout updates
     function updateLayoutForScreenSize() {
         const isMobile = window.innerWidth <= 768;
         const panel = elements.infoPanel;
@@ -1482,7 +1168,6 @@ function setupEventListeners() {
         });
     }
 
-    // Utility functions
     function debounce(func, wait) {
         let timeout;
         return function executedFunction(...args) {
@@ -1495,7 +1180,6 @@ function setupEventListeners() {
         };
     }
 
-    // Map load handler
     function onMapLoad() {
         addMapControls();
         updateLayoutForScreenSize();
@@ -1509,7 +1193,6 @@ function setupEventListeners() {
         }
     }
 
-    // Application cleanup
     function cleanup() {
         if (state.searchDebounceTimeout) {
             clearTimeout(state.searchDebounceTimeout);
@@ -1524,7 +1207,6 @@ function setupEventListeners() {
         elements.kitList.classList.remove('with-table');
     }
 
-    // Initialize application
     function initializeApplication() {
         perf.start('totalLoad');
         
@@ -1543,13 +1225,9 @@ function setupEventListeners() {
         window.addEventListener('beforeunload', cleanup);
     }
 
-    // Start the application when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initializeApplication);
     } else {
         initializeApplication();
     }
 })();
-</script>
-</body>
-</html>
