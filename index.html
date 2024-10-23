@@ -1343,11 +1343,11 @@ const perf = {
         });
     }
 
-    // Event handlers setup
-    function setupEventListeners() {
-        // Map movement events
-        state.map.on('moveend', debounce(update state.map.on('moveend', debounce(updateVisibleBuildings, 100));
-        state.map.on('zoomend', debounce(updateVisibleBuildings, 100));
+// Event handlers setup
+function setupEventListeners() {
+    // Map movement events
+    state.map.on('moveend', debounce(updateVisibleBuildings, 100));   
+    state.map.on('zoomend', debounce(updateVisibleBuildings, 100));
 
         // Panel toggle
         document.getElementById('collapse-button').addEventListener('click', () => {
