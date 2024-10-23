@@ -1222,12 +1222,9 @@ const perf = {
         elements.kitList.classList.add('with-table');
     }
 
-    function updateDetailsTable(feature) {
+   function updateDetailsTable(feature) {
     const tableBody = document.querySelector('.kit-details-table tbody');
     const props = feature.properties;
-
-    // Remove the table headers completely
-    document.querySelector('.kit-details-table thead').style.display = 'none';
 
     // Update layout and content
     tableBody.innerHTML = `
@@ -1239,26 +1236,18 @@ const perf = {
         </tr>
         <tr>
             <td colspan="2">
-                <strong>First Aid Kit Location:</strong><br>
                 ${props.location_details || 'No specific location details available'}<br>
                 ${props.floor ? `Floor: ${props.floor}<br>` : ''}
                 ${props.room ? `Room: ${props.room}` : ''}
             </td>
         </tr>
+        ${props.url ? `
         <tr>
             <td colspan="2">
-                <strong>Access:</strong><br>
-                ${props.access_hours || 'No access information available'}
+                <a href="${props.url}" class="building-url" target="_blank">View First Aiders List</a>
             </td>
         </tr>
-        <tr>
-            <td colspan="2">
-                <strong>First Aid Information:</strong><br>
-                ${props.url ? 
-                    `<a href="${props.url}" class="building-url" target="_blank">View First Aiders List</a>` : 
-                    'No first aid information available'}
-            </td>
-        </tr>
+        ` : ''}
     `;
 }
 
