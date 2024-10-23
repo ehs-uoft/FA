@@ -459,17 +459,29 @@ body {
     box-shadow: 0 2px 4px var(--shadow-color);
 }
 
-.kit-details-table th,
 .kit-details-table td {
-    padding: 12px;
-    text-align: left;
+    padding: 15px;
     border-bottom: 1px solid var(--border-color);
 }
 
-.kit-details-table th {
-    background: var(--primary-color);
+.kit-details-table tr:last-child td {
+    border-bottom: none;
+}
+
+.building-url {
+    display: inline-block;
+    margin-top: 5px;
+    color: var(--secondary-color);
+    text-decoration: none;
+    padding: 5px 10px;
+    border: 1px solid var(--secondary-color);
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.building-url:hover {
+    background: var(--secondary-color);
     color: white;
-    font-weight: 500;
 }
 
 .table-container {
@@ -617,17 +629,11 @@ body {
                spellcheck="false">
         <div id="kit-list"></div>
         <div class="table-container">
-            <table class="kit-details-table">
-                <thead>
-                    <tr>
-                        <th>Property</th>
-                        <th>Value</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Table content will be dynamically populated -->
-                </tbody>
-            </table>
+           <table class="kit-details-table">
+    <tbody>
+        <!-- Table content will be dynamically populated -->
+    </tbody>
+</table>
         </div>
     </div>
 
@@ -1217,33 +1223,44 @@ const perf = {
     }
 
     function updateDetailsTable(feature) {
-        const tableBody = document.querySelector('.kit-details-table tbody');
-        const props = feature.properties;
+    const tableBody = document.querySelector('.kit-details-table tbody');
+    const props = feature.properties;
 
-        const displayProperties = [
-            { label: 'Building', value: props.building },
-            { label: 'Address', value: props.address || 'N/A' },
-            { label: 'Floor', value: props.floor || 'N/A' },
-            { label: 'Room', value: props.room || 'N/A' },
-            { label: 'Location Details', value: props.location_details || 'N/A' },
-            { label: 'Access Hours', value: props.access_hours || 'N/A' },
-            { label: 'Department', value: props.department || 'N/A' },
-            { label: 'Contact', value: props.contact || 'N/A' },
-            { 
-                label: 'Building Info', 
-                value: props.url ? 
-                    `<button class="view-building-info">View Building Information</button>` : 
-                    'N/A'
-            }
-        ];
+    // Remove the table headers completely
+    document.querySelector('.kit-details-table thead').style.display = 'none';
 
-        tableBody.innerHTML = displayProperties.map(prop => `
-            <tr>
-                <td><strong>${prop.label}</strong></td>
-                <td>${prop.value}</td>
-            </tr>
-        `).join('');
-    }
+    // Update layout and content
+    tableBody.innerHTML = `
+        <tr>
+            <td colspan="2">
+                <strong style="font-size: 1.2em;">${props.building}</strong><br>
+                <span style="color: #666;">${props.address || 'No address available'}</span>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <strong>First Aid Kit Location:</strong><br>
+                ${props.location_details || 'No specific location details available'}<br>
+                ${props.floor ? `Floor: ${props.floor}<br>` : ''}
+                ${props.room ? `Room: ${props.room}` : ''}
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <strong>Access:</strong><br>
+                ${props.access_hours || 'No access information available'}
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <strong>First Aid Information:</strong><br>
+                ${props.url ? 
+                    `<a href="${props.url}" class="building-url" target="_blank">View First Aiders List</a>` : 
+                    'No first aid information available'}
+            </td>
+        </tr>
+    `;
+}
 
     // Search functionality
     function handleSearch(e) {
