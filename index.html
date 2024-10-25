@@ -130,10 +130,6 @@
         will-change: transform;
     }
 
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
-
     /* Toast System */
     #toast-container {
         position: fixed;
@@ -178,445 +174,292 @@
         color: var(--text-color);
     }
 
-    /* Info Panel */
-    #info-panel {
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 380px;
-        height: 100vh;
-        background: var(--panel-background);
-        box-shadow: -2px 0 10px var(--shadow-color);
-        transform: translateX(0);
-        transition: transform var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+    /* Floating Card */
+    .floating-card {
+        position: fixed;
+        bottom: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        max-width: 400px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
         z-index: var(--layer-controls);
-        display: flex;
-        flex-direction: column;
-        overscroll-behavior: contain;
-        contain: layout size;
-        will-change: transform;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        opacity: 0;
+        transform: translateX(-50%) translateY(100%);
+        pointer-events: none;
     }
 
-    #info-panel.collapsed {
-        transform: translateX(380px);
+    .floating-card.active {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+        pointer-events: all;
     }
 
-    .panel-header {
-        padding: 20px;
-        background: var(--primary-color);
-        color: white;
-        flex-shrink: 0;
-    }
-
-    .panel-header h2 {
-        margin: 0;
-        font-size: 1.5em;
-        font-weight: 500;
-    }
-
-    .search-container {
-        padding: 15px 20px;
-        background: white;
+    .card-header {
+        padding: 16px 20px;
         border-bottom: 1px solid var(--border-color);
-    }
-
-    .search-input-wrapper {
-        position: relative;
-        display: flex;
-        align-items: center;
-    }
-
-    .search-icon {
-        position: absolute;
-        left: 12px;
-        color: var(--text-muted);
-    }
-
-    #search-box {
-        width: 100%;
-        padding: 12px 12px 12px 40px;
-        border: 2px solid var(--border-color);
-        border-radius: 8px;
-        font-size: 1rem;
-        transition: border-color var(--transition-speed) ease,
-                    box-shadow var(--transition-speed) ease;
-        -webkit-appearance: none;
-        appearance: none;
-    }
-
-    #search-box:focus {
-        outline: none;
-        border-color: var(--secondary-color);
-        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-    }
-
-    .clear-search {
-        position: absolute;
-        right: 12px;
-        background: none;
-        border: none;
-        color: var(--text-muted);
-        cursor: pointer;
-        padding: 5px;
-        border-radius: 50%;
-        transition: background-color var(--transition-speed) ease;
-    }
-
-    .clear-search:hover {
-        background-color: var(--hover-color);
-    }
-
-    /* Kit List */
-    #kit-list {
-        flex-grow: 1;
-        overflow-y: auto;
-        padding: 20px;
-        -webkit-overflow-scrolling: touch;
-        scroll-behavior: smooth;
-        overscroll-behavior: contain;
-    }
-
-    .kit-item {
-        background: white;
-        margin-bottom: 15px;
-        padding: 15px;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: transform var(--transition-speed) ease,
-                    box-shadow var(--transition-speed) ease,
-                    border-color var(--transition-speed) ease;
-        border: 1px solid var(--border-color);
-        box-shadow: 0 2px 4px var(--shadow-color);
-        position: relative;
-    }
-
-    .kit-item:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px var(--shadow-color);
-        border-color: var(--secondary-color);
-    }
-
-    .kit-item h3 {
-        font-size: 1.2em;
-        margin: 0 0 8px 0;
-        color: var(--primary-color);
-    }
-
-    .kit-item p {
-        margin: 0;
-        color: var(--text-muted);
-    }
-
-    .kit-item.selected {
-        border-color: var(--accent-color);
-        background-color: rgba(231, 76, 60, 0.05);
-    }
-
-    /* Kit Details Table */
-    .table-container {
-        margin: 0 20px 20px;
-        display: none;
-    }
-
-    .table-container.visible {
-        display: block;
-    }
-
-    .kit-details-table {
-        width: 100%;
-        border-collapse: collapse;
-        background: white;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 2px 8px var(--shadow-color);
-    }
-
-    .kit-details-table td {
-        padding: 15px;
-        border-bottom: 1px solid var(--border-color);
-    }
-
-    .kit-details-table tr:last-child td {
-        border-bottom: none;
-    }
-
-    .building-header {
-        background: var(--primary-color);
-        color: white;
-    }
-
-    .building-title {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 0.5rem;
     }
 
-    .kit-count {
-        background: rgba(255, 255, 255, 0.2);
-        padding: 0.3rem 0.8rem;
+    .card-header h3 {
+        margin: 0;
+        font-size: 1.3em;
+        color: var(--primary-color);
+    }
+
+    .building-status {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.9em;
+        color: var(--text-muted);
+    }
+
+    .quick-actions {
+        padding: 12px 20px;
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .quick-actions::-webkit-scrollbar {
+        display: none;
+    }
+
+    .action-pill {
+        padding: 8px 16px;
         border-radius: 20px;
+        border: none;
+        background: var(--hover-color);
+        color: var(--text-color);
+        font-size: 0.9em;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.2s ease;
+    }
+
+    .action-pill:hover {
+        background: var(--border-color);
+    }
+
+    .action-pill.primary {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .action-pill.primary:hover {
+        background: var(--secondary-color);
+    }
+
+    /* Bottom Navigation */
+    .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        display: flex;
+        justify-content: space-around;
+        padding: 12px 0;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        z-index: var(--layer-controls);
+    }
+
+    .nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: color 0.2s ease;
+        padding: 8px 16px;
+        border-radius: 8px;
+    }
+
+    .nav-item.active {
+        color: var(--primary-color);
+        background: var(--hover-color);
+    }
+
+    .nav-item i {
+        font-size: 1.2em;
+    }
+
+    .nav-item span {
+        font-size: 0.8em;
+    }
+
+    /* Context Bar */
+    .context-bar {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 8px 16px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        z-index: var(--layer-controls);
         font-size: 0.9em;
     }
 
-    .kit-info {
-        padding: 1.2rem;
+    .nearest-kit {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding-left: 16px;
+        border-left: 1px solid var(--border-color);
+    }
+
+    /* Fullscreen Content */
+    .fullscreen-content {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: white;
+        z-index: var(--layer-modal);
         display: flex;
         flex-direction: column;
-        gap: 0.8rem;
+        animation: slideUp 0.3s ease-out;
     }
 
-    .kit-divider {
-        border-bottom: 1px solid var(--border-color);
+    .fullscreen-header {
+        background: var(--primary-color);
+        color: white;
+        padding: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
-    .kit-detail {
-        display: inline-flex;
+    .back-to-map {
+        background: rgba(255,255,255,0.2);
+        border: none;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
         align-items: center;
         gap: 0.5rem;
-        background: var(--hover-color);
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
-        font-size: 0.95em;
+        transition: background-color 0.2s ease;
     }
 
-    /* Controls */
-    #collapse-button {
-        position: absolute;
-        left: -48px;
-        top: 20px;
+    .back-to-map:hover {
+        background: rgba(255,255,255,0.3);
+    }
+
+    .fullscreen-frame {
+        flex: 1;
+        width: 100%;
+        border: none;
+    }
+
+    /* Font Controls */
+    #font-controls {
+        position: fixed;
+        bottom: 100px;
+        right: 20px;
+        background: var(--panel-background);
+        padding: 8px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px var(--shadow-color);
+        z-index: var(--layer-controls);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .control-button {
         background: var(--primary-color);
         color: white;
         border: none;
-        border-radius: 8px 0 0 8px;
-        padding: 12px;
+        padding: 8px;
+        width: 36px;
+        height: 36px;
+        border-radius: 6px;
         cursor: pointer;
-        transition: background-color var(--transition-speed) ease;
-        box-shadow: -2px 0 5px var(--shadow-color);
-        width: 48px;
-        height: 48px;
+        font-size: 1rem;
         display: flex;
         align-items: center;
         justify-content: center;
-        z-index: calc(var(--layer-controls) + 1);
+        transition: background-color var(--transition-speed) ease;
     }
 
-    #collapse-button:hover {
-        background-color: var(--secondary-color);
+    .control-button:hover {
+        background: var(--secondary-color);
     }
 
-    #collapse-button i {
-        transition: transform var(--transition-speed) ease;
+    /* Animations */
+    @keyframes spin {
+        to { transform: rotate(360deg); }
     }
 
-    #info-panel.collapsed #collapse-button i {
-        transform: rotate(180deg);
+    @keyframes slideIn {
+        from { 
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
-        /* Font Controls */
-   #font-controls {
-       position: fixed;
-       bottom: 20px;
-       right: 400px;
-       background: var(--panel-background);
-       padding: 8px;
-       border-radius: 8px;
-       box-shadow: 0 2px 4px var(--shadow-color);
-       z-index: var(--layer-controls);
-       display: flex;
-       gap: 10px;
-   }
+    @keyframes slideUp {
+        from {
+            transform: translateY(100%);
+        }
+        to {
+            transform: translateY(0);
+        }
+    }
 
-   .control-button {
-       background: var(--primary-color);
-       color: white;
-       border: none;
-       padding: 8px 12px;
-       border-radius: 6px;
-       cursor: pointer;
-       font-size: 1rem;
-       transition: background-color var(--transition-speed) ease;
-   }
-
-   .control-button:hover {
-       background: var(--secondary-color);
-   }
-
-   /* Modal Styles */
-   .modal-overlay {
-       position: fixed;
-       top: 0;
-       left: 0;
-       right: 0;
-       bottom: 0;
-       background: rgba(0, 0, 0, 0.7);
-       backdrop-filter: blur(5px);
-       -webkit-backdrop-filter: blur(5px);
-       z-index: var(--layer-modal);
-       opacity: 0;
-       visibility: hidden;
-       transition: opacity var(--transition-speed), visibility var(--transition-speed);
-   }
-
-   .modal-overlay.active {
-       opacity: 1;
-       visibility: visible;
-   }
-
-   .modal-container {
-       position: absolute;
-       top: 50%;
-       left: 50%;
-       transform: translate(-50%, -50%) scale(0.9);
-       width: 90%;
-       max-width: 1200px;
-       height: 80vh;
-       background: white;
-       border-radius: 12px;
-       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-       display: flex;
-       flex-direction: column;
-       overflow: hidden;
-       transition: transform var(--transition-speed);
-   }
-
-   .modal-overlay.active .modal-container {
-       transform: translate(-50%, -50%) scale(1);
-   }
-
-   .modal-header {
-       display: flex;
-       align-items: center;
-       justify-content: space-between;
-       padding: 16px 24px;
-       background: var(--primary-color);
-       color: white;
-   }
-
-   .modal-close {
-       background: rgba(0, 0, 0, 0.1);
-       border: none;
-       color: white;
-       font-size: 1.8rem;
-       cursor: pointer;
-       padding: 8px;
-       width: 44px;
-       height: 44px;
-       border-radius: 8px;
-       display: flex;
-       align-items: center;
-       justify-content: center;
-       transition: all 0.2s ease;
-   }
-
-   .modal-close:hover {
-       background: rgba(0, 0, 0, 0.2);
-       transform: scale(1.05);
-   }
-
-   .modal-content {
-       flex: 1;
-       display: flex;
-       min-height: 0;
-   }
-
-   .modal-sidebar {
-       width: 300px;
-       background: var(--background-color);
-       padding: 20px;
-       border-right: 1px solid var(--border-color);
-       overflow-y: auto;
-   }
-
-   .modal-main {
-       flex: 1;
-       position: relative;
-       background: white;
-   }
-
-   .building-info-frame {
-       width: 100%;
-       height: 100%;
-       border: none;
-       opacity: 0;
-       transition: opacity var(--transition-speed);
-   }
-
-   /* Animations */
-   @keyframes slideIn {
-       from { 
-           opacity: 0;
-           transform: translateY(-20px);
+    /* Media Queries */
+    @media (max-width: 768px) {
+        .floating-card {
+            bottom: 90px;
+            width: 95%;
        }
-       to {
-           opacity: 1;
-           transform: translateY(0);
-       }
-   }
-
-   /* Media Queries */
-   @media (max-width: 1024px) {
-       #info-panel {
-           width: 320px;
-       }
-
-       #info-panel.collapsed {
-           transform: translateX(320px);
-       }
-
-       .modal-sidebar {
-           width: 250px;
-       }
-
-       #font-controls {
-           right: 340px;
-       }
-   }
-
-   @media (max-width: 768px) {
-       #info-panel {
-           width: 100%;
-           height: 50vh;
-           top: auto;
-           bottom: 0;
-           transform: translateY(0);
-       }
-
-       #info-panel.collapsed {
-           transform: translateY(calc(100% - 60px));
-       }
-
-       #collapse-button {
-           top: -48px;
-           left: 20px;
-           border-radius: 8px 8px 0 0;
-       }
-
-       #collapse-button i {
-           transform: rotate(-90deg);
-       }
-
-       #info-panel.collapsed #collapse-button i {
-           transform: rotate(90deg);
-       }
-
-       .modal-container {
-           width: 95%;
-           height: 90vh;
-       }
-
-       .modal-content {
+       
+       .context-bar {
            flex-direction: column;
+           gap: 8px;
+           width: 90%;
+           text-align: center;
        }
-
-       .modal-sidebar {
-           width: 100%;
-           max-height: 200px;
+       
+       .nearest-kit {
+           padding: 0;
+           border-left: none;
+           border-top: 1px solid var(--border-color);
+           padding-top: 8px;
        }
 
        #font-controls {
-           right: 10px;
-           bottom: calc(50vh + 20px);
+           bottom: unset;
+           top: 20px;
+           right: 20px;
        }
    }
 
@@ -631,10 +474,6 @@
    }
 
    @media (forced-colors: active) {
-       .kit-item {
-           border: 1px solid CanvasText;
-       }
-       
        .control-button {
            border: 1px solid CanvasText;
        }
@@ -642,15 +481,30 @@
    </style>
 </head>
 <body>
+   <!-- Map Container -->
    <div id="map" role="application" aria-label="Interactive map of first aid kit locations"></div>
    
+   <!-- Toast Container -->
    <div id="toast-container" role="alert" aria-live="polite"></div>
    
+   <!-- Loading Indicator -->
    <div id="loading-indicator" role="status">
        <div class="spinner" aria-hidden="true"></div>
        <div class="loading-text">Loading map data...</div>
    </div>
 
+   <!-- Context Bar -->
+   <div class="context-bar">
+       <div class="context-info">
+           <i class="fas fa-sun"></i> All first aid kits available
+       </div>
+       <div class="nearest-kit">
+           <i class="fas fa-location-arrow"></i>
+           <span>Select a building to see details</span>
+       </div>
+   </div>
+
+   <!-- Font Controls -->
    <div id="font-controls" class="control-group">
        <button class="control-button" id="decrease-font" aria-label="Decrease font size">
            <i class="fas fa-minus" aria-hidden="true"></i>
@@ -660,69 +514,50 @@
        </button>
    </div>
 
-   <div id="info-panel" class="panel">
-       <button id="collapse-button" aria-label="Toggle info panel">
-           <i class="fas fa-chevron-left" aria-hidden="true"></i>
-       </button>
-       
-       <div class="panel-header">
-           <h2>First Aid Kit Locations</h2>
+   <!-- Floating Card -->
+   <div class="floating-card" id="building-card">
+       <div class="card-header">
+           <h3></h3>
+           <div class="building-status"></div>
        </div>
-
-       <div class="search-container">
-           <div class="search-input-wrapper">
-               <i class="fas fa-search search-icon" aria-hidden="true"></i>
-               <input type="text" 
-                      id="search-box" 
-                      placeholder="Search for a building..." 
-                      aria-label="Search for a building"
-                      autocomplete="off"
-                      spellcheck="false">
-               <button class="clear-search hidden" aria-label="Clear search">
-                   <i class="fas fa-times" aria-hidden="true"></i>
-               </button>
-           </div>
-       </div>
-
-       <div id="kit-list" class="scrollable-content"></div>
-       
-       <div class="table-container">
-           <table class="kit-details-table">
-               <tbody></tbody>
-           </table>
+       <div class="quick-actions">
+           <button class="action-pill" onclick="centerOnBuilding()">
+               <i class="fas fa-crosshairs"></i> Center
+           </button>
+           <button class="action-pill" onclick="shareBuilding()">
+               <i class="fas fa-share"></i> Share
+           </button>
+           <button class="action-pill primary" onclick="showFirstAidInfo()">
+               <i class="fas fa-first-aid"></i> View First Aid Info
+           </button>
        </div>
    </div>
 
-   <div id="last-updated">Last Updated: Loading...</div>
-
-   <div class="modal-overlay" aria-modal="true" aria-hidden="true">
-       <div class="modal-container">
-           <div class="modal-header">
-               <h3>Building Information</h3>
-               <button class="modal-close" aria-label="Close modal">
-                   <i class="fas fa-times" aria-hidden="true"></i>
-               </button>
-           </div>
-           <div class="modal-content">
-               <div class="modal-sidebar">
-                   <div class="building-quick-info"></div>
-               </div>
-               <div class="modal-main">
-                   <iframe class="building-info-frame" 
-                           title="Building Information"
-                           sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-                           loading="lazy"></iframe>
-                   <div class="loading-spinner">
-                       <div class="spinner"></div>
-                   </div>
-               </div>
-           </div>
+   <!-- Bottom Navigation -->
+   <div class="bottom-nav">
+       <div class="nav-item active" onclick="switchView('map')">
+           <i class="fas fa-map-marked-alt"></i>
+           <span>Map</span>
+       </div>
+       <div class="nav-item" onclick="switchView('buildings')">
+           <i class="fas fa-building"></i>
+           <span>Buildings</span>
+       </div>
+       <div class="nav-item" onclick="switchView('saved')">
+           <i class="fas fa-star"></i>
+           <span>Saved</span>
+       </div>
+       <div class="nav-item" onclick="switchView('info')">
+           <i class="fas fa-info-circle"></i>
+           <span>Info</span>
        </div>
    </div>
 
+   <!-- Mapbox Script -->
    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+   
    <script>
-       // Performance monitoring
+   // Performance monitoring
    const perf = {
        marks: new Map(),
        start: (name) => {
@@ -762,12 +597,11 @@
            searchDebounceTimeout: null,
            errorTimeout: null,
            selectedBuilding: null,
-           modalHistory: [],
-           currentBuilding: null,
            networkStatus: {
                isUoftNetwork: false,
                checkedNetwork: false
-           }
+           },
+           currentView: 'map'
        };
 
        // Cache DOM elements
@@ -775,19 +609,10 @@
            map: document.getElementById('map'),
            loading: document.getElementById('loading-indicator'),
            toastContainer: document.getElementById('toast-container'),
-           infoPanel: document.getElementById('info-panel'),
-           searchBox: document.getElementById('search-box'),
-           searchClear: document.querySelector('.clear-search'),
-           kitList: document.getElementById('kit-list'),
-           tableContainer: document.querySelector('.table-container'),
-           lastUpdated: document.getElementById('last-updated'),
-           modal: {
-               overlay: document.querySelector('.modal-overlay'),
-               container: document.querySelector('.modal-container'),
-               frame: document.querySelector('.building-info-frame'),
-               spinner: document.querySelector('.modal-main .loading-spinner'),
-               quickInfo: document.querySelector('.building-quick-info')
-           }
+           buildingCard: document.getElementById('building-card'),
+           fontControls: document.getElementById('font-controls'),
+           contextBar: document.querySelector('.context-bar'),
+           nearestKit: document.querySelector('.nearest-kit span')
        };
 
        // Toast system
@@ -819,7 +644,6 @@
                }
            }
        };
-
        // Network status check
        async function checkUoftNetwork() {
            if (state.networkStatus.checkedNetwork) {
@@ -895,6 +719,7 @@
                showLoading(false);
            }
        }
+
        // GeoJSON data fetching
        async function fetchGeoJSONData() {
            perf.start('dataFetch');
@@ -1098,14 +923,6 @@
            });
            state.map.addControl(nav, 'top-left');
 
-           // Fullscreen control
-           state.map.addControl(
-               new mapboxgl.FullscreenControl({
-                   container: document.documentElement
-               }),
-               'top-left'
-           );
-
            // Scale control
            const scale = new mapboxgl.ScaleControl({
                maxWidth: 100,
@@ -1153,6 +970,175 @@
            customControls.appendChild(resetViewButton);
            state.map.addControl({ onAdd: () => customControls, onRemove: () => {} }, 'top-left');
        }
+
+       // Building management functions
+       function showBuildingDetails(feature) {
+           const props = feature.properties;
+           const coordinates = feature.geometry.coordinates;
+           state.selectedBuilding = feature;
+
+           // Update map view
+           state.map.flyTo({
+               center: coordinates,
+               zoom: Math.max(state.map.getZoom(), 17),
+               speed: 1.2,
+               curve: 1.42
+           });
+
+           // Update source data
+           const updatedFeatures = state.kitFeatures.map(f => ({
+               ...f,
+               properties: {
+                   ...f.properties,
+                   selected: f.properties.building === props.building
+               }
+           }));
+
+           if (state.map.getSource('kits')) {
+               state.map.getSource('kits').setData({
+                   type: 'FeatureCollection',
+                   features: updatedFeatures
+               });
+           }
+
+           // Update floating card
+           const card = elements.buildingCard;
+           card.querySelector('h3').textContent = props.building;
+           card.querySelector('.building-status').innerHTML = `
+               <i class="fas fa-map-marker-alt"></i>
+               ${props.address || 'Address not available'}
+           `;
+           card.classList.add('active');
+
+           // Update context bar
+           elements.nearestKit.textContent = `Selected: ${props.building}`;
+       }
+
+       function hideBuildingDetails() {
+           state.selectedBuilding = null;
+           elements.buildingCard.classList.remove('active');
+           elements.nearestKit.textContent = 'Select a building to see details';
+       }
+
+       // Navigation functions
+       function switchView(view) {
+           state.currentView = view;
+           document.querySelectorAll('.nav-item').forEach(item => {
+               item.classList.toggle('active', item.textContent.toLowerCase().includes(view));
+           });
+
+           // Handle view changes
+           switch(view) {
+               case 'map':
+                   elements.map.style.display = 'block';
+                   break;
+               case 'buildings':
+                   showBuildingsList();
+                   break;
+               case 'saved':
+                   showSavedBuildings();
+                   break;
+               case 'info':
+                   showInformation();
+                   break;
+           }
+       }
+
+       // View handling functions
+       function showBuildingsList() {
+           // Implementation for buildings list view
+           toast.create('info', 'Buildings list view coming soon');
+       }
+
+       function showSavedBuildings() {
+           // Implementation for saved buildings
+           toast.create('info', 'Saved buildings feature coming soon');
+       }
+
+       function showInformation() {
+           // Implementation for information view
+           toast.create('info', 'Information view coming soon');
+       }
+
+       // Action functions
+       function centerOnBuilding() {
+           if (state.selectedBuilding) {
+               state.map.flyTo({
+                   center: state.selectedBuilding.geometry.coordinates,
+                   zoom: 18,
+                   pitch: 45,
+                   bearing: 30,
+                   duration: 1500
+               });
+           }
+       }
+
+       function shareBuilding() {
+           if (state.selectedBuilding) {
+               const props = state.selectedBuilding.properties;
+               const coords = state.selectedBuilding.geometry.coordinates;
+               const shareUrl = `https://maps.google.com/?q=${coords[1]},${coords[0]}`;
+               
+               if (navigator.share) {
+                   navigator.share({
+                       title: `First Aid Kit Location - ${props.building}`,
+                       text: `First Aid Kit location at ${props.building}, ${props.address}`,
+                       url: shareUrl
+                   }).catch(console.error);
+               } else {
+                   navigator.clipboard.writeText(shareUrl)
+                       .then(() => toast.create('success', 'Location link copied to clipboard'))
+                       .catch(() => toast.create('error', 'Failed to copy location link'));
+               }
+           }
+       }
+
+       async function showFirstAidInfo() {
+           if (!state.selectedBuilding?.properties?.url) {
+               toast.create('info', 'No additional information available');
+               return;
+           }
+
+           const isOnUoftNetwork = await checkUoftNetwork();
+           if (!isOnUoftNetwork) {
+               toast.create('warning', 'UofT network access required to view first aid information');
+               return;
+           }
+
+           const url = state.selectedBuilding.properties.url;
+           showFullscreenContent(url);
+       }
+
+       // Fullscreen content handling
+       function showFullscreenContent(url) {
+           const content = document.createElement('div');
+           content.className = 'fullscreen-content';
+           content.innerHTML = `
+               <div class="fullscreen-header">
+                   <h3>${state.selectedBuilding.properties.building}</h3>
+                   <button class="back-to-map" onclick="hideFullscreenContent()">
+                       <i class="fas fa-arrow-left"></i> Back to Map
+                   </button>
+               </div>
+               <iframe src="${url}" 
+                       class="fullscreen-frame"
+                       title="Building First Aid Information"
+                       sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
+           `;
+           
+           document.body.appendChild(content);
+           document.body.style.overflow = 'hidden';
+       }
+
+       function hideFullscreenContent() {
+           const content = document.querySelector('.fullscreen-content');
+           if (content) {
+               content.addEventListener('animationend', () => content.remove());
+               content.style.animation = 'slideDown 0.3s ease-in forwards';
+               document.body.style.overflow = '';
+           }
+       }
+
        // 3D View Toggle
        function toggle3DView() {
            const is3DActive = state.map.getPitch() !== 0;
@@ -1206,8 +1192,17 @@
 
            // Single point click
            state.map.on('click', 'unclustered-point', (e) => {
-               const coordinates = e.features[0].geometry.coordinates.slice();
                showBuildingDetails(e.features[0]);
+           });
+
+           // Map click outside points
+           state.map.on('click', (e) => {
+               const features = state.map.queryRenderedFeatures(e.point, { 
+                   layers: ['clusters', 'unclustered-point'] 
+               });
+               if (features.length === 0) {
+                   hideBuildingDetails();
+               }
            });
 
            // Hover effects
@@ -1226,207 +1221,6 @@
            });
        }
 
-       // Building details handling
-       function showBuildingDetails(feature) {
-           perf.start('showDetails');
-           
-           const coordinates = feature.geometry.coordinates;
-           state.selectedBuilding = feature;
-
-           // Update map view
-           state.map.flyTo({
-               center: coordinates,
-               zoom: Math.max(state.map.getZoom(), 17),
-               speed: 1.2,
-               curve: 1.42
-           });
-
-           // Update source data
-           const updatedFeatures = state.kitFeatures.map(f => ({
-               ...f,
-               properties: {
-                   ...f.properties,
-                   selected: f.properties.building === feature.properties.building
-               }
-           }));
-
-           if (state.map.getSource('kits')) {
-               state.map.getSource('kits').setData({
-                   type: 'FeatureCollection',
-                   features: updatedFeatures
-               });
-           }
-
-           // Update UI
-           updateBuildingSelection(feature);
-           updateDetailsTable(feature);
-           
-           perf.end('showDetails');
-       }
-
-       function formatFirstAidKits(kits) {
-           if (!kits || !kits.length) return 'No kit information available';
-           
-           return kits.map((kit, index) => `
-               <div class="kit-info ${index !== kits.length - 1 ? 'kit-divider' : ''}">
-                   ${kit.floor ? `<span class="kit-detail">
-                       <i class="fas fa-building"></i> Floor: ${kit.floor}
-                   </span>` : ''}
-                   ${kit.room ? `<span class="kit-detail">
-                       <i class="fas fa-door-open"></i> Room: ${kit.room}
-                   </span>` : ''}
-                   ${kit.otherDetails ? `<div class="kit-other-details">
-                       <i class="fas fa-info-circle"></i> ${kit.otherDetails}
-                   </div>` : ''}
-               </div>
-           `).join('');
-       }
-
-       function updateBuildingSelection(feature) {
-           const listItems = elements.kitList.querySelectorAll('.kit-item');
-           const buildingName = feature.properties.building;
-           
-           listItems.forEach(item => {
-               const isMatch = item.querySelector('h3').textContent === buildingName;
-               item.classList.toggle('selected', isMatch);
-               
-               if (isMatch) {
-                   item.scrollIntoView({ 
-                       behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 
-                                'auto' : 'smooth',
-                       block: 'nearest'
-                   });
-               }
-           });
-
-           elements.tableContainer.classList.add('visible');
-           elements.kitList.classList.add('with-table');
-       }
-
-       function updateDetailsTable(feature) {
-           const tableBody = document.querySelector('.kit-details-table tbody');
-           const props = feature.properties;
-           
-           tableBody.innerHTML = `
-               <tr>
-                   <td class="building-header">
-                       <div class="building-title">
-                           <h3>${props.building}</h3>
-                           <span class="kit-count">
-                               ${props.firstAidKits.length} First Aid Kit${props.firstAidKits.length !== 1 ? 's' : ''}
-                           </span>
-                       </div>
-                       <p class="building-address">
-                           <i class="fas fa-map-marker-alt"></i> ${props.address || 'Address not available'}
-                       </p>
-                   </td>
-               </tr>
-               <tr>
-                   <td class="kits-container">
-                       ${formatFirstAidKits(props.firstAidKits)}
-                   </td>
-               </tr>
-           `;
-       }
-       // Search functionality
-       function handleSearch(e) {
-           const searchTerm = e.target.value.toLowerCase().trim();
-           elements.searchClear.classList.toggle('hidden', !searchTerm);
-           
-           if (state.searchDebounceTimeout) {
-               clearTimeout(state.searchDebounceTimeout);
-           }
-
-           state.searchDebounceTimeout = setTimeout(() => {
-               perf.start('search');
-
-               const filteredFeatures = state.kitFeatures.map(feature => ({
-                   ...feature,
-                   properties: {
-                       ...feature.properties,
-                       selected: searchTerm === '' ? false :
-                           feature.properties.building.toLowerCase().includes(searchTerm) ||
-                           (feature.properties.address && 
-                            feature.properties.address.toLowerCase().includes(searchTerm))
-                   }
-               }));
-
-               if (state.map.getSource('kits')) {
-                   state.map.getSource('kits').setData({
-                       type: 'FeatureCollection',
-                       features: filteredFeatures
-                   });
-               }
-
-               updateKitList(filteredFeatures);
-
-               const matches = filteredFeatures.filter(f => f.properties.selected);
-               if (matches.length === 1) {
-                   showBuildingDetails(matches[0]);
-               } else {
-                   elements.tableContainer.classList.remove('visible');
-                   elements.kitList.classList.remove('with-table');
-                   state.selectedBuilding = null;
-               }
-
-               perf.end('search');
-           }, 300);
-       }
-
-       function clearSearch() {
-           elements.searchBox.value = '';
-           elements.searchClear.classList.add('hidden');
-           handleSearch({ target: elements.searchBox });
-       }
-
-       // Kit list updates
-       function updateKitList(features) {
-           perf.start('updatePanel');
-
-           const fragment = document.createDocumentFragment();
-           const searchTerm = elements.searchBox.value.toLowerCase().trim();
-           
-           const relevantFeatures = searchTerm === '' ? features : 
-               features.filter(f => f.properties.selected);
-
-           if (relevantFeatures.length === 0) {
-               const noResults = document.createElement('div');
-               noResults.className = 'no-results';
-               noResults.textContent = 'No buildings found';
-               fragment.appendChild(noResults);
-           } else {
-               relevantFeatures
-                   .sort((a, b) => a.properties.building.localeCompare(b.properties.building))
-                   .forEach(feature => {
-                       const div = document.createElement('div');
-                       div.className = 'kit-item';
-                       if (state.selectedBuilding && 
-                           feature.properties.building === state.selectedBuilding.properties.building) {
-                           div.classList.add('selected');
-                       }
-                       
-                       div.innerHTML = `
-                           <h3>${feature.properties.building}</h3>
-                           <p><i class="fas fa-map-marker-alt"></i> ${feature.properties.address || 'No address available'}</p>
-                           <div class="kit-summary">
-                               <span class="kit-badge">
-                                   <i class="fas fa-first-aid"></i>
-                                   ${feature.properties.firstAidKits.length} Kit${feature.properties.firstAidKits.length !== 1 ? 's' : ''}
-                               </span>
-                           </div>
-                       `;
-                       
-                       div.dataset.buildingData = JSON.stringify(feature);
-                       fragment.appendChild(div);
-                   });
-           }
-
-           elements.kitList.innerHTML = '';
-           elements.kitList.appendChild(fragment);
-
-           perf.end('updatePanel');
-       }
-
        // Font size controls
        function updateFontSize(increase) {
            state.currentFontSize = increase ? 
@@ -1437,65 +1231,38 @@
                `${16 * state.currentFontSize}px`);
        }
 
+       // Touch gesture handling
+       let touchStartY = 0;
+       let touchStartTime = 0;
+
+       document.querySelector('.floating-card').addEventListener('touchstart', (e) => {
+           touchStartY = e.touches[0].clientY;
+           touchStartTime = Date.now();
+       });
+
+       document.querySelector('.floating-card').addEventListener('touchmove', (e) => {
+           e.preventDefault();
+           const currentY = e.touches[0].clientY;
+           const deltaY = currentY - touchStartY;
+           
+           if (deltaY > 50) {
+               hideBuildingDetails();
+           }
+       });
+
        // Layout updates
        function updateLayoutForScreenSize() {
            const isMobile = window.innerWidth <= 768;
-           const panel = elements.infoPanel;
-           const isCollapsed = panel.classList.contains('collapsed');
            
            if (isMobile) {
                document.documentElement.style.fontSize = '14px';
-               state.map.setPadding({
-                   bottom: isCollapsed ? 0 : (window.innerHeight / 2)
-               });
            } else {
                document.documentElement.style.fontSize = '16px';
-               state.map.setPadding({
-                   right: isCollapsed ? 0 : 380
-               });
            }
 
            requestAnimationFrame(() => {
                state.map.resize();
            });
-       }
-
-       function updateVisibleBuildings() {
-           if (!state.map || !state.map.getSource('kits')) return;
-
-           const bounds = state.map.getBounds();
-           const visibleFeatures = state.kitFeatures.filter(feature => {
-               const [lng, lat] = feature.geometry.coordinates;
-               return bounds.contains([lng, lat]);
-           });
-
-           requestAnimationFrame(() => {
-               updateKitList(visibleFeatures);
-           });
-       }
-
-       // Last modified date handling
-       async function getLastModifiedDate() {
-           try {
-               const response = await fetch('https://api.github.com/repos/ehs-uoft/FA/commits?path=geojson.geojson&page=1&per_page=1');
-               const [latestCommit] = await response.json();
-               const date = new Date(latestCommit.commit.committer.date);
-               return date.toLocaleDateString('en-US', { 
-                   year: 'numeric', 
-                   month: 'long', 
-                   day: 'numeric',
-                   hour: '2-digit',
-                   minute: '2-digit'
-               });
-           } catch (error) {
-               console.error('Error fetching last modified date:', error);
-               return 'Date unavailable';
-           }
-       }
-
-       async function updateLastModifiedDate() {
-           const dateString = await getLastModifiedDate();
-           elements.lastUpdated.textContent = `Last Updated: ${dateString}`;
        }
 
        // Loading management
@@ -1512,59 +1279,27 @@
                perf.end('totalLoad');
            }
        }
+
+       // Last modified date handling
+       async function updateLastModifiedDate() {
+           try {
+               const response = await fetch('https://api.github.com/repos/ehs-uoft/FA/commits?path=geojson.geojson&page=1&per_page=1');
+               const [latestCommit] = await response.json();
+               const date = new Date(latestCommit.commit.committer.date);
+               elements.contextBar.querySelector('.context-info').innerHTML = `
+                   <i class="fas fa-clock"></i> 
+                   Updated: ${date.toLocaleDateString()}
+               `;
+           } catch (error) {
+               console.error('Error fetching last modified date:', error);
+           }
+       }
+
        // Event listeners setup
        function setupEventListeners() {
-           // Map movement events
-           state.map.on('moveend', debounce(updateVisibleBuildings, 100));   
-           state.map.on('zoomend', debounce(updateVisibleBuildings, 100));
-
-           // Panel toggle
-           document.getElementById('collapse-button').addEventListener('click', () => {
-               elements.infoPanel.classList.toggle('collapsed');
-               updateLayoutForScreenSize();
-           });
-
-           // Search
-           elements.searchBox.addEventListener('input', handleSearch);
-           elements.searchClear.addEventListener('click', clearSearch);
-
            // Font size controls
            document.getElementById('increase-font').addEventListener('click', () => updateFontSize(true));
            document.getElementById('decrease-font').addEventListener('click', () => updateFontSize(false));
-
-           // Kit list delegation
-           elements.kitList.addEventListener('click', (e) => {
-               const kitItem = e.target.closest('.kit-item');
-               if (!kitItem) return;
-               
-               try {
-                   const buildingData = JSON.parse(kitItem.dataset.buildingData);
-                   showBuildingDetails(buildingData);
-               } catch (error) {
-                   console.error('Error parsing building data:', error);
-                   toast.create('error', 'Error loading building details');
-               }
-           });
-
-           // Modal events
-           elements.modal.overlay.addEventListener('click', (e) => {
-               if (e.target === elements.modal.overlay) {
-                   hideModal();
-               }
-           });
-
-           document.querySelector('.modal-close').addEventListener('click', hideModal);
-
-           // Keyboard shortcuts
-           document.addEventListener('keydown', (e) => {
-               if (e.key === 'Escape') {
-                   hideModal();
-                   elements.infoPanel.classList.add('collapsed');
-               } else if (e.key === 'f' && (e.ctrlKey || e.metaKey)) {
-                   e.preventDefault();
-                   elements.searchBox.focus();
-               }
-           });
 
            // Window resize
            window.addEventListener('resize', debounce(() => {
@@ -1578,14 +1313,18 @@
                setTimeout(updateLayoutForScreenSize, 200);
            });
 
+           // Keyboard shortcuts
+           document.addEventListener('keydown', (e) => {
+               if (e.key === 'Escape') {
+                   hideFullscreenContent();
+                   hideBuildingDetails();
+               }
+           });
+
            // Visibility change
            document.addEventListener('visibilitychange', () => {
-               if (document.hidden) {
-                   if (state.searchDebounceTimeout) {
-                       clearTimeout(state.searchDebounceTimeout);
-                   }
-               } else {
-                   updateVisibleBuildings();
+               if (!document.hidden && state.selectedBuilding) {
+                   showBuildingDetails(state.selectedBuilding);
                }
            });
        }
@@ -1603,17 +1342,6 @@
            };
        }
 
-       function showModal(content) {
-           elements.modal.overlay.classList.add('active');
-           document.body.style.overflow = 'hidden';
-       }
-
-       function hideModal() {
-           elements.modal.overlay.classList.remove('active');
-           document.body.style.overflow = '';
-           state.modalHistory = [];
-       }
-
        // Map load handler
        function onMapLoad() {
            addMapControls();
@@ -1624,23 +1352,14 @@
                    type: 'FeatureCollection',
                    features: state.kitFeatures
                });
-               updateVisibleBuildings();
            }
        }
 
        // Application cleanup
        function cleanup() {
-           if (state.searchDebounceTimeout) {
-               clearTimeout(state.searchDebounceTimeout);
-           }
            if (state.loadingTimeout) {
                clearTimeout(state.loadingTimeout);
            }
-           if (state.errorTimeout) {
-               clearTimeout(state.errorTimeout);
-           }
-           elements.tableContainer.classList.remove('visible');
-           elements.kitList.classList.remove('with-table');
        }
 
        // Initialize application
@@ -1665,7 +1384,7 @@
            window.addEventListener('beforeunload', cleanup);
        }
 
-       // Start the application when DOM is ready
+       // Start the application
        if (document.readyState === 'loading') {
            document.addEventListener('DOMContentLoaded', initializeApplication);
        } else {
