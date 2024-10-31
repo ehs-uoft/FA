@@ -6,7 +6,8 @@
     <title>UTSG First Aid Kit Locator</title>
     
     <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#002A5C">
+    <meta name="theme-color" content="#002A5C" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#007FA3" media="(prefers-color-scheme: dark)">
     <link rel="manifest" href="manifest.json">
     
     <!-- Mapbox -->
@@ -132,9 +133,13 @@
         }
 
         /* Building List */
+    
         .building-list {
             flex: 1;
             overflow-y: auto;
+        }
+
+        .building-list-group {
             display: flex;
             flex-direction: column;
             gap: 8px;
@@ -148,6 +153,7 @@
             border-radius: var(--radius);
             cursor: pointer;
             transition: var(--transition);
+            position: relative;
         }
 
         .building-item:hover {
@@ -242,19 +248,24 @@
     </style>
 </head>
 <body>
-    <button class="emergency-button" onclick="findNearestKit()" aria-label="Find nearest first aid kit">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+   <button class="emergency-button" 
+            onclick="findNearestKit()" 
+            type="button"
+            aria-pressed="false">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 8v8M8 12h8"/>
         </svg>
-        Find Nearest Kit
+        <span>Find Nearest Kit</span>
     </button>
 
     <div class="app-container">
-        <aside class="sidebar">
+          <aside class="sidebar" role="complementary" aria-label="Building list">
             <header class="sidebar-header">
-                <h1>First Aid Kit Locator</h1>
-                <p>UofT St. George Campus</p>
+                <h1 id="buildingListTitle">First Aid Kit Locator</h1>
+                <p id="buildingListDescription">UofT St. George Campus</p>
             </header>
+
 
             <div class="search-container">
                 <input 
@@ -270,15 +281,24 @@
                 </svg>
             </div>
 
-            <div class="building-list" id="building-list" role="list">
-                <!-- Buildings will be populated here -->
+            <div class="building-list" role="region" aria-labelledby="buildingListTitle">
+                <ul class="building-list-group" role="list">
+                    <!-- Buildings will be populated here -->
+                </ul>
             </div>
         </aside>
 
-        <main class="map-container">
-            <div id="map" role="application" aria-label="Map showing first aid kit locations"></div>
-            <div class="info-panel" id="info-panel" aria-live="polite">
-                <!-- Location details will be shown here -->
+        <main class="map-container" role="main">
+            <div id="map" 
+                 role="application" 
+                 aria-label="Interactive map of first aid kit locations"
+                 tabindex="0">
+            </div>
+           <div class="info-panel" 
+                 id="info-panel" 
+                 role="complementary" 
+                 aria-live="polite"
+                 aria-atomic="true">
             </div>
         </main>
     </div>
@@ -342,22 +362,25 @@ async function fetchBuildingData() {
 }
 
 // Display Buildings in Sidebar
-function displayBuildings() {
-    const buildingList = document.getElementById('building-list');
-    buildingList.innerHTML = state.buildings
-        .map(building => `
-            <div class="building-item" 
-                 data-building-id="${building.properties.id}"
-                 role="button"
-                 tabindex="0"
-                 onclick="selectBuilding('${building.properties.id}')"
-                 onkeypress="if(event.key === 'Enter') selectBuilding('${building.properties.id}')">
-                <div class="building-name">${building.properties.building}</div>
-                <div class="building-address">${building.properties.address || ''}</div>
-            </div>
-        `)
-        .join('');
-}
+    function displayBuildings() {
+        const buildingList = document.querySelector('.building-list-group');
+        buildingList.innerHTML = state.buildings
+            .map(building => `
+                <li class="building-item" role="listitem">
+                    <button type="button"
+                            class="building-button"
+                            onclick="selectBuilding('${building.properties.id}')"
+                            aria-pressed="${state.selectedBuilding?.properties.id === building.properties.id}"
+                            aria-label="Select ${building.properties.building}">
+                        <div class="building-name">${building.properties.building}</div>
+                        <div class="building-address" aria-label="Address: ${building.properties.address || 'Not available'}">
+                            ${building.properties.address || ''}
+                        </div>
+                    </button>
+                </li>
+            `)
+            .join('');
+    }
 
 // Add Markers to Map
 function addMarkersToMap() {
