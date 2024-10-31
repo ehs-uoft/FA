@@ -1,143 +1,300 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UTSG First Aid Kit Locator</title>
-
-    <!-- Simplified manifest -->
-    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIlVUU0cgRmlyc3QgQWlkIEtpdCBMb2NhdG9yIiwKICAic2hvcnRfbmFtZSI6ICJGQSBMb2NhdG9yIiwKICAic3RhcnRfdXJsIjogIi8iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMwMDJBNUMiLAogICJ0aGVtZV9jb2xvciI6ICIjMDAyQTVDIgp9">
-
+    <link rel="manifest" href="manifest.json">
+    
     <!-- Mapbox -->
     <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
-
+    
     <style>
-        body { margin: 0; padding: 0; }
-        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
-        
+        :root {
+            --uoft-blue: #002A5C;
+            --uoft-red: #E31837;
+            --accent-blue: #007FA3;
+            --surface-white: rgba(255, 255, 255, 0.95);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --emergency-gradient: linear-gradient(135deg, var(--uoft-red), #FF4B6E);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            overflow: hidden;
+            background: var(--uoft-blue);
+        }
+
+        /* Floating Emergency Button */
+        .emergency-btn {
+            position: fixed;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: var(--emergency-gradient);
+            padding: 15px 30px;
+            border-radius: 30px;
+            border: none;
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            box-shadow: 0 8px 32px rgba(227, 24, 55, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .emergency-btn:hover {
+            transform: translateX(-50%) translateY(-2px);
+            box-shadow: 0 12px 40px rgba(227, 24, 55, 0.4);
+        }
+
+        .emergency-btn svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* Main Layout */
+        .app-container {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Sidebar */
         .sidebar {
-            position: absolute;
-            right: 0;
-            top: 0;
-            bottom: 0;
-            width: 300px;
-            background: white;
+            background: var(--surface-white);
+            backdrop-filter: blur(20px);
             padding: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 100;
+            border-right: 1px solid rgba(0, 42, 92, 0.1);
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(0, 42, 92, 0.1);
+        }
+
+        .logo {
+            width: 50px;
+            height: 50px;
+            background: var(--uoft-blue);
+            border-radius: 12px;
+            padding: 10px;
+        }
+
+        .header-text h1 {
+            font-size: 1.2rem;
+            color: var(--uoft-blue);
+            font-weight: 600;
+        }
+
+        .header-text p {
+            font-size: 0.9rem;
+            color: var(--accent-blue);
+        }
+
+        /* Search Container */
+        .search-container {
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 20px;
+            padding-left: 45px;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            background: rgba(0, 42, 92, 0.05);
+            font-size: 1rem;
+            color: var(--uoft-blue);
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            background: white;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--accent-blue);
+        }
+
+        /* Building List */
+        .building-list {
+            flex: 1;
             overflow-y: auto;
+            padding-right: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
         .building-item {
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
+            padding: 15px;
+            background: white;
+            border-radius: 12px;
             cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 42, 92, 0.1);
         }
 
         .building-item:hover {
-            background: #f0f0f0;
+            transform: translateX(5px);
+            box-shadow: 0 4px 20px rgba(0, 42, 92, 0.1);
+        }
+
+        .building-item.active {
+            background: var(--uoft-blue);
+            color: white;
+            border-color: transparent;
+        }
+
+        .building-item h3 {
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+
+        .building-item p {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        /* Map Container */
+        .map-container {
+            position: relative;
+            height: 100vh;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Custom Marker */
+        .marker {
+            width: 30px;
+            height: 30px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(0, 42, 92, 0.2);
+            border: 2px solid var(--uoft-red);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .marker::after {
+            content: '+';
+            color: var(--uoft-red);
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .marker:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0, 42, 92, 0.3);
+        }
+
+        /* Location Details Panel */
+        .location-details {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            background: var(--surface-white);
+            backdrop-filter: blur(20px);
+            padding: 20px;
+            border-radius: 15px;
+            width: 300px;
+            transform: translateY(100%);
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 32px rgba(0, 42, 92, 0.1);
+            border: 1px solid var(--glass-border);
+        }
+
+        .location-details.active {
+            transform: translateY(0);
+            opacity: 1;
         }
     </style>
 </head>
 <body>
-    <div id="map"></div>
-    <div class="sidebar">
-        <h2>First Aid Locations</h2>
-        <input type="text" id="search" placeholder="Search buildings..." 
-               onkeyup="filterBuildings(this.value)">
-        <div id="building-list"></div>
-    </div>
+    <!-- Emergency Button -->
+    <button class="emergency-btn" onclick="findNearestKit()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 8v8M8 12h8"/>
+        </svg>
+        Find Nearest First Aid Kit
+    </button>
 
-    <script>
-    // State management
-    const state = {
-        map: null,
-        buildings: [],
-        selectedBuilding: null
-    };
-
-    // Initialize map
-    function initMap() {
-        mapboxgl.accessToken = 'pk.eyJ1IjoiZWhzIiwiYSI6ImNtMjNsYWtlZzA2bnQycW9qb2F3dHJuM2gifQ.Yw2JtBD13UqJFKtTj-SKsQ';
-        state.map = new mapboxgl.Map({
-            container: 'map',
-            style: 'mapbox://styles/mapbox/light-v11',
-            center: [-79.3957, 43.6629], // UofT coordinates
-            zoom: 15
-        });
-
-        state.map.on('load', () => {
-            fetchBuildingData();
-        });
-    }
-
-    // Fetch building data
-    async function fetchBuildingData() {
-        try {
-            const response = await fetch('/FA/geojson.geojson');
-            const data = await response.json();
-            state.buildings = data.features;
-            displayBuildings();
-            addMapMarkers();
-        } catch (error) {
-            console.error('Error fetching building data:', error);
-        }
-    }
-
-    // Display buildings in sidebar
-    function displayBuildings() {
-        const buildingList = document.getElementById('building-list');
-        buildingList.innerHTML = state.buildings
-            .map(building => `
-                <div class="building-item" onclick="selectBuilding('${building.properties.id}')">
-                    <h3>${building.properties.building}</h3>
-                    <p>${building.properties.address || ''}</p>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <header class="sidebar-header">
+                <div class="logo">
+                    <!-- UofT Logo SVG here -->
                 </div>
-            `)
-            .join('');
-    }
+                <div class="header-text">
+                    <h1>First Aid Kit Locator</h1>
+                    <p>St. George Campus</p>
+                </div>
+            </header>
 
-    // Add markers to map
-    function addMapMarkers() {
-        state.buildings.forEach(building => {
-            const el = document.createElement('div');
-            el.className = 'marker';
-            el.style.width = '15px';
-            el.style.height = '15px';
-            el.style.backgroundColor = '#e74c3c';
-            el.style.borderRadius = '50%';
+            <div class="search-container">
+                <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="M21 21l-4.35-4.35"/>
+                </svg>
+                <input type="text" 
+                       class="search-input" 
+                       placeholder="Search buildings..."
+                       onkeyup="filterBuildings(this.value)">
+            </div>
 
-            new mapboxgl.Marker(el)
-                .setLngLat(building.geometry.coordinates)
-                .addTo(state.map);
-        });
-    }
+            <div class="building-list" id="building-list">
+                <!-- Buildings will be populated here -->
+            </div>
+        </aside>
 
-    // Select building
-    function selectBuilding(buildingId) {
-        const building = state.buildings.find(b => b.properties.id === buildingId);
-        if (!building) return;
-
-        state.selectedBuilding = building;
-        state.map.flyTo({
-            center: building.geometry.coordinates,
-            zoom: 18
-        });
-    }
-
-    // Filter buildings
-    function filterBuildings(query) {
-        const normalizedQuery = query.toLowerCase();
-        const buildingItems = document.querySelectorAll('.building-item');
-        
-        buildingItems.forEach(item => {
-            const text = item.textContent.toLowerCase();
-            item.style.display = text.includes(normalizedQuery) ? 'block' : 'none';
-        });
-    }
-
-    // Initialize
-    document.addEventListener('DOMContentLoaded', initMap);
-    </script>
+        <!-- Map Container -->
+        <main class="map-container">
+            <div id="map"></div>
+            <div class="location-details" id="location-details">
+                <!-- Location details will be populated here -->
+            </div>
+        </main>
+    </div>
 </body>
 </html>
