@@ -1,0 +1,29 @@
+{
+    "name": "UTSG First Aid Kit Locator",
+    "short_name": "FA Kit Locator",
+    "description": "Emergency first aid kit locations at University of Toronto St. George Campus",
+    "start_url": "/",
+    "display": "standalone",
+    "orientation": "any",
+    "background_color": "#002A5C",
+    "theme_color": "#002A5C",
+    "categories": ["emergency", "health", "utilities"],
+    "icons": [
+        {
+            "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23002A5C'/%3E%3Cpath d='M25 25h50v50h-50z' fill='white'/%3E%3Cpath d='M45 35h10v10h10v10h-10v10h-10v-10h-10v-10h10z' fill='%23E31837'/%3E%3C/svg%3E",
+            "sizes": "512x512",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Find Nearest Kit",
+            "url": "/?action=nearest",
+            "description": "Locate the nearest first aid kit"
+        }
+    ],
+    "related_applications": [],
+    "prefer_related_applications": false,
+    "screenshots": []
+}
