@@ -1,222 +1,183 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UTSG First Aid Kit Locator</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#002A5C">
     <link rel="manifest" href="manifest.json">
     
     <!-- Mapbox -->
     <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
-    <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
-
-    // Mapbox API Key and Configuration
-mapboxgl.accessToken = 'pk.eyJ1IjoiZWhzIiwiYSI6ImNtMjNsYWtlZzA2bnQycW9qb2F3dHJuM2gifQ.Yw2JtBD13UqJFKtTj-SKsQ'; 
-
-// Mapbox Configuration Constants
-const MAP_CONFIG = {
-    center: [-79.3957, 43.6629], // UofT coordinates
-    bounds: [
-        [-79.4057, 43.6529], // Southwest bounds
-        [-79.3857, 43.6729]  // Northeast bounds
-    ],
-    styles: {
-        default: 'mapbox://styles/mapbox/light-v11',
-        dark: 'mapbox://styles/mapbox/dark-v11'
-    }
-};
-
-// Initialize Mapbox Map
-function initializeMap() {
-    return new mapboxgl.Map({
-        container: 'map',
-        style: MAP_CONFIG.styles.default,
-        center: MAP_CONFIG.center,
-        zoom: 15,
-        minZoom: 14,
-        maxBounds: MAP_CONFIG.bounds,
-        attributionControl: false
-    });
-}
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet'>
+    
     <style>
+        /* Modern CSS Reset */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* CSS Custom Properties */
         :root {
             --uoft-blue: #002A5C;
             --uoft-red: #E31837;
             --accent-blue: #007FA3;
-            --surface-white: rgba(255, 255, 255, 0.95);
-            --glass-bg: rgba(255, 255, 255, 0.1);
-            --glass-border: rgba(255, 255, 255, 0.2);
-            --emergency-gradient: linear-gradient(135deg, var(--uoft-red), #FF4B6E);
+            --background: #FFFFFF;
+            --surface: #F8F9FA;
+            --text: #002A5C;
+            --text-light: #4A5568;
+            --shadow: 0 2px 4px rgba(0, 42, 92, 0.1);
+            --radius: 8px;
+            --transition: all 0.2s ease;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-        }
-
+        /* Base Styles */
         body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text);
+            background: var(--background);
             overflow: hidden;
-            background: var(--uoft-blue);
+            line-height: 1.5;
         }
 
-        /* Floating Emergency Button */
-        .emergency-btn {
-            position: fixed;
-            top: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            background: var(--emergency-gradient);
-            padding: 15px 30px;
-            border-radius: 30px;
-            border: none;
-            color: white;
-            font-weight: 600;
-            font-size: 1.1rem;
-            cursor: pointer;
-            box-shadow: 0 8px 32px rgba(227, 24, 55, 0.3);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-        }
-
-        .emergency-btn:hover {
-            transform: translateX(-50%) translateY(-2px);
-            box-shadow: 0 12px 40px rgba(227, 24, 55, 0.4);
-        }
-
-        .emergency-btn svg {
-            width: 24px;
-            height: 24px;
-        }
-
-        /* Main Layout */
+        /* Layout */
         .app-container {
             display: grid;
-            grid-template-columns: 360px 1fr;
+            grid-template-columns: minmax(300px, 25%) 1fr;
             height: 100vh;
             position: relative;
         }
 
+        /* Emergency Button */
+        .emergency-button {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: var(--uoft-red);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 24px;
+            border: none;
+            font-weight: 600;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .emergency-button:hover {
+            background: #cc1630;
+            transform: translateX(-50%) translateY(-2px);
+        }
+
+        .emergency-button:focus-visible {
+            outline: 3px solid rgba(227, 24, 55, 0.5);
+            outline-offset: 2px;
+        }
+
         /* Sidebar */
         .sidebar {
-            background: var(--surface-white);
-            backdrop-filter: blur(20px);
+            background: var(--surface);
             padding: 20px;
-            overflow: hidden;
             display: flex;
             flex-direction: column;
-            gap: 20px;
-            z-index: 100;
+            gap: 16px;
             border-right: 1px solid rgba(0, 42, 92, 0.1);
+            overflow: hidden;
         }
 
         .sidebar-header {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding-bottom: 20px;
+            padding-bottom: 16px;
             border-bottom: 1px solid rgba(0, 42, 92, 0.1);
         }
 
-        .logo {
-            width: 50px;
-            height: 50px;
-            background: var(--uoft-blue);
-            border-radius: 12px;
-            padding: 10px;
-        }
-
-        .header-text h1 {
-            font-size: 1.2rem;
+        .sidebar-header h1 {
+            font-size: 20px;
             color: var(--uoft-blue);
-            font-weight: 600;
         }
 
-        .header-text p {
-            font-size: 0.9rem;
-            color: var(--accent-blue);
-        }
-
-        /* Search Container */
         .search-container {
             position: relative;
         }
 
         .search-input {
             width: 100%;
-            padding: 12px 20px;
-            padding-left: 45px;
-            border: 2px solid transparent;
-            border-radius: 12px;
-            background: rgba(0, 42, 92, 0.05);
-            font-size: 1rem;
-            color: var(--uoft-blue);
-            transition: all 0.3s ease;
+            padding: 8px 16px;
+            padding-left: 36px;
+            border: 1px solid rgba(0, 42, 92, 0.2);
+            border-radius: var(--radius);
+            font-size: 16px;
         }
 
         .search-input:focus {
             outline: none;
             border-color: var(--accent-blue);
-            background: white;
         }
 
         .search-icon {
             position: absolute;
-            left: 15px;
+            left: 12px;
             top: 50%;
             transform: translateY(-50%);
-            color: var(--accent-blue);
+            color: var(--text-light);
         }
 
         /* Building List */
         .building-list {
             flex: 1;
             overflow-y: auto;
-            padding-right: 10px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
+            padding-right: 8px;
         }
 
         .building-item {
-            padding: 15px;
-            background: white;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            padding: 12px;
+            background: var(--background);
             border: 1px solid rgba(0, 42, 92, 0.1);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: var(--transition);
         }
 
         .building-item:hover {
-            transform: translateX(5px);
-            box-shadow: 0 4px 20px rgba(0, 42, 92, 0.1);
+            background: var(--surface);
+            transform: translateX(4px);
         }
 
         .building-item.active {
             background: var(--uoft-blue);
             color: white;
-            border-color: transparent;
         }
 
-        .building-item h3 {
-            font-size: 1rem;
-            margin-bottom: 5px;
+        .building-name {
+            font-weight: 600;
+            margin-bottom: 4px;
         }
 
-        .building-item p {
-            font-size: 0.9rem;
-            opacity: 0.8;
+        .building-address {
+            font-size: 14px;
+            color: var(--text-light);
+        }
+
+        .building-item.active .building-address {
+            color: rgba(255, 255, 255, 0.8);
         }
 
         /* Map Container */
         .map-container {
             position: relative;
-            height: 100vh;
+            height: 100%;
         }
 
         #map {
@@ -229,17 +190,16 @@ function initializeMap() {
 
         /* Custom Marker */
         .marker {
-            width: 30px;
-            height: 30px;
+            width: 32px;
+            height: 32px;
             background: white;
-            border-radius: 50%;
-            box-shadow: 0 4px 12px rgba(0, 42, 92, 0.2);
             border: 2px solid var(--uoft-red);
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: var(--transition);
         }
 
         .marker::after {
@@ -251,78 +211,310 @@ function initializeMap() {
 
         .marker:hover {
             transform: scale(1.1);
-            box-shadow: 0 6px 16px rgba(0, 42, 92, 0.3);
         }
 
-        /* Location Details Panel */
-        .location-details {
+        /* Info Panel */
+        .info-panel {
             position: absolute;
-            bottom: 30px;
-            left: 30px;
-            background: var(--surface-white);
-            backdrop-filter: blur(20px);
-            padding: 20px;
-            border-radius: 15px;
-            width: 300px;
-            transform: translateY(100%);
+            bottom: 24px;
+            left: 24px;
+            background: white;
+            padding: 16px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            max-width: 320px;
+            z-index: 100;
             opacity: 0;
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 8px 32px rgba(0, 42, 92, 0.1);
-            border: 1px solid var(--glass-border);
+            transform: translateY(16px);
+            transition: var(--transition);
         }
 
-        .location-details.active {
-            transform: translateY(0);
+        .info-panel.active {
             opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Accessible Focus Styles */
+        :focus-visible {
+            outline: 3px solid var(--accent-blue);
+            outline-offset: 2px;
         }
     </style>
 </head>
 <body>
-    <!-- Emergency Button -->
-    <button class="emergency-btn" onclick="findNearestKit()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M12 8v8M8 12h8"/>
+    <button class="emergency-button" onclick="findNearestKit()" aria-label="Find nearest first aid kit">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
         </svg>
-        Find Nearest First Aid Kit
+        Find Nearest Kit
     </button>
 
     <div class="app-container">
-        <!-- Sidebar -->
         <aside class="sidebar">
             <header class="sidebar-header">
-                <div class="logo">
-                    <!-- UofT Logo SVG here -->
-                </div>
-                <div class="header-text">
-                    <h1>First Aid Kit Locator</h1>
-                    <p>St. George Campus</p>
-                </div>
+                <h1>First Aid Kit Locator</h1>
+                <p>UofT St. George Campus</p>
             </header>
 
             <div class="search-container">
-                <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="11" cy="11" r="8"/>
-                    <path d="M21 21l-4.35-4.35"/>
+                <input 
+                    type="search" 
+                    class="search-input" 
+                    placeholder="Search buildings..."
+                    aria-label="Search buildings"
+                    id="search-input"
+                >
+                <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 </svg>
-                <input type="text" 
-                       class="search-input" 
-                       placeholder="Search buildings..."
-                       onkeyup="filterBuildings(this.value)">
             </div>
 
-            <div class="building-list" id="building-list">
+            <div class="building-list" id="building-list" role="list">
                 <!-- Buildings will be populated here -->
             </div>
         </aside>
 
-        <!-- Map Container -->
         <main class="map-container">
-            <div id="map"></div>
-            <div class="location-details" id="location-details">
-                <!-- Location details will be populated here -->
+            <div id="map" role="application" aria-label="Map showing first aid kit locations"></div>
+            <div class="info-panel" id="info-panel" aria-live="polite">
+                <!-- Location details will be shown here -->
             </div>
         </main>
     </div>
+
+    <script>
+      
+// State Management
+const state = {
+    map: null,
+    buildings: [],
+    markers: new Map(),
+    selectedBuilding: null,
+    userLocation: null
+};
+
+// Constants
+const MAPBOX_TOKEN = 'pk.eyJ1IjoiZWhzIiwiYSI6ImNtMjNsYWtlZzA2bnQycW9qb2F3dHJuM2gifQ.Yw2JtBD13UqJFKtTj-SKsQ'; 
+const UOFT_CENTER = [-79.3957, 43.6629];
+const MAP_BOUNDS = [
+    [-79.4057, 43.6529], // Southwest
+    [-79.3857, 43.6729]  // Northeast
+];
+
+// Initialize Map
+function initializeMap() {
+    mapboxgl.accessToken = MAPBOX_TOKEN;
+    
+    state.map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/light-v11',
+        center: UOFT_CENTER,
+        zoom: 15,
+        minZoom: 14,
+        maxBounds: MAP_BOUNDS,
+        attributionControl: false
+    });
+
+    state.map.addControl(new mapboxgl.AttributionControl(), 'bottom-right');
+    state.map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+
+    state.map.on('load', () => {
+        fetchBuildingData();
+    });
+}
+
+// Fetch Building Data
+async function fetchBuildingData() {
+    try {
+        const response = await fetch('/FA/geojson.geojson');
+        if (!response.ok) throw new Error('Network response was not ok');
+        
+        const data = await response.json();
+        state.buildings = data.features;
+        
+        displayBuildings();
+        addMarkersToMap();
+    } catch (error) {
+        console.error('Error fetching building data:', error);
+        showError('Failed to load building data');
+    }
+}
+
+// Display Buildings in Sidebar
+function displayBuildings() {
+    const buildingList = document.getElementById('building-list');
+    buildingList.innerHTML = state.buildings
+        .map(building => `
+            <div class="building-item" 
+                 data-building-id="${building.properties.id}"
+                 role="button"
+                 tabindex="0"
+                 onclick="selectBuilding('${building.properties.id}')"
+                 onkeypress="if(event.key === 'Enter') selectBuilding('${building.properties.id}')">
+                <div class="building-name">${building.properties.building}</div>
+                <div class="building-address">${building.properties.address || ''}</div>
+            </div>
+        `)
+        .join('');
+}
+
+// Add Markers to Map
+function addMarkersToMap() {
+    state.buildings.forEach(building => {
+        const el = document.createElement('div');
+        el.className = 'marker';
+        
+        const marker = new mapboxgl.Marker({
+            element: el,
+            anchor: 'center'
+        })
+        .setLngLat(building.geometry.coordinates)
+        .addTo(state.map);
+
+        marker.getElement().addEventListener('click', () => {
+            selectBuilding(building.properties.id);
+        });
+
+        state.markers.set(building.properties.id, marker);
+    });
+}
+
+// Select Building
+function selectBuilding(buildingId) {
+    const building = state.buildings.find(b => b.properties.id === buildingId);
+    if (!building) return;
+
+    // Update state
+    state.selectedBuilding = building;
+
+    // Update UI
+    updateSelectedBuildingUI(building);
+
+    // Fly to building
+    state.map.flyTo({
+        center: building.geometry.coordinates,
+        zoom: 17,
+        essential: true
+    });
+}
+
+// Update UI for Selected Building
+function updateSelectedBuildingUI(building) {
+    // Update building list
+    document.querySelectorAll('.building-item').forEach(item => {
+        item.classList.toggle('active', 
+            item.dataset.buildingId === building.properties.id);
+    });
+
+    // Update info panel
+    const infoPanel = document.getElementById('info-panel');
+    infoPanel.innerHTML = `
+        <h2>${building.properties.building}</h2>
+        <p>${building.properties.address}</p>
+        ${building.properties.access ? 
+          `<p><strong>Access:</strong> ${building.properties.access}</p>` : ''}
+    `;
+    infoPanel.classList.add('active');
+
+    // Update markers
+    state.markers.forEach((marker, id) => {
+        marker.getElement().style.borderColor = 
+            id === building.properties.id ? 'var(--uoft-blue)' : 'var(--uoft-red)';
+    });
+}
+
+// Find Nearest Kit
+async function findNearestKit() {
+    try {
+        const position = await getCurrentPosition();
+        state.userLocation = [position.coords.longitude, position.coords.latitude];
+
+        const nearest = findNearestBuilding(state.userLocation);
+        if (nearest) {
+            selectBuilding(nearest.properties.id);
+        }
+    } catch (error) {
+        console.error('Error finding nearest kit:', error);
+        showError('Could not determine your location');
+    }
+}
+
+// Get Current Position
+function getCurrentPosition() {
+    return new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 5000,
+            maximumAge: 0
+        });
+    });
+}
+
+// Find Nearest Building
+function findNearestBuilding(location) {
+    return state.buildings.reduce((nearest, current) => {
+        const distance = calculateDistance(location, current.geometry.coordinates);
+        if (!nearest || distance < nearest.distance) {
+            return { ...current, distance };
+        }
+        return nearest;
+    }, null);
+}
+
+// Calculate Distance (Haversine formula)
+function calculateDistance(point1, point2) {
+    const R = 6371e3; // Earth's radius in meters
+    const φ1 = point1[1] * Math.PI/180;
+    const φ2 = point2[1] * Math.PI/180;
+    const Δφ = (point2[1] - point1[1]) * Math.PI/180;
+    const Δλ = (point2[0] - point1[0]) * Math.PI/180;
+
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+            Math.cos(φ1) * Math.cos(φ2) *
+            Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+    return R * c;
+}
+
+// Filter Buildings
+function filterBuildings(query) {
+    const normalizedQuery = query.toLowerCase().trim();
+    const buildingItems = document.querySelectorAll('.building-item');
+
+    buildingItems.forEach(item => {
+        const building = state.buildings.find(
+            b => b.properties.id === item.dataset.buildingId
+        );
+        const matches = building.properties.building.toLowerCase().includes(normalizedQuery) ||
+                       building.properties.address.toLowerCase().includes(normalizedQuery);
+        
+        item.style.display = matches ? 'block' : 'none';
+        
+        // Update marker visibility
+        const marker = state.markers.get(building.properties.id);
+        if (marker) {
+            marker.getElement().style.opacity = matches ? '1' : '0.3';
+        }
+    });
+}
+
+// Show Error
+function showError(message) {
+    // You can implement your preferred error display method here
+    alert(message); // Basic implementation
+}
+
+// Initialize Application
+document.addEventListener('DOMContentLoaded', () => {
+    initializeMap();
+
+    // Setup search
+    document.getElementById('search-input').addEventListener('input', (e) => {
+        filterBuildings(e.target.value);
+    });
+});
+    </script>
 </body>
 </html>
