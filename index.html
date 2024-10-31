@@ -9,7 +9,35 @@
     <!-- Mapbox -->
     <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
-    
+
+    // Mapbox API Key and Configuration
+mapboxgl.accessToken = 'pk.eyJ1IjoiZWhzIiwiYSI6ImNtMjNsYWtlZzA2bnQycW9qb2F3dHJuM2gifQ.Yw2JtBD13UqJFKtTj-SKsQ'; 
+
+// Mapbox Configuration Constants
+const MAP_CONFIG = {
+    center: [-79.3957, 43.6629], // UofT coordinates
+    bounds: [
+        [-79.4057, 43.6529], // Southwest bounds
+        [-79.3857, 43.6729]  // Northeast bounds
+    ],
+    styles: {
+        default: 'mapbox://styles/mapbox/light-v11',
+        dark: 'mapbox://styles/mapbox/dark-v11'
+    }
+};
+
+// Initialize Mapbox Map
+function initializeMap() {
+    return new mapboxgl.Map({
+        container: 'map',
+        style: MAP_CONFIG.styles.default,
+        center: MAP_CONFIG.center,
+        zoom: 15,
+        minZoom: 14,
+        maxBounds: MAP_CONFIG.bounds,
+        attributionControl: false
+    });
+}
     <style>
         :root {
             --uoft-blue: #002A5C;
