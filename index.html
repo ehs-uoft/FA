@@ -1,1066 +1,143 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UTSG First Aid Kit Locator</title>
-    
-    <!-- PWA Meta Tags -->
-    <meta name="description" content="Locate first aid kits across the University of Toronto St. George campus">
-    <meta name="theme-color" content="#002A5C">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="apple-mobile-web-app-title" content="UTSG First Aid">
 
-    <!-- Preload Critical Resources -->
-    <link rel="preload" href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" as="style">
-    <link rel="preload" href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js" as="script">
-    
-    <!-- Integrated PWA Manifest -->
-    <link rel="manifest" href='data:application/manifest+json,{
-        "name": "UTSG First Aid Kit Locator",
-        "short_name": "UTSG First Aid",
-        "description": "Locate first aid kits across the University of Toronto St. George campus",
-        "start_url": "/",
-        "display": "standalone",
-        "background_color": "#002A5C",
-        "theme_color": "#002A5C",
-        "icons": [{
-            "src": "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23002A5C\'/%3E%3Cpath d=\'M30 30h40v40h-40z\' fill=\'white\'/%3E%3Cpath d=\'M45 35h10v10h10v10h-10v10h-10v-10h-10v-10h10z\' fill=\'%23e74c3c\'/%3E%3C/svg%3E",
-            "sizes": "512x512",
-            "type": "image/svg+xml",
-            "purpose": "any maskable"
-        }]
-    }'>
+    <!-- Simplified manifest -->
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIlVUU0cgRmlyc3QgQWlkIEtpdCBMb2NhdG9yIiwKICAic2hvcnRfbmFtZSI6ICJGQSBMb2NhdG9yIiwKICAic3RhcnRfdXJsIjogIi8iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMwMDJBNUMiLAogICJ0aGVtZV9jb2xvciI6ICIjMDAyQTVDIgp9">
 
-    <!-- Styles -->
-    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css">
-    
+    <!-- Mapbox -->
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
+
     <style>
-    /* CSS Custom Properties - UofT Theme Light */
-    :root[data-theme="light"] {
-        --uoft-blue: #002A5C;
-        --uoft-light-blue: #007FA3;
-        --accent-blue: #00204E;
-        --success-green: #2ecc71;
-        --warning-color: #f39c12;
-        --error-color: #e74c3c;
-        --background-color: #FFFFFF;
-        --surface-color: #F8F9FA;
-        --text-color: #002A5C;
-        --text-muted: #6c757d;
-        --border-color: #E2E8F0;
-        --shadow-color: rgba(0, 42, 92, 0.1);
-        --layer-map: 1;
-        --layer-controls: 100;
-        --layer-modal: 1000;
-    }
+        body { margin: 0; padding: 0; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+        
+        .sidebar {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 300px;
+            background: white;
+            padding: 20px;
+            overflow-y: auto;
+        }
 
-    /* CSS Custom Properties - UofT Theme Dark */
-    :root[data-theme="dark"] {
-        --uoft-blue: #007FA3;
-        --uoft-light-blue: #00ADD8;
-        --accent-blue: #FFFFFF;
-        --success-green: #2ecc71;
-        --warning-color: #f39c12;
-        --error-color: #e74c3c;
-        --background-color: #1A1A1A;
-        --surface-color: #2D2D2D;
-        --text-color: #FFFFFF;
-        --text-muted: #A0A0A0;
-        --border-color: #404040;
-        --shadow-color: rgba(0, 0, 0, 0.3);
-    }
+        .building-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            cursor: pointer;
+        }
 
-    /* Base Styles */
-    *, *::before, *::after {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-    }
-
-    html {
-        font-size: 16px;
-        -webkit-text-size-adjust: 100%;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        text-rendering: optimizeLegibility;
-        height: 100%;
-    }
-
-    body {
-        margin: 0;
-        padding: 0;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, 
-                     Helvetica, Arial, sans-serif;
-        color: var(--text-color);
-        background-color: var(--background-color);
-        overflow: hidden;
-        height: 100vh;
-        transition: background-color 0.3s ease;
-    }
-
-    /* Layout */
-    .app-container {
-        display: grid;
-        grid-template-columns: 1fr 320px;
-        height: 100vh;
-        overflow: hidden;
-    }
-
-    /* Map Container */
-    .map-container {
-        position: relative;
-        height: 100%;
-    }
-
-    #map {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: var(--layer-map);
-    }
-
-    /* Navigation Controls */
-    .navigation-controls {
-        position: fixed;
-        left: 20px;
-        top: 50%;
-        transform: translateY(-50%);
-        background: var(--background-color);
-        padding: 8px;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px var(--shadow-color);
-        z-index: var(--layer-controls);
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .nav-btn {
-        width: 40px;
-        height: 40px;
-        border: none;
-        border-radius: 4px;
-        background: var(--surface-color);
-        color: var(--uoft-blue);
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s ease;
-    }
-
-    .nav-btn:hover {
-        background: var(--uoft-light-blue);
-        color: white;
-        transform: translateX(2px);
-    }
-
-    /* Sidebar */
-    .sidebar {
-        background: var(--surface-color);
-        border-left: 1px solid var(--border-color);
-        display: flex;
-        flex-direction: column;
-        z-index: var(--layer-controls);
-    }
-
-    .sidebar-header {
-        padding: 1rem;
-        background: var(--uoft-blue);
-        color: white;
-    }
-
-    .uoft-logo {
-        height: 40px;
-        margin-bottom: 1rem;
-    }
-
-    .search-container {
-        padding: 1rem;
-        border-bottom: 1px solid var(--border-color);
-    }
-
-    .search-input {
-        width: 100%;
-        padding: 0.75rem;
-        border: 1px solid var(--border-color);
-        border-radius: 4px;
-        background: var(--background-color);
-        color: var(--text-color);
-    }
-
-    .search-input:focus {
-        outline: none;
-        border-color: var(--uoft-light-blue);
-        box-shadow: 0 0 0 2px rgba(0, 127, 163, 0.2);
-    }
-
-    /* Building List */
-    .building-list {
-        flex: 1;
-        overflow-y: auto;
-        padding: 1rem;
-    }
-
-    .building-item {
-        padding: 1rem;
-        background: var(--background-color);
-        border-radius: 8px;
-        margin-bottom: 0.5rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .building-item:hover {
-        transform: translateX(-5px);
-        box-shadow: 0 2px 8px var(--shadow-color);
-    }
-
-    .building-item.active {
-        border-left: 4px solid var(--uoft-blue);
-        background: var(--uoft-light-blue);
-        color: white;
-    }
-
-    .building-item h3 {
-        margin-bottom: 0.5rem;
-        font-size: 1rem;
-    }
-
-    .building-item p {
-        color: var(--text-muted);
-        font-size: 0.875rem;
-    }
-</style>
+        .building-item:hover {
+            background: #f0f0f0;
+        }
+    </style>
 </head>
 <body>
-    <div class="app-container">
-        <!-- Map Container -->
-        <main class="map-container">
-            <div id="map" role="application" aria-label="Interactive map of first aid kit locations"></div>
-            
-            <!-- Navigation Controls -->
-            <div class="navigation-controls">
-                <button class="nav-btn" onclick="zoomToUserLocation()" aria-label="Find my location">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="8"/>
-                        <line x1="12" y1="2" x2="12" y2="4"/>
-                        <line x1="12" y1="20" x2="12" y2="22"/>
-                        <line x1="2" y1="12" x2="4" y2="12"/>
-                        <line x1="20" y1="12" x2="22" y2="12"/>
-                    </svg>
-                </button>
-                <button class="nav-btn" onclick="toggleAccessibility()" aria-label="Toggle accessibility features">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"/>
-                        <path d="M12 8v8"/>
-                        <line x1="8" y1="12" x2="16" y2="12"/>
-                    </svg>
-                </button>
-                <button class="nav-btn" onclick="resetView()" aria-label="Reset map view">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 12h18"/>
-                        <path d="M12 3v18"/>
-                    </svg>
-                </button>
-            </div>
-            
-            <!-- Custom First Aid Marker Template -->
-            <template id="marker-template">
-                <svg width="32" height="32" viewBox="0 0 32 32" class="first-aid-marker">
-                    <circle cx="16" cy="16" r="14" fill="currentColor"/>
-                    <path class="first-aid-cross" d="M14 10h4v4h4v4h-4v4h-4v-4h-4v-4h4v-4z" fill="white"/>
-                </svg>
-            </template>
-        </main>
-
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <header class="sidebar-header">
-                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 50'%3E%3Cpath d='M0 0h200v50H0z' fill='white'/%3E%3Ctext x='10' y='35' font-family='Arial' font-size='24' fill='%23002A5C'%3EUofT First Aid%3C/text%3E%3C/svg%3E" 
-                     alt="University of Toronto" 
-                     class="uoft-logo">
-                <h1>First Aid Kit Locations</h1>
-            </header>
-            
-            <div class="search-container">
-                <input type="text" 
-                       class="search-input"
-                       placeholder="Search buildings..."
-                       aria-label="Search buildings"
-                       oninput="filterBuildings(this.value)">
-            </div>
-            
-            <div class="building-list" role="list" id="building-list">
-                <!-- Buildings will be populated here -->
-            </div>
-        </aside>
+    <div id="map"></div>
+    <div class="sidebar">
+        <h2>First Aid Locations</h2>
+        <input type="text" id="search" placeholder="Search buildings..." 
+               onkeyup="filterBuildings(this.value)">
+        <div id="building-list"></div>
     </div>
-    <!-- Mapbox -->
-    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
 
-    <!-- Main Application Script -->
     <script>
-    (() => {
-        'use strict';
+    // State management
+    const state = {
+        map: null,
+        buildings: [],
+        selectedBuilding: null
+    };
 
-        // Constants
-        const MAPBOX_TOKEN = 'pk.eyJ1IjoiZWhzIiwiYSI6ImNtMjNsYWtlZzA2bnQycW9qb2F3dHJuM2gifQ.Yw2JtBD13UqJFKtTj-SKsQ'; 
-        const GEOJSON_URL = '/FA/geojson.geojson';
-        const UOFT_COORDINATES = [-79.3957, 43.6629];
-        const MAP_BOUNDS = [
-            [-79.4057, 43.6529], // Southwest
-            [-79.3857, 43.6729]  // Northeast
-        ];
+    // Initialize map
+    function initMap() {
+        mapboxgl.accessToken = 'pk.eyJ1IjoiZWhzIiwiYSI6ImNtMjNsYWtlZzA2bnQycW9qb2F3dHJuM2gifQ.Yw2JtBD13UqJFKtTj-SKsQ';
+        state.map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/light-v11',
+            center: [-79.3957, 43.6629], // UofT coordinates
+            zoom: 15
+        });
 
-        // State Management
-        const state = {
-            map: null,
-            buildings: [],
-            selectedBuilding: null,
-            userLocation: null,
-            markers: new Map(),  // Map to store marker references
-            mapLoaded: false,
-            isAccessible: false,
-            theme: localStorage.getItem('theme') || 'light'
-        };
+        state.map.on('load', () => {
+            fetchBuildingData();
+        });
+    }
 
-        // Cache DOM Elements
-        const elements = {
-            map: document.getElementById('map'),
-            buildingList: document.getElementById('building-list'),
-            markerTemplate: document.getElementById('marker-template'),
-            searchInput: document.querySelector('.search-input')
-        };
-
-        // Initialize Map
-        async function initializeMap() {
-            try {
-                mapboxgl.accessToken = MAPBOX_TOKEN;
-
-                state.map = new mapboxgl.Map({
-                    container: 'map',
-                    style: `mapbox://styles/mapbox/${state.theme === 'dark' ? 'dark' : 'light'}-v11`,
-                    center: UOFT_COORDINATES,
-                    zoom: 15,
-                    minZoom: 14,
-                    maxBounds: MAP_BOUNDS,
-                    preserveDrawingBuffer: true,
-                    trackResize: true,
-                    cooperativeGestures: true,
-                    maxPitch: 60
-                });
-
-                // Wait for map to load
-                await new Promise(resolve => state.map.on('load', resolve));
-                state.mapLoaded = true;
-
-                // Add custom markers layer
-                addCustomMarkers();
-
-                // Add map controls
-                state.map.addControl(
-                    new mapboxgl.NavigationControl({ showCompass: false }), 
-                    'bottom-right'
-                );
-
-                // Setup map event listeners
-                setupMapEvents();
-
-            } catch (error) {
-                console.error('Map initialization failed:', error);
-                showError('Failed to initialize map');
-            }
+    // Fetch building data
+    async function fetchBuildingData() {
+        try {
+            const response = await fetch('/FA/geojson.geojson');
+            const data = await response.json();
+            state.buildings = data.features;
+            displayBuildings();
+            addMapMarkers();
+        } catch (error) {
+            console.error('Error fetching building data:', error);
         }
+    }
 
-        // Create Custom Marker
-        function createCustomMarker(coordinates, building) {
-            const markerEl = elements.markerTemplate.content.cloneNode(true).firstElementChild;
-            markerEl.style.color = state.selectedBuilding === building ? 
-                'var(--uoft-blue)' : 'var(--success-green)';
-
-            const marker = new mapboxgl.Marker({
-                element: markerEl,
-                anchor: 'center'
-            })
-            .setLngLat(coordinates)
-            .addTo(state.map);
-
-            // Add click handler
-            markerEl.addEventListener('click', () => {
-                selectBuilding(building);
-            });
-
-            return marker;
-        }
-
-        // Add Custom Markers to Map
-        function addCustomMarkers() {
-            // Clear existing markers
-            state.markers.forEach(marker => marker.remove());
-            state.markers.clear();
-
-            // Add new markers
-            state.buildings.forEach(building => {
-                const marker = createCustomMarker(
-                    building.geometry.coordinates,
-                    building
-                );
-                state.markers.set(building.properties.id, marker);
-            });
-        }
-
-        // Fetch Building Data
-        async function fetchBuildingData() {
-            try {
-                const response = await fetch(GEOJSON_URL);
-                if (!response.ok) throw new Error('Network response was not ok');
-                
-                const data = await response.json();
-                state.buildings = data.features;
-
-                // Cache the data
-                localStorage.setItem('buildingData', JSON.stringify(data));
-                localStorage.setItem('lastUpdated', new Date().toISOString());
-
-                // Populate building list
-                populateBuildingList();
-
-            } catch (error) {
-                console.error('Failed to fetch building data:', error);
-                // Try to load cached data
-                const cached = localStorage.getItem('buildingData');
-                if (cached) {
-                    state.buildings = JSON.parse(cached).features;
-                    populateBuildingList();
-                    showWarning('Using cached data');
-                } else {
-                    showError('Failed to load building data');
-                }
-            }
-        }
-
-        // Populate Building List
-        function populateBuildingList() {
-            elements.buildingList.innerHTML = state.buildings
-                .map(building => `
-                    <div class="building-item ${state.selectedBuilding === building ? 'active' : ''}"
-                         role="button"
-                         tabindex="0"
-                         onclick="selectBuilding(${building.properties.id})"
-                         data-building-id="${building.properties.id}">
-                        <h3>${building.properties.building}</h3>
-                        <p>${building.properties.address}</p>
-                        ${building.properties.access ? 
-                          `<span class="access-info">${building.properties.access}</span>` : 
-                          ''}
-                    </div>
-                `)
-                .join('');
-        }
-
-        // Select Building
-        function selectBuilding(buildingId) {
-            const building = state.buildings.find(b => b.properties.id === buildingId);
-            if (!building) return;
-
-            state.selectedBuilding = building;
-
-            // Update markers
-            state.markers.forEach((marker, id) => {
-                const markerEl = marker.getElement();
-                markerEl.style.color = id === buildingId ? 
-                    'var(--uoft-blue)' : 'var(--success-green)';
-            });
-
-            // Update building list
-            document.querySelectorAll('.building-item').forEach(item => {
-                item.classList.toggle('active', 
-                    item.dataset.buildingId === buildingId.toString());
-            });
-
-            // Fly to building
-            state.map.flyTo({
-                center: building.geometry.coordinates,
-                zoom: 18,
-                pitch: 45,
-                bearing: 45,
-                duration: 1500,
-                essential: true
-            });
-
-            // Show building details
-            showBuildingDetails(building);
-        }
-
-        // Building Details Display
-        function showBuildingDetails(building) {
-            const { properties: p } = building;
-            
-            // Create or update details panel
-            let detailsPanel = document.querySelector('.building-details');
-            if (!detailsPanel) {
-                detailsPanel = document.createElement('div');
-                detailsPanel.className = 'building-details';
-                elements.map.parentElement.appendChild(detailsPanel);
-            }
-
-            detailsPanel.innerHTML = `
-                <div class="details-content">
-                    <h2>${p.building}</h2>
-                    <address>${p.address}</address>
-                    <div class="details-info">
-                        <div class="info-item">
-                            <span class="label">Access:</span>
-                            <span>${p.access || 'Standard access'}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">First Aid Kit Location:</span>
-                            <span>${p.location || 'Front desk'}</span>
-                        </div>
-                        ${p.hours ? `
-                            <div class="info-item">
-                                <span class="label">Hours:</span>
-                                <span>${p.hours}</span>
-                            </div>
-                        ` : ''}
-                    </div>
+    // Display buildings in sidebar
+    function displayBuildings() {
+        const buildingList = document.getElementById('building-list');
+        buildingList.innerHTML = state.buildings
+            .map(building => `
+                <div class="building-item" onclick="selectBuilding('${building.properties.id}')">
+                    <h3>${building.properties.building}</h3>
+                    <p>${building.properties.address || ''}</p>
                 </div>
-            `;
+            `)
+            .join('');
+    }
 
-            requestAnimationFrame(() => {
-                detailsPanel.classList.add('active');
-            });
-        }
-        // Filter Buildings
-        function filterBuildings(query) {
-            const normalizedQuery = query.toLowerCase().trim();
-            const items = document.querySelectorAll('.building-item');
-            let visibleCount = 0;
-
-            items.forEach(item => {
-                const building = state.buildings.find(
-                    b => b.properties.id.toString() === item.dataset.buildingId
-                );
-                if (!building) return;
-
-                const { building: name, address } = building.properties;
-                const matches = name.toLowerCase().includes(normalizedQuery) || 
-                              address.toLowerCase().includes(normalizedQuery);
-
-                item.style.display = matches ? 'block' : 'none';
-                if (matches) visibleCount++;
-
-                // Update marker visibility
-                const marker = state.markers.get(building.properties.id);
-                if (marker) {
-                    marker.getElement().style.opacity = matches ? '1' : '0.3';
-                }
-            });
-
-            // Update no results message
-            updateNoResultsMessage(visibleCount === 0, query);
-        }
-
-        function updateNoResultsMessage(show, query) {
-            let message = document.querySelector('.no-results');
-            if (show) {
-                if (!message) {
-                    message = document.createElement('div');
-                    message.className = 'no-results';
-                    elements.buildingList.appendChild(message);
-                }
-                message.innerHTML = `
-                    <div class="no-results-content">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <circle cx="11" cy="11" r="8"/>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                        </svg>
-                        <p>No buildings found matching "${query}"</p>
-                    </div>
-                `;
-            } else if (message) {
-                message.remove();
-            }
-        }
-
-        // User Location
-        async function zoomToUserLocation() {
-            if (!navigator.geolocation) {
-                showWarning('Geolocation is not supported by your browser');
-                return;
-            }
-
-            try {
-                const position = await getCurrentPosition();
-                state.userLocation = [position.coords.longitude, position.coords.latitude];
-
-                // Find nearest building
-                const nearest = findNearestBuilding(state.userLocation);
-                if (nearest) {
-                    selectBuilding(nearest.properties.id);
-                }
-
-                // Add user location marker
-                updateUserLocationMarker(state.userLocation);
-
-            } catch (error) {
-                console.error('Geolocation error:', error);
-                showError('Could not get your location');
-            }
-        }
-
-        function getCurrentPosition() {
-            return new Promise((resolve, reject) => {
-                navigator.geolocation.getCurrentPosition(resolve, reject, {
-                    enableHighAccuracy: true,
-                    timeout: 5000,
-                    maximumAge: 0
-                });
-            });
-        }
-
-        function findNearestBuilding(location) {
-            return state.buildings.reduce((nearest, building) => {
-                const distance = calculateDistance(
-                    location,
-                    building.geometry.coordinates
-                );
-                if (!nearest || distance < nearest.distance) {
-                    return { building, distance };
-                }
-                return nearest;
-            }, null)?.building;
-        }
-
-        // Distance Calculation (Haversine formula)
-        function calculateDistance(point1, point2) {
-            const R = 6371e3; // Earth's radius in meters
-            const φ1 = point1[1] * Math.PI/180;
-            const φ2 = point2[1] * Math.PI/180;
-            const Δφ = (point2[1] - point1[1]) * Math.PI/180;
-            const Δλ = (point2[0] - point1[0]) * Math.PI/180;
-
-            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-                    Math.cos(φ1) * Math.cos(φ2) *
-                    Math.sin(Δλ/2) * Math.sin(Δλ/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-
-            return R * c;
-        }
-
-        // User Location Marker
-        function updateUserLocationMarker(coordinates) {
-            if (state.userMarker) {
-                state.userMarker.remove();
-            }
-
+    // Add markers to map
+    function addMapMarkers() {
+        state.buildings.forEach(building => {
             const el = document.createElement('div');
-            el.className = 'user-location-marker';
-            el.innerHTML = `
-                <svg width="24" height="24" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10" fill="var(--uoft-blue)" opacity="0.2"/>
-                    <circle cx="12" cy="12" r="6" fill="var(--uoft-blue)"/>
-                    <circle cx="12" cy="12" r="2" fill="white"/>
-                </svg>
-            `;
+            el.className = 'marker';
+            el.style.width = '15px';
+            el.style.height = '15px';
+            el.style.backgroundColor = '#e74c3c';
+            el.style.borderRadius = '50%';
 
-            state.userMarker = new mapboxgl.Marker({
-                element: el,
-                anchor: 'center'
-            })
-            .setLngLat(coordinates)
-            .addTo(state.map);
-        }
+            new mapboxgl.Marker(el)
+                .setLngLat(building.geometry.coordinates)
+                .addTo(state.map);
+        });
+    }
 
-        // Accessibility Features
-        function toggleAccessibility() {
-            state.isAccessible = !state.isAccessible;
-            document.body.classList.toggle('accessible', state.isAccessible);
+    // Select building
+    function selectBuilding(buildingId) {
+        const building = state.buildings.find(b => b.properties.id === buildingId);
+        if (!building) return;
 
-            if (state.isAccessible) {
-                // Increase contrast
-                document.documentElement.style.setProperty('--text-muted', '#4A4A4A');
-                // Increase marker size
-                document.querySelectorAll('.first-aid-marker').forEach(marker => {
-                    marker.style.transform = 'scale(1.2)';
-                });
-                // Add focus indicators
-                addFocusIndicators();
-            } else {
-                // Reset styles
-                document.documentElement.style.removeProperty('--text-muted');
-                document.querySelectorAll('.first-aid-marker').forEach(marker => {
-                    marker.style.transform = '';
-                });
-                removeFocusIndicators();
-            }
+        state.selectedBuilding = building;
+        state.map.flyTo({
+            center: building.geometry.coordinates,
+            zoom: 18
+        });
+    }
 
-            showMessage(`Accessibility features ${state.isAccessible ? 'enabled' : 'disabled'}`);
-        }
+    // Filter buildings
+    function filterBuildings(query) {
+        const normalizedQuery = query.toLowerCase();
+        const buildingItems = document.querySelectorAll('.building-item');
+        
+        buildingItems.forEach(item => {
+            const text = item.textContent.toLowerCase();
+            item.style.display = text.includes(normalizedQuery) ? 'block' : 'none';
+        });
+    }
 
-        // Focus Indicators
-        function addFocusIndicators() {
-            const style = document.createElement('style');
-            style.id = 'focus-indicators';
-            style.textContent = `
-                *:focus {
-                    outline: 3px solid var(--uoft-light-blue) !important;
-                    outline-offset: 2px !important;
-                }
-            `;
-            document.head.appendChild(style);
-        }
-
-        function removeFocusIndicators() {
-            document.getElementById('focus-indicators')?.remove();
-        }
-
-        // Status Messages
-        function showMessage(message, type = 'info') {
-            const container = document.querySelector('.status-messages') || 
-                            createStatusContainer();
-
-            const messageEl = document.createElement('div');
-            messageEl.className = `status-message ${type}`;
-            messageEl.setAttribute('role', 'alert');
-            messageEl.textContent = message;
-
-            container.appendChild(messageEl);
-            setTimeout(() => messageEl.remove(), 3000);
-        }
-
-        function createStatusContainer() {
-            const container = document.createElement('div');
-            container.className = 'status-messages';
-            document.body.appendChild(container);
-            return container;
-        }
-
-        const showError = msg => showMessage(msg, 'error');
-        const showWarning = msg => showMessage(msg, 'warning');
-        const showSuccess = msg => showMessage(msg, 'success');
-
-        // View Management
-        function resetView() {
-            state.map.flyTo({
-                center: UOFT_COORDINATES,
-                zoom: 15,
-                pitch: 0,
-                bearing: 0,
-                duration: 1500
-            });
-            
-            if (state.selectedBuilding) {
-                state.selectedBuilding = null;
-                document.querySelector('.building-details')?.classList.remove('active');
-                addCustomMarkers(); // Reset marker styles
-            }
-        }
-
-        // Map Events Setup
-        function setupMapEvents() {
-            state.map.on('moveend', () => {
-                // Update visible buildings based on map bounds
-                const bounds = state.map.getBounds();
-                state.markers.forEach((marker, id) => {
-                    const coordinates = marker.getLngLat();
-                    const visible = bounds.contains(coordinates);
-                    marker.getElement().style.opacity = visible ? '1' : '0.3';
-                });
-            });
-
-            state.map.on('zoomend', () => {
-                // Scale markers based on zoom level
-                const zoom = state.map.getZoom();
-                const scale = Math.max(0.8, Math.min(1.2, zoom / 16));
-                document.querySelectorAll('.first-aid-marker').forEach(marker => {
-                    marker.style.transform = `scale(${scale})`;
-                });
-            });
-        }
-        // Service Worker Registration
-        async function registerServiceWorker() {
-            if ('serviceWorker' in navigator) {
-                try {
-                    const registration = await navigator.serviceWorker.register('/sw.js', {
-                        scope: '/',
-                        updateViaCache: 'none'
-                    });
-
-                    registration.addEventListener('updatefound', () => {
-                        const newWorker = registration.installing;
-                        newWorker.addEventListener('statechange', () => {
-                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                showMessage('New version available. Please refresh.', 'info');
-                            }
-                        });
-                    });
-
-                    // Handle updates
-                    let refreshing = false;
-                    navigator.serviceWorker.addEventListener('controllerchange', () => {
-                        if (!refreshing) {
-                            refreshing = true;
-                            window.location.reload();
-                        }
-                    });
-
-                } catch (error) {
-                    console.error('Service worker registration failed:', error);
-                }
-            }
-        }
-
-        // Keyboard Navigation
-        function setupKeyboardNavigation() {
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') {
-                    // Close building details if open
-                    const details = document.querySelector('.building-details.active');
-                    if (details) {
-                        details.classList.remove('active');
-                        state.selectedBuilding = null;
-                        addCustomMarkers();
-                    }
-                } else if (e.key === 'f' && (e.ctrlKey || e.metaKey)) {
-                    e.preventDefault();
-                    elements.searchInput.focus();
-                }
-            });
-
-            // Make building items keyboard accessible
-            elements.buildingList.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' && e.target.classList.contains('building-item')) {
-                    e.target.click();
-                }
-            });
-        }
-
-        // Application Initialization
-        async function initializeApplication() {
-            try {
-                // Register service worker
-                await registerServiceWorker();
-
-                // Initialize map
-                await initializeMap();
-
-                // Fetch building data
-                await fetchBuildingData();
-
-                // Setup keyboard navigation
-                setupKeyboardNavigation();
-
-                // Setup offline support
-                setupOfflineSupport();
-
-                // Remove loading screen
-                document.getElementById('loading-screen')?.remove();
-
-            } catch (error) {
-                console.error('Application initialization failed:', error);
-                showError('Failed to initialize application');
-            }
-        }
-
-        // Offline Support
-        function setupOfflineSupport() {
-            window.addEventListener('online', () => {
-                showSuccess('Back online');
-                fetchBuildingData(); // Refresh data when back online
-            });
-
-            window.addEventListener('offline', () => {
-                showWarning('You are offline. Using cached data.');
-            });
-        }
-
-        // Start the application
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initializeApplication);
-        } else {
-            initializeApplication();
-        }
-    })();
+    // Initialize
+    document.addEventListener('DOMContentLoaded', initMap);
     </script>
-
-    <!-- Additional Styles -->
-    <style>
-    /* Status Messages */
-    .status-messages {
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: var(--layer-modal);
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        pointer-events: none;
-    }
-
-    .status-message {
-        padding: 12px 24px;
-        border-radius: 8px;
-        background: var(--surface-color);
-        box-shadow: 0 2px 8px var(--shadow-color);
-        animation: slideIn 0.3s ease-out;
-        pointer-events: auto;
-    }
-
-    .status-message.error {
-        border-left: 4px solid var(--error-color);
-    }
-
-    .status-message.warning {
-        border-left: 4px solid var(--warning-color);
-    }
-
-    .status-message.success {
-        border-left: 4px solid var(--success-green);
-    }
-
-    .status-message.info {
-        border-left: 4px solid var(--uoft-light-blue);
-    }
-
-    /* Building Details Panel */
-    .building-details {
-        position: absolute;
-        bottom: 20px;
-        left: 20px;
-        background: var(--surface-color);
-        border-radius: 12px;
-        box-shadow: 0 4px 20px var(--shadow-color);
-        padding: 20px;
-        max-width: 400px;
-        transform: translateY(100%);
-        opacity: 0;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        z-index: var(--layer-controls);
-    }
-
-    .building-details.active {
-        transform: translateY(0);
-        opacity: 1;
-    }
-
-    .details-content h2 {
-        color: var(--uoft-blue);
-        margin-bottom: 8px;
-    }
-
-    .details-content address {
-        color: var(--text-muted);
-        font-style: normal;
-        margin-bottom: 16px;
-    }
-
-    .details-info {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    .info-item {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-    }
-
-    .info-item .label {
-        color: var(--text-muted);
-        font-size: 0.875rem;
-    }
-
-    /* User Location Marker */
-    .user-location-marker {
-        width: 24px;
-        height: 24px;
-        animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.2); }
-        100% { transform: scale(1); }
-    }
-
-    /* Loading Screen */
-    #loading-screen {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: var(--uoft-blue);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        z-index: var(--layer-modal);
-        color: white;
-    }
-
-    .loading-spinner {
-        width: 40px;
-        height: 40px;
-        border: 3px solid rgba(255, 255, 255, 0.3);
-        border-top: 3px solid white;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin-bottom: 16px;
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-
-    /* High Contrast Mode */
-    @media (forced-colors: active) {
-        .building-item.active {
-            border: 2px solid CanvasText;
-        }
-
-        .first-aid-marker {
-            forced-color-adjust: none;
-        }
-    }
-
-    /* Print Styles */
-    @media print {
-        .app-container {
-            display: block;
-        }
-
-        .sidebar,
-        .navigation-controls,
-        .building-details {
-            display: none !important;
-        }
-
-        #map {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
-    }
-    </style>
-
-    <!-- Loading Screen -->
-    <div id="loading-screen">
-        <div class="loading-spinner"></div>
-        <p>Loading First Aid Kit Locations...</p>
-    </div>
 </body>
 </html>
