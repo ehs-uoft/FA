@@ -6,143 +6,75 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>UTSG First Aid Kit Locator</title>
     
-    <!-- Basic PWA meta tags -->
+    <!-- PWA Meta Tags -->
     <meta name="description" content="Locate first aid kits across the University of Toronto St. George campus">
-    <meta name="theme-color" content="#2c3e50">
+    <meta name="theme-color" content="#002A5C">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="format-detection" content="telephone=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="UTSG First Aid">
+
+    <!-- Preload Critical Resources -->
+    <link rel="preload" href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" as="style">
+    <link rel="preload" href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js" as="script">
     
-    <!-- Web App Manifest data integrated directly -->
+    <!-- Integrated PWA Manifest -->
     <link rel="manifest" href='data:application/manifest+json,{
         "name": "UTSG First Aid Kit Locator",
-        "short_name": "FA Locator",
+        "short_name": "UTSG First Aid",
         "description": "Locate first aid kits across the University of Toronto St. George campus",
         "start_url": "/",
         "display": "standalone",
-        "background_color": "#ffffff",
-        "theme_color": "#2c3e50",
-        "icons": [
-            {
-                "src": "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Cpath d=\'M50 10c-17.6 0-32 14.4-32 32 0 24 32 48 32 48s32-24 32-48c0-17.6-14.4-32-32-32zm0 44c-6.6 0-12-5.4-12-12s5.4-12 12-12 12 5.4 12 12-5.4 12-12 12z\' fill=\'%23e74c3c\'/%3E%3C/svg%3E",
-                "sizes": "192x192",
-                "type": "image/svg+xml",
-                "purpose": "any maskable"
-            }
-        ]
+        "background_color": "#002A5C",
+        "theme_color": "#002A5C",
+        "icons": [{
+            "src": "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23002A5C\'/%3E%3Cpath d=\'M30 30h40v40h-40z\' fill=\'white\'/%3E%3Cpath d=\'M45 35h10v10h10v10h-10v10h-10v-10h-10v-10h10z\' fill=\'%23e74c3c\'/%3E%3C/svg%3E",
+            "sizes": "512x512",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        }]
     }'>
-    
-    <!-- Apple-specific PWA tags -->
-    <meta name="apple-mobile-web-app-title" content="FA Locator">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23ffffff'/%3E%3Cpath d='M50 10c-17.6 0-32 14.4-32 32 0 24 32 48 32 48s32-24 32-48c0-17.6-14.4-32-32-32zm0 44c-6.6 0-12-5.4-12-12s5.4-12 12-12 12 5.4 12 12-5.4 12-12 12z' fill='%23e74c3c'/%3E%3C/svg%3E">
-    
-    <!-- Favicon -->
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 10c-17.6 0-32 14.4-32 32 0 24 32 48 32 48s32-24 32-48c0-17.6-14.4-32-32-32zm0 44c-6.6 0-12-5.4-12-12s5.4-12 12-12 12 5.4 12 12-5.4 12-12 12z' fill='%23e74c3c'/%3E%3C/svg%3E">
 
-    <!-- Error tracking and performance monitoring -->
-    <script>
-    // Error tracking
-    window.onerror = function(msg, url, lineNo, columnNo, error) {
-        console.error('Error: ', msg, '\nURL: ', url, '\nLine:', lineNo, 
-                      '\nColumn:', columnNo, '\nError object:', error);
-        if (window.analytics) {
-            window.analytics.trackError({
-                message: msg,
-                source: url,
-                line: lineNo,
-                column: columnNo,
-                error: error
-            });
-        }
-        showToast('error', 'An error occurred. Please refresh the page.');
-        return false;
-    };
-
-    // Performance monitoring
-    window.performance.mark('pageStart');
-    
-    // Feature detection
-    const features = {
-        serviceWorker: 'serviceWorker' in navigator,
-        geolocation: 'geolocation' in navigator,
-        intersectionObserver: 'IntersectionObserver' in window,
-        localStorage: (() => {
-            try {
-                localStorage.setItem('test', 'test');
-                localStorage.removeItem('test');
-                return true;
-            } catch(e) {
-                return false;
-            }
-        })()
-    };
-    </script>
-
-    <!-- Preload critical resources -->
-    <link rel="preload" href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" as="style">
-    <link rel="preload" href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js" as="script">
-    <link rel="preconnect" href="https://api.mapbox.com">
-    <link rel="preconnect" href="https://events.mapbox.com">
-    
-    <!-- Stylesheets -->
+    <!-- Styles -->
     <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-    /* CSS Custom Properties - Light Theme */
+    /* CSS Custom Properties - UofT Theme Light */
     :root[data-theme="light"] {
-        --primary-color: #2c3e50;
-        --secondary-color: #3498db;
-        --accent-color: #e74c3c;
-        --success-color: #2ecc71;
-        --warning-color: #f1c40f;
+        --uoft-blue: #002A5C;
+        --uoft-light-blue: #007FA3;
+        --accent-blue: #00204E;
+        --success-green: #2ecc71;
+        --warning-color: #f39c12;
         --error-color: #e74c3c;
-        --background-color: #f8f9fa;
-        --surface-color: #ffffff;
-        --text-color: #2c3e50;
+        --background-color: #FFFFFF;
+        --surface-color: #F8F9FA;
+        --text-color: #002A5C;
         --text-muted: #6c757d;
-        --panel-background: rgba(255, 255, 255, 0.98);
-        --hover-color: #f1f5f9;
-        --border-color: #e2e8f0;
-        --shadow-color: rgba(0, 0, 0, 0.1);
-        --shadow-color-strong: rgba(0, 0, 0, 0.2);
-    }
-
-    /* CSS Custom Properties - Dark Theme */
-    :root[data-theme="dark"] {
-        --primary-color: #3498db;
-        --secondary-color: #2c3e50;
-        --accent-color: #e74c3c;
-        --success-color: #2ecc71;
-        --warning-color: #f1c40f;
-        --error-color: #e74c3c;
-        --background-color: #1a1a1a;
-        --surface-color: #2d2d2d;
-        --text-color: #ffffff;
-        --text-muted: #a0a0a0;
-        --panel-background: rgba(45, 45, 45, 0.98);
-        --hover-color: #3d3d3d;
-        --border-color: #404040;
-        --shadow-color: rgba(0, 0, 0, 0.3);
-        --shadow-color-strong: rgba(0, 0, 0, 0.4);
-    }
-</style>
-</head>
-<style>
-    /* Common Properties */
-    :root {
-        --base-font-size: 16px;
-        --transition-speed: 0.3s;
+        --border-color: #E2E8F0;
+        --shadow-color: rgba(0, 42, 92, 0.1);
         --layer-map: 1;
         --layer-controls: 100;
         --layer-modal: 1000;
-        --layer-toast: 2000;
-        --safe-area-inset-top: env(safe-area-inset-top, 0px);
-        --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
     }
 
-    /* Reset and Base Styles */
+    /* CSS Custom Properties - UofT Theme Dark */
+    :root[data-theme="dark"] {
+        --uoft-blue: #007FA3;
+        --uoft-light-blue: #00ADD8;
+        --accent-blue: #FFFFFF;
+        --success-green: #2ecc71;
+        --warning-color: #f39c12;
+        --error-color: #e74c3c;
+        --background-color: #1A1A1A;
+        --surface-color: #2D2D2D;
+        --text-color: #FFFFFF;
+        --text-muted: #A0A0A0;
+        --border-color: #404040;
+        --shadow-color: rgba(0, 0, 0, 0.3);
+    }
+
+    /* Base Styles */
     *, *::before, *::after {
         box-sizing: border-box;
         margin: 0;
@@ -150,651 +82,565 @@
     }
 
     html {
-        font-size: var(--base-font-size);
+        font-size: 16px;
         -webkit-text-size-adjust: 100%;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
         text-rendering: optimizeLegibility;
         height: 100%;
-        scroll-behavior: smooth;
     }
 
-    body { 
-        margin: 0; 
-        padding: 0; 
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 
-                     Oxygen, Ubuntu, Cantarell, sans-serif;
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, 
+                     Helvetica, Arial, sans-serif;
         color: var(--text-color);
         background-color: var(--background-color);
         overflow: hidden;
-        position: fixed;
-        width: 100%;
-        height: 100%;
-        line-height: 1.5;
-        transition: background-color var(--transition-speed) ease;
+        height: 100vh;
+        transition: background-color 0.3s ease;
+    }
+
+    /* Layout */
+    .app-container {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        height: 100vh;
+        overflow: hidden;
     }
 
     /* Map Container */
-    #map { 
-        position: absolute; 
-        top: 0; 
-        bottom: 0; 
-        width: 100%; 
+    .map-container {
+        position: relative;
         height: 100%;
-        z-index: var(--layer-map);
-        background-color: var(--background-color);
-        transition: filter var(--transition-speed) ease;
     }
 
-    .map-blur {
-        filter: blur(4px);
-    }
-
-    /* Loading States */
-    .loading-states {
-        position: fixed;
+    #map {
+        position: absolute;
         top: 0;
         left: 0;
-        right: 0;
-        bottom: 0;
-        background: var(--background-color);
-        z-index: var(--layer-modal);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 20px;
-    }
-
-    .skeleton-map {
         width: 100%;
-        height: 70vh;
-        background: linear-gradient(90deg, 
-            var(--hover-color) 25%, 
-            var(--border-color) 50%, 
-            var(--hover-color) 75%);
-        background-size: 200% 100%;
-        animation: shimmer 1.5s infinite;
-        border-radius: 8px;
+        height: 100%;
+        z-index: var(--layer-map);
     }
 
-    @keyframes shimmer {
-        0% { background-position: 200% 0; }
-        100% { background-position: -200% 0; }
-    }
-
-    /* Quick Actions Toolbar */
-    .quick-actions-toolbar {
+    /* Navigation Controls */
+    .navigation-controls {
         position: fixed;
-        top: calc(20px + var(--safe-area-inset-top));
-        left: 50%;
-        transform: translateX(-50%);
-        background: var(--surface-color);
-        border-radius: 12px;
+        left: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: var(--background-color);
         padding: 8px;
-        display: flex;
-        gap: 8px;
+        border-radius: 8px;
         box-shadow: 0 2px 8px var(--shadow-color);
         z-index: var(--layer-controls);
-    }
-
-    .action-btn {
-        background: transparent;
-        border: none;
-        color: var(--text-color);
-        padding: 8px 16px;
-        border-radius: 6px;
-        cursor: pointer;
         display: flex;
-        align-items: center;
+        flex-direction: column;
         gap: 8px;
-        transition: all var(--transition-speed) ease;
     }
 
-    .action-btn:hover {
-        background: var(--hover-color);
-    }
-
-    .action-btn i {
-        font-size: 1.1em;
-    }
-
-    /* Toast System */
-    #toast-container {
-        position: fixed;
-        top: calc(20px + var(--safe-area-inset-top));
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: var(--layer-toast);
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        max-width: 90%;
-        pointer-events: none;
-    }
-
-    .toast {
-        background: var(--surface-color);
-        padding: 12px 24px;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px var(--shadow-color);
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        pointer-events: auto;
-        animation: slideIn 0.3s ease-out;
-        min-width: 300px;
-    }
-
-    .toast.error { border-left: 4px solid var(--error-color); }
-    .toast.warning { border-left: 4px solid var(--warning-color); }
-    .toast.success { border-left: 4px solid var(--success-color); }
-    .toast.info { border-left: 4px solid var(--secondary-color); }
-
-    .toast-content {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-    }
-
-    .toast-title {
-        font-weight: 600;
-        color: var(--text-color);
-    }
-
-    .toast-message {
-        color: var(--text-muted);
-        font-size: 0.9em;
-    }
-
-    .toast-close {
-        background: none;
-        border: none;
-        padding: 8px;
-        cursor: pointer;
-        color: var(--text-muted);
-        transition: color var(--transition-speed) ease;
-        border-radius: 50%;
-    }
-
-    .toast-close:hover {
-        color: var(--text-color);
-        background: var(--hover-color);
-    }
-
-    /* Building Card */
-    .building-card {
-        position: fixed;
-        bottom: calc(80px + var(--safe-area-inset-bottom));
-        left: 50%;
-        transform: translateX(-50%);
-        width: 90%;
-        max-width: 400px;
-        background: var(--surface-color);
-        border-radius: 16px;
-        box-shadow: 0 4px 20px var(--shadow-color);
-        z-index: var(--layer-controls);
-        overflow: hidden;
-        opacity: 0;
-        transform: translate(-50%, 100%);
-        transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .building-card.active {
-        opacity: 1;
-        transform: translate(-50%, 0);
-    }
-
-    .card-header {
-        position: relative;
-        background: var(--primary-color);
-        color: white;
-        padding: 20px;
-    }
-
-    .building-image {
-        width: 100%;
-        height: 150px;
-        object-fit: cover;
-        border-radius: 8px;
-        margin-bottom: 12px;
-    }
-
-    .quick-stats {
-        display: flex;
-        gap: 16px;
-        margin-top: 8px;
-        font-size: 0.9em;
-        color: rgba(255, 255, 255, 0.9);
-    }
-    </style>
-</head>
-<body>
-    <!-- Skip Link for Accessibility -->
-    <a href="#main-content" class="skip-link">Skip to main content</a>
-
-    <!-- Loading States -->
-    <div class="loading-states" id="initial-loading">
-        <div class="skeleton-map"></div>
-        <div class="loading-text">Loading map data...</div>
-    </div>
-
-    <!-- Main Content -->
-    <main id="main-content">
-        <div id="map" role="application" aria-label="Interactive map of first aid kit locations"></div>
-
-        <!-- Quick Actions Toolbar -->
-        <div class="quick-actions-toolbar no-print">
-            <button class="action-btn" onclick="getCurrentLocation()" aria-label="Find nearest building">
-                <i class="fas fa-location-crosshairs"></i>
-                <span>Nearest</span>
-            </button>
-            <button class="action-btn" onclick="toggleAccessibility()" aria-label="Toggle accessibility features">
-                <i class="fas fa-universal-access"></i>
-                <span>Access</span>
-            </button>
-            <button class="action-btn" onclick="shareLocation()" aria-label="Share location">
-                <i class="fas fa-share-alt"></i>
-                <span>Share</span>
-            </button>
-            <button class="action-btn" onclick="printMap()" aria-label="Print map">
-                <i class="fas fa-print"></i>
-                <span>Print</span>
-            </button>
-        </div>
-
-        <!-- Theme Toggle -->
-        <button class="theme-toggle no-print" onclick="toggleTheme()" aria-label="Toggle theme">
-            <i class="fas fa-moon"></i>
-        </button>
-
-        <!-- Toast Container -->
-        <div id="toast-container" role="alert" aria-live="polite"></div>
-
-        <!-- Building Card -->
-        <div class="building-card no-print" id="building-card">
-            <div class="card-header">
-                <h2 class="building-title"></h2>
-                <div class="quick-stats">
-                    <span class="distance"></span>
-                    <span class="direction"></span>
-                </div>
-            </div>
-            <div class="card-content">
-                <div class="building-details"></div>
-            </div>
-            <div class="card-actions">
-                <button class="action-button" onclick="getDirections()" aria-label="Get directions">
-                    <i class="fas fa-directions"></i>
-                    <span>Directions</span>
-                </button>
-                <button class="action-button" onclick="shareBuilding()" aria-label="Share building">
-                    <i class="fas fa-share-alt"></i>
-                    <span>Share</span>
-                </button>
-                <button class="action-button primary" onclick="viewFirstAid()" aria-label="View first aid information">
-                    <i class="fas fa-first-aid"></i>
-                    <span>First Aid Info</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- Bottom Navigation -->
-        <nav class="bottom-nav no-print" role="navigation">
-            <button class="nav-item active" data-view="map" onclick="switchView('map')" aria-label="Show map view">
-                <i class="fas fa-map-marked-alt"></i>
-                <span>Map</span>
-            </button>
-            <button class="nav-item" data-view="buildings" onclick="switchView('buildings')" aria-label="Show buildings list">
-                <i class="fas fa-building"></i>
-                <span>Buildings</span>
-            </button>
-            <button class="nav-item" data-view="info" onclick="switchView('info')" aria-label="Show information">
-                <i class="fas fa-info-circle"></i>
-                <span>Info</span>
-            </button>
-        </nav>
-
-        <!-- Print Header -->
-        <div class="print-header print-only">
-            <h1>UTSG First Aid Kit Locations</h1>
-            <p>Generated on <span id="print-date"></span></p>
-        </div>
-    </main>
-
-    <style>
-    /* Additional Styles */
-    .card-content {
-        padding: 20px;
-    }
-
-    .card-actions {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 8px;
-        padding: 16px;
-        background: var(--background-color);
-    }
-
-    .action-button {
-        background: var(--surface-color);
-        border: none;
-        padding: 12px;
-        border-radius: 8px;
-        cursor: pointer;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 6px;
-        color: var(--text-color);
-        transition: all var(--transition-speed) ease;
-    }
-
-    .action-button:hover {
-        background: var(--hover-color);
-        transform: translateY(-2px);
-    }
-
-    .action-button.primary {
-        background: var(--primary-color);
-        color: white;
-    }
-
-    .action-button.primary:hover {
-        background: var(--secondary-color);
-    }
-
-    .bottom-nav {
-        position: fixed;
-        bottom: var(--safe-area-inset-bottom);
-        left: 0;
-        right: 0;
-        background: var(--surface-color);
-        display: flex;
-        justify-content: space-around;
-        padding: 12px;
-        box-shadow: 0 -2px 10px var(--shadow-color);
-        z-index: var(--layer-controls);
-    }
-
-    .nav-item {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 4px;
-        color: var(--text-muted);
-        cursor: pointer;
-        padding: 8px;
-        border-radius: 8px;
-        transition: all var(--transition-speed) ease;
-        background: none;
-        border: none;
-    }
-
-    .nav-item.active {
-        color: var(--primary-color);
-        background: var(--hover-color);
-    }
-
-    .nav-item i {
-        font-size: 1.2em;
-        transition: transform var(--transition-speed) ease;
-    }
-
-    .nav-item span {
-        font-size: 0.8em;
-        font-weight: 500;
-    }
-
-    .nav-item:hover i {
-        transform: translateY(-2px);
-    }
-
-    .theme-toggle {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: var(--surface-color);
-        border: none;
+    .nav-btn {
         width: 40px;
         height: 40px;
-        border-radius: 50%;
+        border: none;
+        border-radius: 4px;
+        background: var(--surface-color);
+        color: var(--uoft-blue);
+        cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        cursor: pointer;
-        box-shadow: 0 2px 8px var(--shadow-color);
+        transition: all 0.2s ease;
+    }
+
+    .nav-btn:hover {
+        background: var(--uoft-light-blue);
+        color: white;
+        transform: translateX(2px);
+    }
+
+    /* Sidebar */
+    .sidebar {
+        background: var(--surface-color);
+        border-left: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
         z-index: var(--layer-controls);
-        transition: all var(--transition-speed) ease;
     }
 
-    .theme-toggle:hover {
-        transform: rotate(15deg);
+    .sidebar-header {
+        padding: 1rem;
+        background: var(--uoft-blue);
+        color: white;
     }
 
-    /* Animations */
-    @keyframes spin {
-        to { transform: rotate(360deg); }
+    .uoft-logo {
+        height: 40px;
+        margin-bottom: 1rem;
     }
 
-    @keyframes slideIn {
-        from { 
-            opacity: 0;
-            transform: translateY(-20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    .search-container {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
     }
 
-    @keyframes slideUp {
-        from { transform: translateY(100%); }
-        to { transform: translateY(0); }
+    .search-input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background: var(--background-color);
+        color: var(--text-color);
     }
 
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
+    .search-input:focus {
+        outline: none;
+        border-color: var(--uoft-light-blue);
+        box-shadow: 0 0 0 2px rgba(0, 127, 163, 0.2);
     }
 
-    /* Media Queries */
-    @media (max-width: 768px) {
-        .quick-actions-toolbar {
-            width: 90%;
-            overflow-x: auto;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-        }
-
-        .quick-actions-toolbar::-webkit-scrollbar {
-            display: none;
-        }
-
-        .building-card {
-            width: 95%;
-            bottom: calc(90px + var(--safe-area-inset-bottom));
-        }
-
-        .card-actions {
-            grid-template-columns: 1fr;
-        }
+    /* Building List */
+    .building-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem;
     }
 
-    /* Print Styles */
-    @media print {
-        .no-print {
-            display: none !important;
-        }
-
-        body * {
-            visibility: hidden;
-        }
-
-        #map, #map * {
-            visibility: visible;
-        }
-
-        #map {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-        }
-
-        .print-header {
-            visibility: visible;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            padding: 20px;
-            text-align: center;
-        }
+    .building-item {
+        padding: 1rem;
+        background: var(--background-color);
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
     }
 
-    /* Accessibility */
-    @media (prefers-reduced-motion: reduce) {
-        * {
-            animation-duration: 0.01ms !important;
-            animation-iteration-count: 1 !important;
-            transition-duration: 0.01ms !important;
-            scroll-behavior: auto !important;
-        }
+    .building-item:hover {
+        transform: translateX(-5px);
+        box-shadow: 0 2px 8px var(--shadow-color);
     }
 
-    /* High Contrast */
-    @media (forced-colors: active) {
-        .building-card {
-            border: 2px solid CanvasText;
-        }
-
-        .action-button {
-            border: 1px solid CanvasText;
-        }
+    .building-item.active {
+        border-left: 4px solid var(--uoft-blue);
+        background: var(--uoft-light-blue);
+        color: white;
     }
-    </style>
-    <!-- Scripts -->
+
+    .building-item h3 {
+        margin-bottom: 0.5rem;
+        font-size: 1rem;
+    }
+
+    .building-item p {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+    }
+</style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Map Container -->
+        <main class="map-container">
+            <div id="map" role="application" aria-label="Interactive map of first aid kit locations"></div>
+            
+            <!-- Navigation Controls -->
+            <div class="navigation-controls">
+                <button class="nav-btn" onclick="zoomToUserLocation()" aria-label="Find my location">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="8"/>
+                        <line x1="12" y1="2" x2="12" y2="4"/>
+                        <line x1="12" y1="20" x2="12" y2="22"/>
+                        <line x1="2" y1="12" x2="4" y2="12"/>
+                        <line x1="20" y1="12" x2="22" y2="12"/>
+                    </svg>
+                </button>
+                <button class="nav-btn" onclick="toggleAccessibility()" aria-label="Toggle accessibility features">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 8v8"/>
+                        <line x1="8" y1="12" x2="16" y2="12"/>
+                    </svg>
+                </button>
+                <button class="nav-btn" onclick="resetView()" aria-label="Reset map view">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 12h18"/>
+                        <path d="M12 3v18"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Custom First Aid Marker Template -->
+            <template id="marker-template">
+                <svg width="32" height="32" viewBox="0 0 32 32" class="first-aid-marker">
+                    <circle cx="16" cy="16" r="14" fill="currentColor"/>
+                    <path class="first-aid-cross" d="M14 10h4v4h4v4h-4v4h-4v-4h-4v-4h4v-4z" fill="white"/>
+                </svg>
+            </template>
+        </main>
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <header class="sidebar-header">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 50'%3E%3Cpath d='M0 0h200v50H0z' fill='white'/%3E%3Ctext x='10' y='35' font-family='Arial' font-size='24' fill='%23002A5C'%3EUofT First Aid%3C/text%3E%3C/svg%3E" 
+                     alt="University of Toronto" 
+                     class="uoft-logo">
+                <h1>First Aid Kit Locations</h1>
+            </header>
+            
+            <div class="search-container">
+                <input type="text" 
+                       class="search-input"
+                       placeholder="Search buildings..."
+                       aria-label="Search buildings"
+                       oninput="filterBuildings(this.value)">
+            </div>
+            
+            <div class="building-list" role="list" id="building-list">
+                <!-- Buildings will be populated here -->
+            </div>
+        </aside>
+    </div>
+    <!-- Mapbox -->
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+
+    <!-- Main Application Script -->
     <script>
     (() => {
         'use strict';
 
         // Constants
-        const MAPBOX_TOKEN = 'pk.eyJ1IjoiZWhzIiwiYSI6ImNtMjNsYWtlZzA2bnQycW9qb2F3dHJuM2gifQ.Yw2JtBD13UqJFKtTj-SKsQ';
+        const MAPBOX_TOKEN = 'pk.eyJ1IjoiZWhzIiwiYSI6ImNtMjNsYWtlZzA2bnQycW9qb2F3dHJuM2gifQ.Yw2JtBD13UqJFKtTj-SKsQ'; 
         const GEOJSON_URL = '/FA/geojson.geojson';
-        const UNIVERSITY_OF_TORONTO_COORDINATES = [-79.3957, 43.6629];
+        const UOFT_COORDINATES = [-79.3957, 43.6629];
         const MAP_BOUNDS = [
             [-79.4057, 43.6529], // Southwest
             [-79.3857, 43.6729]  // Northeast
         ];
-        const LOAD_TIMEOUT = 15000;
 
-        // State management
+        // State Management
         const state = {
             map: null,
-            kitFeatures: [],
-            mapLoaded: false,
-            dataLoaded: false,
-            loadingTimeout: null,
-            currentFontSize: 1,
+            buildings: [],
             selectedBuilding: null,
-            currentView: 'map',
-            theme: localStorage.getItem('theme') || 'light',
             userLocation: null,
-            // Offline support
-            offlineData: null,
-            isOnline: navigator.onLine,
-            lastUpdated: null,
-            // Accessibility
-            highContrast: false,
-            reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+            markers: new Map(),  // Map to store marker references
+            mapLoaded: false,
+            isAccessible: false,
+            theme: localStorage.getItem('theme') || 'light'
         };
 
-        // Cache DOM elements
+        // Cache DOM Elements
         const elements = {
             map: document.getElementById('map'),
-            initialLoading: document.getElementById('initial-loading'),
-            toastContainer: document.getElementById('toast-container'),
-            buildingCard: document.getElementById('building-card'),
-            quickStats: document.querySelector('.quick-stats'),
-            themeToggle: document.querySelector('.theme-toggle'),
-            navItems: document.querySelectorAll('.nav-item'),
-            printDate: document.getElementById('print-date')
+            buildingList: document.getElementById('building-list'),
+            markerTemplate: document.getElementById('marker-template'),
+            searchInput: document.querySelector('.search-input')
         };
 
-        // Performance monitoring
-        const perf = {
-            marks: new Map(),
-            start: (name) => {
-                perf.marks.set(name, performance.now());
-            },
-            end: (name) => {
-                const start = perf.marks.get(name);
-                if (start) {
-                    const duration = performance.now() - start;
-                    console.log(`${name}: ${duration.toFixed(2)}ms`);
-                    perf.marks.delete(name);
+        // Initialize Map
+        async function initializeMap() {
+            try {
+                mapboxgl.accessToken = MAPBOX_TOKEN;
+
+                state.map = new mapboxgl.Map({
+                    container: 'map',
+                    style: `mapbox://styles/mapbox/${state.theme === 'dark' ? 'dark' : 'light'}-v11`,
+                    center: UOFT_COORDINATES,
+                    zoom: 15,
+                    minZoom: 14,
+                    maxBounds: MAP_BOUNDS,
+                    preserveDrawingBuffer: true,
+                    trackResize: true,
+                    cooperativeGestures: true,
+                    maxPitch: 60
+                });
+
+                // Wait for map to load
+                await new Promise(resolve => state.map.on('load', resolve));
+                state.mapLoaded = true;
+
+                // Add custom markers layer
+                addCustomMarkers();
+
+                // Add map controls
+                state.map.addControl(
+                    new mapboxgl.NavigationControl({ showCompass: false }), 
+                    'bottom-right'
+                );
+
+                // Setup map event listeners
+                setupMapEvents();
+
+            } catch (error) {
+                console.error('Map initialization failed:', error);
+                showError('Failed to initialize map');
+            }
+        }
+
+        // Create Custom Marker
+        function createCustomMarker(coordinates, building) {
+            const markerEl = elements.markerTemplate.content.cloneNode(true).firstElementChild;
+            markerEl.style.color = state.selectedBuilding === building ? 
+                'var(--uoft-blue)' : 'var(--success-green)';
+
+            const marker = new mapboxgl.Marker({
+                element: markerEl,
+                anchor: 'center'
+            })
+            .setLngLat(coordinates)
+            .addTo(state.map);
+
+            // Add click handler
+            markerEl.addEventListener('click', () => {
+                selectBuilding(building);
+            });
+
+            return marker;
+        }
+
+        // Add Custom Markers to Map
+        function addCustomMarkers() {
+            // Clear existing markers
+            state.markers.forEach(marker => marker.remove());
+            state.markers.clear();
+
+            // Add new markers
+            state.buildings.forEach(building => {
+                const marker = createCustomMarker(
+                    building.geometry.coordinates,
+                    building
+                );
+                state.markers.set(building.properties.id, marker);
+            });
+        }
+
+        // Fetch Building Data
+        async function fetchBuildingData() {
+            try {
+                const response = await fetch(GEOJSON_URL);
+                if (!response.ok) throw new Error('Network response was not ok');
+                
+                const data = await response.json();
+                state.buildings = data.features;
+
+                // Cache the data
+                localStorage.setItem('buildingData', JSON.stringify(data));
+                localStorage.setItem('lastUpdated', new Date().toISOString());
+
+                // Populate building list
+                populateBuildingList();
+
+            } catch (error) {
+                console.error('Failed to fetch building data:', error);
+                // Try to load cached data
+                const cached = localStorage.getItem('buildingData');
+                if (cached) {
+                    state.buildings = JSON.parse(cached).features;
+                    populateBuildingList();
+                    showWarning('Using cached data');
+                } else {
+                    showError('Failed to load building data');
                 }
             }
-        };
+        }
 
-        // Analytics
-        const analytics = {
-            trackEvent: (category, action, label) => {
-                console.log(`Analytics Event: ${category} - ${action} - ${label}`);
-                // Implement your analytics here
-            },
-            trackError: (error) => {
-                console.error('Analytics Error:', error);
-                // Implement your error tracking here
-            }
-        };
-
-        // Toast system with improved accessibility
-        const toast = {
-            create: (type, message, duration = 5000) => {
-                const toastElement = document.createElement('div');
-                toastElement.className = `toast ${type}`;
-                toastElement.setAttribute('role', 'alert');
-                toastElement.innerHTML = `
-                    <div class="toast-content">
-                        <span class="toast-title">
-                            ${type.charAt(0).toUpperCase() + type.slice(1)}
-                        </span>
-                        <span class="toast-message">${message}</span>
+        // Populate Building List
+        function populateBuildingList() {
+            elements.buildingList.innerHTML = state.buildings
+                .map(building => `
+                    <div class="building-item ${state.selectedBuilding === building ? 'active' : ''}"
+                         role="button"
+                         tabindex="0"
+                         onclick="selectBuilding(${building.properties.id})"
+                         data-building-id="${building.properties.id}">
+                        <h3>${building.properties.building}</h3>
+                        <p>${building.properties.address}</p>
+                        ${building.properties.access ? 
+                          `<span class="access-info">${building.properties.access}</span>` : 
+                          ''}
                     </div>
-                    <button class="toast-close" aria-label="Dismiss message">
-                        <i class="fas fa-times" aria-hidden="true"></i>
-                    </button>
+                `)
+                .join('');
+        }
+
+        // Select Building
+        function selectBuilding(buildingId) {
+            const building = state.buildings.find(b => b.properties.id === buildingId);
+            if (!building) return;
+
+            state.selectedBuilding = building;
+
+            // Update markers
+            state.markers.forEach((marker, id) => {
+                const markerEl = marker.getElement();
+                markerEl.style.color = id === buildingId ? 
+                    'var(--uoft-blue)' : 'var(--success-green)';
+            });
+
+            // Update building list
+            document.querySelectorAll('.building-item').forEach(item => {
+                item.classList.toggle('active', 
+                    item.dataset.buildingId === buildingId.toString());
+            });
+
+            // Fly to building
+            state.map.flyTo({
+                center: building.geometry.coordinates,
+                zoom: 18,
+                pitch: 45,
+                bearing: 45,
+                duration: 1500,
+                essential: true
+            });
+
+            // Show building details
+            showBuildingDetails(building);
+        }
+
+        // Building Details Display
+        function showBuildingDetails(building) {
+            const { properties: p } = building;
+            
+            // Create or update details panel
+            let detailsPanel = document.querySelector('.building-details');
+            if (!detailsPanel) {
+                detailsPanel = document.createElement('div');
+                detailsPanel.className = 'building-details';
+                elements.map.parentElement.appendChild(detailsPanel);
+            }
+
+            detailsPanel.innerHTML = `
+                <div class="details-content">
+                    <h2>${p.building}</h2>
+                    <address>${p.address}</address>
+                    <div class="details-info">
+                        <div class="info-item">
+                            <span class="label">Access:</span>
+                            <span>${p.access || 'Standard access'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">First Aid Kit Location:</span>
+                            <span>${p.location || 'Front desk'}</span>
+                        </div>
+                        ${p.hours ? `
+                            <div class="info-item">
+                                <span class="label">Hours:</span>
+                                <span>${p.hours}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+
+            requestAnimationFrame(() => {
+                detailsPanel.classList.add('active');
+            });
+        }
+        // Filter Buildings
+        function filterBuildings(query) {
+            const normalizedQuery = query.toLowerCase().trim();
+            const items = document.querySelectorAll('.building-item');
+            let visibleCount = 0;
+
+            items.forEach(item => {
+                const building = state.buildings.find(
+                    b => b.properties.id.toString() === item.dataset.buildingId
+                );
+                if (!building) return;
+
+                const { building: name, address } = building.properties;
+                const matches = name.toLowerCase().includes(normalizedQuery) || 
+                              address.toLowerCase().includes(normalizedQuery);
+
+                item.style.display = matches ? 'block' : 'none';
+                if (matches) visibleCount++;
+
+                // Update marker visibility
+                const marker = state.markers.get(building.properties.id);
+                if (marker) {
+                    marker.getElement().style.opacity = matches ? '1' : '0.3';
+                }
+            });
+
+            // Update no results message
+            updateNoResultsMessage(visibleCount === 0, query);
+        }
+
+        function updateNoResultsMessage(show, query) {
+            let message = document.querySelector('.no-results');
+            if (show) {
+                if (!message) {
+                    message = document.createElement('div');
+                    message.className = 'no-results';
+                    elements.buildingList.appendChild(message);
+                }
+                message.innerHTML = `
+                    <div class="no-results-content">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <circle cx="11" cy="11" r="8"/>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        <p>No buildings found matching "${query}"</p>
+                    </div>
                 `;
+            } else if (message) {
+                message.remove();
+            }
+        }
 
-                elements.toastContainer.appendChild(toastElement);
+        // User Location
+        async function zoomToUserLocation() {
+            if (!navigator.geolocation) {
+                showWarning('Geolocation is not supported by your browser');
+                return;
+            }
 
-                const closeToast = () => {
-                    toastElement.style.opacity = '0';
-                    setTimeout(() => {
-                        elements.toastContainer.removeChild(toastElement);
-                    }, 300);
-                };
+            try {
+                const position = await getCurrentPosition();
+                state.userLocation = [position.coords.longitude, position.coords.latitude];
 
-                toastElement.querySelector('.toast-close').addEventListener('click', closeToast);
-
-                if (duration) {
-                    setTimeout(closeToast, duration);
+                // Find nearest building
+                const nearest = findNearestBuilding(state.userLocation);
+                if (nearest) {
+                    selectBuilding(nearest.properties.id);
                 }
 
-                // Track toast creation
-                analytics.trackEvent('UI', 'Toast', type);
-            }
-        };
+                // Add user location marker
+                updateUserLocationMarker(state.userLocation);
 
-        // Utility functions
+            } catch (error) {
+                console.error('Geolocation error:', error);
+                showError('Could not get your location');
+            }
+        }
+
+        function getCurrentPosition() {
+            return new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, {
+                    enableHighAccuracy: true,
+                    timeout: 5000,
+                    maximumAge: 0
+                });
+            });
+        }
+
+        function findNearestBuilding(location) {
+            return state.buildings.reduce((nearest, building) => {
+                const distance = calculateDistance(
+                    location,
+                    building.geometry.coordinates
+                );
+                if (!nearest || distance < nearest.distance) {
+                    return { building, distance };
+                }
+                return nearest;
+            }, null)?.building;
+        }
+
+        // Distance Calculation (Haversine formula)
         function calculateDistance(point1, point2) {
-            // Haversine formula
             const R = 6371e3; // Earth's radius in meters
             const φ1 = point1[1] * Math.PI/180;
             const φ2 = point2[1] * Math.PI/180;
@@ -809,815 +655,234 @@
             return R * c;
         }
 
-        function getDirectionText(distance) {
-            if (distance < 50) return 'You are here';
-            if (distance < 100) return 'Very close';
-            if (distance < 250) return '2 min walk';
-            if (distance < 500) return '5 min walk';
-            return '10+ min walk';
-        }
-
-        // Theme management
-        function toggleTheme() {
-            const newTheme = state.theme === 'light' ? 'dark' : 'light';
-            state.theme = newTheme;
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            
-            // Update map style
-            if (state.map) {
-                state.map.setStyle(`mapbox://styles/mapbox/${newTheme}-v11`);
-            }
-            
-            // Update icon
-            elements.themeToggle.innerHTML = `<i class="fas fa-${newTheme === 'light' ? 'moon' : 'sun'}"></i>`;
-            
-            // Track theme change
-            analytics.trackEvent('Settings', 'Theme', newTheme);
-        }
-
-        // Location services
-        async function getCurrentLocation() {
-            if (!navigator.geolocation) {
-                toast.create('error', 'Geolocation is not supported by your browser');
-                return;
+        // User Location Marker
+        function updateUserLocationMarker(coordinates) {
+            if (state.userMarker) {
+                state.userMarker.remove();
             }
 
-            try {
-                const position = await new Promise((resolve, reject) => {
-                    navigator.geolocation.getCurrentPosition(resolve, reject, {
-                        enableHighAccuracy: true,
-                        timeout: 5000,
-                        maximumAge: 0
-                    });
-                });
-
-                state.userLocation = [position.coords.longitude, position.coords.latitude];
-                
-                // Find nearest building
-                const nearest = findNearestBuilding(state.userLocation);
-                if (nearest) {
-                    showBuildingDetails(nearest);
-                }
-
-                // Track success
-                analytics.trackEvent('Location', 'GetCurrentLocation', 'Success');
-            } catch (error) {
-                console.error('Geolocation error:', error);
-                toast.create('error', 'Could not get your location');
-                analytics.trackError(error);
-            }
-        }
-        // Map initialization and functionality
-        async function initializeMap() {
-            perf.start('mapInit');
-            
-            try {
-                state.loadingTimeout = setTimeout(() => {
-                    elements.initialLoading.style.display = 'none';
-                    toast.create('warning', 'Loading is taking longer than expected. Please refresh the page.');
-                }, LOAD_TIMEOUT);
-
-                mapboxgl.accessToken = MAPBOX_TOKEN;
-
-                const mapOptions = {
-                    container: 'map',
-                    style: state.theme === 'dark' ? 
-                        'mapbox://styles/mapbox/dark-v11' : 
-                        'mapbox://styles/mapbox/light-v11',
-                    center: UNIVERSITY_OF_TORONTO_COORDINATES,
-                    zoom: 15,
-                    minZoom: 14,
-                    maxBounds: MAP_BOUNDS,
-                    preserveDrawingBuffer: true,
-                    trackResize: true,
-                    renderWorldCopies: false,
-                    optimizeForTerrain: true,
-                    maxPitch: 60,
-                    antialias: true,
-                    cooperativeGestures: true
-                };
-
-                if ('ontouchstart' in window) {
-                    Object.assign(mapOptions, {
-                        dragRotate: false,
-                        touchPitch: false
-                    });
-                }
-
-                state.map = new mapboxgl.Map(mapOptions);
-
-                state.map.once('load', () => {
-                    state.mapLoaded = true;
-                    perf.end('mapInit');
-                    onMapLoad();
-                    checkLoadingComplete();
-                    analytics.trackEvent('Map', 'Load', 'Success');
-                });
-
-                state.map.on('error', (e) => {
-                    console.error('Map error:', e);
-                    toast.create('error', 'Error loading map. Please check your connection.');
-                    elements.initialLoading.style.display = 'none';
-                    analytics.trackError(e);
-                });
-
-            } catch (error) {
-                console.error('Map initialization error:', error);
-                toast.create('error', 'Failed to initialize map. Please refresh the page.');
-                elements.initialLoading.style.display = 'none';
-                analytics.trackError(error);
-            }
-        }
-
-        // Map load handler
-        async function onMapLoad() {
-            try {
-                // Add layers to map
-                state.map.addSource('kits', {
-                    type: 'geojson',
-                    data: {
-                        type: 'FeatureCollection',
-                        features: state.kitFeatures
-                    },
-                    cluster: true,
-                    clusterMaxZoom: 14,
-                    clusterRadius: 50
-                });
-
-                // Add cluster layer
-                state.map.addLayer({
-                    id: 'clusters',
-                    type: 'circle',
-                    source: 'kits',
-                    filter: ['has', 'point_count'],
-                    paint: {
-                        'circle-color': [
-                            'step',
-                            ['get', 'point_count'],
-                            '#51bbd6',
-                            100,
-                            '#f1f075',
-                            750,
-                            '#f28cb1'
-                        ],
-                        'circle-radius': [
-                            'step',
-                            ['get', 'point_count'],
-                            20,
-                            100,
-                            30,
-                            750,
-                            40
-                        ]
-                    }
-                });
-
-                // Add cluster count layer
-                state.map.addLayer({
-                    id: 'cluster-count',
-                    type: 'symbol',
-                    source: 'kits',
-                    filter: ['has', 'point_count'],
-                    layout: {
-                        'text-field': '{point_count_abbreviated}',
-                        'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-                        'text-size': 12
-                    }
-                });
-
-                // Add unclustered point layer
-                state.map.addLayer({
-                    id: 'unclustered-point',
-                    type: 'circle',
-                    source: 'kits',
-                    filter: ['!', ['has', 'point_count']],
-                    paint: {
-                        'circle-color': '#e74c3c',
-                        'circle-radius': 8,
-                        'circle-stroke-width': 1,
-                        'circle-stroke-color': '#fff'
-                    }
-                });
-
-                // Add click handlers
-                state.map.on('click', 'clusters', (e) => {
-                    const features = state.map.queryRenderedFeatures(e.point, {
-                        layers: ['clusters']
-                    });
-                    const clusterId = features[0].properties.cluster_id;
-                    state.map.getSource('kits').getClusterExpansionZoom(
-                        clusterId,
-                        (err, zoom) => {
-                            if (err) return;
-
-                            state.map.easeTo({
-                                center: features[0].geometry.coordinates,
-                                zoom: zoom
-                            });
-                        }
-                    );
-                });
-
-                state.map.on('click', 'unclustered-point', (e) => {
-                    const feature = e.features[0];
-                    showBuildingDetails(feature);
-                });
-
-                // Change cursor on hover
-                state.map.on('mouseenter', 'clusters', () => {
-                    state.map.getCanvas().style.cursor = 'pointer';
-                });
-                state.map.on('mouseleave', 'clusters', () => {
-                    state.map.getCanvas().style.cursor = '';
-                });
-
-                state.map.on('mouseenter', 'unclustered-point', () => {
-                    state.map.getCanvas().style.cursor = 'pointer';
-                });
-                state.map.on('mouseleave', 'unclustered-point', () => {
-                    state.map.getCanvas().style.cursor = '';
-                });
-
-                // Add zoom and rotation controls
-                state.map.addControl(new mapboxgl.NavigationControl(), 'top-right');
-                state.map.addControl(new mapboxgl.GeolocateControl({
-                    positionOptions: {
-                        enableHighAccuracy: true
-                    },
-                    trackUserLocation: true
-                }), 'top-right');
-
-            } catch (error) {
-                console.error('Error in onMapLoad:', error);
-                toast.create('error', 'Failed to initialize map layers');
-                analytics.trackError(error);
-            }
-        }
-
-        // Data fetching with offline support
-        async function fetchGeoJSONData() {
-            perf.start('dataFetch');
-            
-            try {
-                // Try to load from cache first
-                if (state.isOnline === false && state.offlineData) {
-                    state.kitFeatures = state.offlineData.features;
-                    state.lastUpdated = state.offlineData.lastUpdated;
-                    toast.create('info', 'Using offline data');
-                    return state.offlineData;
-                }
-
-                const response = await fetch(GEOJSON_URL, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Cache-Control': 'no-cache'
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-                if (!data || !data.features || !Array.isArray(data.features)) {
-                    throw new Error('Invalid data format');
-                }
-
-                // Store data for offline use
-                state.kitFeatures = data.features;
-                state.offlineData = {
-                    features: data.features,
-                    lastUpdated: new Date().toISOString()
-                };
-                localStorage.setItem('offlineData', JSON.stringify(state.offlineData));
-
-                state.dataLoaded = true;
-                await updateLastModifiedDate();
-                
-                perf.end('dataFetch');
-                
-                if (state.mapLoaded) {
-                    addMapLayers(data);
-                    updateVisibleBuildings();
-                }
-                
-                checkLoadingComplete();
-                analytics.trackEvent('Data', 'Fetch', 'Success');
-                return data;
-
-            } catch (error) {
-                console.error('Error fetching GeoJSON:', error);
-                toast.create('error', 'Failed to load location data');
-                analytics.trackError(error);
-                
-                // Try to load cached data if fetch fails
-                const cachedData = localStorage.getItem('offlineData');
-                if (cachedData) {
-                    const data = JSON.parse(cachedData);
-                    state.kitFeatures = data.features;
-                    state.lastUpdated = data.lastUpdated;
-                    toast.create('info', 'Using cached data');
-                    return data;
-                }
-            }
-        }
-        // Building details handling
-        function showBuildingDetails(feature) {
-            perf.start('showDetails');
-            
-            const props = feature.properties;
-            const coordinates = feature.geometry.coordinates;
-            state.selectedBuilding = feature;
-
-            // Smooth map transition
-            state.map.flyTo({
-                center: coordinates,
-                zoom: Math.max(state.map.getZoom(), 17),
-                speed: 1.2,
-                curve: 1.42,
-                essential: true
-            });
-
-            // Update marker styles
-            const updatedFeatures = state.kitFeatures.map(f => ({
-                ...f,
-                properties: {
-                    ...f.properties,
-                    selected: f.properties.building === props.building
-                }
-            }));
-
-            if (state.map.getSource('kits')) {
-                state.map.getSource('kits').setData({
-                    type: 'FeatureCollection',
-                    features: updatedFeatures
-                });
-            }
-
-            // Update building card
-            const card = elements.buildingCard;
-            const title = card.querySelector('.building-title');
-            const stats = card.querySelector('.quick-stats');
-            const details = card.querySelector('.building-details');
-            
-            title.textContent = props.building;
-            
-            // Calculate and show distance if user location is available
-            let distanceHtml = '';
-            if (state.userLocation) {
-                const distance = calculateDistance(state.userLocation, coordinates);
-                const distanceText = getDirectionText(distance);
-                distanceHtml = `
-                    <span class="distance">
-                        <i class="fas fa-walking"></i> ${distanceText}
-                    </span>
-                `;
-            }
-
-            stats.innerHTML = distanceHtml;
-            
-            // Building details
-            details.innerHTML = `
-                <div class="detail-item">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <span>${props.address || 'Address not available'}</span>
-                </div>
-                ${props.access ? `
-                    <div class="detail-item">
-                        <i class="fas fa-door-open"></i>
-                        <span>${props.access}</span>
-                    </div>
-                ` : ''}
-                ${props.hours ? `
-                    <div class="detail-item">
-                        <i class="fas fa-clock"></i>
-                        <span>${props.hours}</span>
-                    </div>
-                ` : ''}
+            const el = document.createElement('div');
+            el.className = 'user-location-marker';
+            el.innerHTML = `
+                <svg width="24" height="24" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" fill="var(--uoft-blue)" opacity="0.2"/>
+                    <circle cx="12" cy="12" r="6" fill="var(--uoft-blue)"/>
+                    <circle cx="12" cy="12" r="2" fill="white"/>
+                </svg>
             `;
 
-            // Show the card with animation
-            requestAnimationFrame(() => {
-                card.classList.add('active');
-            });
-
-            analytics.trackEvent('Building', 'View', props.building);
-            perf.end('showDetails');
+            state.userMarker = new mapboxgl.Marker({
+                element: el,
+                anchor: 'center'
+            })
+            .setLngLat(coordinates)
+            .addTo(state.map);
         }
 
-        function hideBuildingDetails() {
-            if (!state.selectedBuilding) return;
-
-            elements.buildingCard.classList.remove('active');
-            
-            // Reset markers
-            if (state.map.getSource('kits')) {
-                state.map.getSource('kits').setData({
-                    type: 'FeatureCollection',
-                    features: state.kitFeatures.map(f => ({
-                        ...f,
-                        properties: {
-                            ...f.properties,
-                            selected: false
-                        }
-                    }))
-                });
-            }
-
-            state.selectedBuilding = null;
-        }
-
-        // View management
-        function switchView(view) {
-            if (state.currentView === view) return;
-
-            // Update navigation state
-            elements.navItems.forEach(item => {
-                item.classList.toggle('active', item.dataset.view === view);
-            });
-
-            // Handle view transition
-            switch(view) {
-                case 'map':
-                    showMapView();
-                    break;
-                case 'buildings':
-                    showBuildingsList();
-                    break;
-                case 'info':
-                    showInformation();
-                    break;
-            }
-
-            state.currentView = view;
-            analytics.trackEvent('Navigation', 'ViewChange', view);
-        }
-
-        function showMapView() {
-            elements.map.style.display = 'block';
-            elements.buildingCard.style.display = 'block';
-            
-            // Remove other views
-            document.querySelectorAll('.view-content')
-                .forEach(el => el.remove());
-        }
-
-        function showBuildingsList() {
-            // Create buildings list view
-            const content = document.createElement('div');
-            content.className = 'view-content buildings-list';
-            content.innerHTML = `
-                <div class="list-header">
-                    <h2>All Buildings</h2>
-                    <div class="search-box">
-                        <input type="text" placeholder="Search buildings..." 
-                               aria-label="Search buildings"
-                               oninput="filterBuildings(this.value)">
-                        <i class="fas fa-search"></i>
-                    </div>
-                </div>
-                <div class="buildings-grid">
-                    ${state.kitFeatures.map(feature => `
-                        <div class="building-item" 
-                             onclick="showBuildingDetails(${JSON.stringify(feature)})"
-                             tabindex="0"
-                             role="button"
-                             aria-label="View details for ${feature.properties.building}">
-                            <h3>${feature.properties.building}</h3>
-                            <p>${feature.properties.address || ''}</p>
-                            <div class="building-actions">
-                                <button class="view-btn">
-                                    <i class="fas fa-info-circle"></i>
-                                    View Details
-                                </button>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-            
-            document.body.appendChild(content);
-            elements.map.style.display = 'none';
-            elements.buildingCard.style.display = 'none';
-        }
-
-        function showInformation() {
-            const content = document.createElement('div');
-            content.className = 'view-content info-view';
-            content.innerHTML = `
-                <div class="info-header">
-                    <h2>First Aid Information</h2>
-                </div>
-                
-                <div class="info-sections">
-                    <section class="info-section">
-                        <h3><i class="fas fa-first-aid"></i> About First Aid Kits</h3>
-                        <p>First aid kits are available in buildings across the UTSG campus.
-                           Each building has designated first aid responders and equipment.</p>
-                    </section>
-
-                    <section class="info-section">
-                        <h3><i class="fas fa-phone-alt"></i> Emergency Contacts</h3>
-                        <div class="emergency-contacts">
-                            <div class="contact-item">
-                                <strong>Campus Police (Emergency)</strong>
-                                <a href="tel:416-978-2222">416-978-2222</a>
-                            </div>
-                            <div class="contact-item">
-                                <strong>Campus Police (Non-Emergency)</strong>
-                                <a href="tel:416-978-2323">416-978-2323</a>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section class="info-section">
-                        <h3><i class="fas fa-question-circle"></i> How to Use</h3>
-                        <ul class="usage-tips">
-                            <li>Click building markers to see details</li>
-                            <li>Use the search to find specific buildings</li>
-                            <li>Click "Nearest" to find closest first aid kit</li>
-                            <li>View building details for specific access information</li>
-                        </ul>
-                    </section>
-                </div>
-            `;
-            
-            document.body.appendChild(content);
-            elements.map.style.display = 'none';
-            elements.buildingCard.style.display = 'none';
-        }
-        // Search functionality
-        function filterBuildings(query) {
-            const normalizedQuery = query.toLowerCase().trim();
-            const buildingsGrid = document.querySelector('.buildings-grid');
-            
-            if (!buildingsGrid) return;
-
-            const items = buildingsGrid.querySelectorAll('.building-item');
-            let hasVisibleItems = false;
-
-            items.forEach(item => {
-                const buildingName = item.querySelector('h3').textContent.toLowerCase();
-                const address = item.querySelector('p').textContent.toLowerCase();
-                const matches = buildingName.includes(normalizedQuery) || 
-                              address.includes(normalizedQuery);
-                
-                item.style.display = matches ? 'block' : 'none';
-                if (matches) hasVisibleItems = true;
-            });
-
-            // Show/hide no results message
-            let noResults = buildingsGrid.querySelector('.no-results');
-            if (!hasVisibleItems) {
-                if (!noResults) {
-                    noResults = document.createElement('div');
-                    noResults.className = 'no-results';
-                    noResults.innerHTML = `
-                        <i class="fas fa-search"></i>
-                        <p>No buildings found matching "${query}"</p>
-                    `;
-                    buildingsGrid.appendChild(noResults);
-                }
-            } else if (noResults) {
-                noResults.remove();
-            }
-
-            analytics.trackEvent('Search', 'Filter', normalizedQuery);
-        }
-
-        // Sharing functionality
-        async function shareBuilding() {
-            if (!state.selectedBuilding) return;
-
-            const building = state.selectedBuilding.properties;
-            const coords = state.selectedBuilding.geometry.coordinates;
-            const shareUrl = `https://maps.google.com/?q=${coords[1]},${coords[0]}`;
-            
-            const shareData = {
-                title: `First Aid Kit Location - ${building.building}`,
-                text: `First Aid Kit location at ${building.building}, ${building.address}`,
-                url: shareUrl
-            };
-
-            try {
-                if (navigator.share) {
-                    await navigator.share(shareData);
-                    analytics.trackEvent('Share', 'Native', 'Success');
-                } else {
-                    await navigator.clipboard.writeText(shareUrl);
-                    toast.create('success', 'Location link copied to clipboard');
-                    analytics.trackEvent('Share', 'Clipboard', 'Success');
-                }
-            } catch (error) {
-                console.error('Share error:', error);
-                toast.create('error', 'Could not share location');
-                analytics.trackError(error);
-            }
-        }
-
-        async function shareLocation() {
-            if (!state.map) return;
-
-            const center = state.map.getCenter();
-            const zoom = state.map.getZoom();
-            const shareUrl = `https://maps.google.com/?q=${center.lat},${center.lng}&z=${Math.round(zoom)}`;
-
-            try {
-                if (navigator.share) {
-                    await navigator.share({
-                        title: 'UTSG First Aid Kit Location',
-                        text: 'Check out this location on the UTSG campus',
-                        url: shareUrl
-                    });
-                    analytics.trackEvent('Share', 'Location', 'Success');
-                } else {
-                    await navigator.clipboard.writeText(shareUrl);
-                    toast.create('success', 'Location link copied to clipboard');
-                    analytics.trackEvent('Share', 'Location', 'Clipboard');
-                }
-            } catch (error) {
-                console.error('Share error:', error);
-                toast.create('error', 'Could not share location');
-                analytics.trackError(error);
-            }
-        }
-
-        // Directions functionality
-        function getDirections() {
-            if (!state.selectedBuilding) return;
-
-            const coords = state.selectedBuilding.geometry.coordinates;
-            const url = `https://www.google.com/maps/dir/?api=1&destination=${coords[1]},${coords[0]}`;
-            
-            window.open(url, '_blank');
-            analytics.trackEvent('Navigation', 'Directions', state.selectedBuilding.properties.building);
-        }
-
-        // First aid info viewing
-        async function viewFirstAid() {
-            if (!state.selectedBuilding?.properties?.url) {
-                toast.create('info', 'No additional information available');
-                return;
-            }
-
-            try {
-                window.open(state.selectedBuilding.properties.url, '_blank');
-                analytics.trackEvent('FirstAid', 'View', state.selectedBuilding.properties.building);
-            } catch (error) {
-                console.error('Error opening URL:', error);
-                toast.create('error', 'Could not open first aid information');
-                analytics.trackError(error);
-            }
-        }
-
-        // Print functionality
-        function printMap() {
-            elements.printDate.textContent = new Date().toLocaleString();
-            window.print();
-            analytics.trackEvent('UI', 'Print', 'Map');
-        }
-
-        // Accessibility toggles
+        // Accessibility Features
         function toggleAccessibility() {
-            state.highContrast = !state.highContrast;
-            document.body.classList.toggle('high-contrast', state.highContrast);
-            
-            // Update map styles for accessibility
-            if (state.map) {
-                state.map.setLayoutProperty('unclustered-point', 'icon-size', 
-                    state.highContrast ? 1.2 : 0.8);
+            state.isAccessible = !state.isAccessible;
+            document.body.classList.toggle('accessible', state.isAccessible);
+
+            if (state.isAccessible) {
+                // Increase contrast
+                document.documentElement.style.setProperty('--text-muted', '#4A4A4A');
+                // Increase marker size
+                document.querySelectorAll('.first-aid-marker').forEach(marker => {
+                    marker.style.transform = 'scale(1.2)';
+                });
+                // Add focus indicators
+                addFocusIndicators();
+            } else {
+                // Reset styles
+                document.documentElement.style.removeProperty('--text-muted');
+                document.querySelectorAll('.first-aid-marker').forEach(marker => {
+                    marker.style.transform = '';
+                });
+                removeFocusIndicators();
             }
 
-            toast.create('success', 
-                `Accessibility features ${state.highContrast ? 'enabled' : 'disabled'}`);
-            analytics.trackEvent('Settings', 'Accessibility', 
-                state.highContrast ? 'Enabled' : 'Disabled');
+            showMessage(`Accessibility features ${state.isAccessible ? 'enabled' : 'disabled'}`);
         }
 
-        // Keyboard navigation
+        // Focus Indicators
+        function addFocusIndicators() {
+            const style = document.createElement('style');
+            style.id = 'focus-indicators';
+            style.textContent = `
+                *:focus {
+                    outline: 3px solid var(--uoft-light-blue) !important;
+                    outline-offset: 2px !important;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        function removeFocusIndicators() {
+            document.getElementById('focus-indicators')?.remove();
+        }
+
+        // Status Messages
+        function showMessage(message, type = 'info') {
+            const container = document.querySelector('.status-messages') || 
+                            createStatusContainer();
+
+            const messageEl = document.createElement('div');
+            messageEl.className = `status-message ${type}`;
+            messageEl.setAttribute('role', 'alert');
+            messageEl.textContent = message;
+
+            container.appendChild(messageEl);
+            setTimeout(() => messageEl.remove(), 3000);
+        }
+
+        function createStatusContainer() {
+            const container = document.createElement('div');
+            container.className = 'status-messages';
+            document.body.appendChild(container);
+            return container;
+        }
+
+        const showError = msg => showMessage(msg, 'error');
+        const showWarning = msg => showMessage(msg, 'warning');
+        const showSuccess = msg => showMessage(msg, 'success');
+
+        // View Management
+        function resetView() {
+            state.map.flyTo({
+                center: UOFT_COORDINATES,
+                zoom: 15,
+                pitch: 0,
+                bearing: 0,
+                duration: 1500
+            });
+            
+            if (state.selectedBuilding) {
+                state.selectedBuilding = null;
+                document.querySelector('.building-details')?.classList.remove('active');
+                addCustomMarkers(); // Reset marker styles
+            }
+        }
+
+        // Map Events Setup
+        function setupMapEvents() {
+            state.map.on('moveend', () => {
+                // Update visible buildings based on map bounds
+                const bounds = state.map.getBounds();
+                state.markers.forEach((marker, id) => {
+                    const coordinates = marker.getLngLat();
+                    const visible = bounds.contains(coordinates);
+                    marker.getElement().style.opacity = visible ? '1' : '0.3';
+                });
+            });
+
+            state.map.on('zoomend', () => {
+                // Scale markers based on zoom level
+                const zoom = state.map.getZoom();
+                const scale = Math.max(0.8, Math.min(1.2, zoom / 16));
+                document.querySelectorAll('.first-aid-marker').forEach(marker => {
+                    marker.style.transform = `scale(${scale})`;
+                });
+            });
+        }
+        // Service Worker Registration
+        async function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registration = await navigator.serviceWorker.register('/sw.js', {
+                        scope: '/',
+                        updateViaCache: 'none'
+                    });
+
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                showMessage('New version available. Please refresh.', 'info');
+                            }
+                        });
+                    });
+
+                    // Handle updates
+                    let refreshing = false;
+                    navigator.serviceWorker.addEventListener('controllerchange', () => {
+                        if (!refreshing) {
+                            refreshing = true;
+                            window.location.reload();
+                        }
+                    });
+
+                } catch (error) {
+                    console.error('Service worker registration failed:', error);
+                }
+            }
+        }
+
+        // Keyboard Navigation
         function setupKeyboardNavigation() {
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
-                    hideBuildingDetails();
+                    // Close building details if open
+                    const details = document.querySelector('.building-details.active');
+                    if (details) {
+                        details.classList.remove('active');
+                        state.selectedBuilding = null;
+                        addCustomMarkers();
+                    }
                 } else if (e.key === 'f' && (e.ctrlKey || e.metaKey)) {
                     e.preventDefault();
-                    document.querySelector('.search-box input')?.focus();
+                    elements.searchInput.focus();
                 }
             });
 
             // Make building items keyboard accessible
-            document.addEventListener('keypress', (e) => {
+            elements.buildingList.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter' && e.target.classList.contains('building-item')) {
                     e.target.click();
                 }
             });
         }
 
-        // Touch gestures
-        function setupGestureControls() {
-            let touchStartY = 0;
-            let touchStartTime = 0;
+        // Application Initialization
+        async function initializeApplication() {
+            try {
+                // Register service worker
+                await registerServiceWorker();
 
-            elements.buildingCard.addEventListener('touchstart', (e) => {
-                touchStartY = e.touches[0].clientY;
-                touchStartTime = Date.now();
-            });
+                // Initialize map
+                await initializeMap();
 
-            elements.buildingCard.addEventListener('touchmove', (e) => {
-                const currentY = e.touches[0].clientY;
-                const deltaY = currentY - touchStartY;
-                
-                if (deltaY > 50) {
-                    hideBuildingDetails();
-                }
-            });
+                // Fetch building data
+                await fetchBuildingData();
+
+                // Setup keyboard navigation
+                setupKeyboardNavigation();
+
+                // Setup offline support
+                setupOfflineSupport();
+
+                // Remove loading screen
+                document.getElementById('loading-screen')?.remove();
+
+            } catch (error) {
+                console.error('Application initialization failed:', error);
+                showError('Failed to initialize application');
+            }
         }
-        // Offline support
+
+        // Offline Support
         function setupOfflineSupport() {
             window.addEventListener('online', () => {
-                state.isOnline = true;
-                toast.create('success', 'Back online');
-                fetchGeoJSONData(); // Refresh data
+                showSuccess('Back online');
+                fetchBuildingData(); // Refresh data when back online
             });
 
             window.addEventListener('offline', () => {
-                state.isOnline = false;
-                toast.create('warning', 'You are offline');
-            });
-
-            // Load cached data
-            const cachedData = localStorage.getItem('offlineData');
-            if (cachedData) {
-                try {
-                    state.offlineData = JSON.parse(cachedData);
-                } catch (error) {
-                    console.error('Error parsing cached data:', error);
-                    localStorage.removeItem('offlineData');
-                }
-            }
-        }
-
-        // Update last modified date
-        async function updateLastModifiedDate() {
-            try {
-                const response = await fetch(GEOJSON_URL, {
-                    method: 'HEAD'
-                });
-                if (response.ok) {
-                    const lastModified = response.headers.get('last-modified');
-                    state.lastUpdated = lastModified ? new Date(lastModified) : new Date();
-                    localStorage.setItem('lastUpdated', state.lastUpdated.toISOString());
-                }
-            } catch (error) {
-                console.error('Error fetching last modified date:', error);
-            }
-        }
-
-        // Check if loading is complete
-        function checkLoadingComplete() {
-            if (state.mapLoaded && state.dataLoaded) {
-                clearTimeout(state.loadingTimeout);
-                elements.initialLoading.style.display = 'none';
-                if (state.map && state.map.getSource('kits')) {
-                    state.map.getSource('kits').setData({
-                        type: 'FeatureCollection',
-                        features: state.kitFeatures
-                    });
-                }
-            }
-        }
-
-        // Initialize application
-        function initializeApplication() {
-            perf.start('totalLoad');
-            window.performance.mark('appStart');
-
-            // Set initial theme
-            document.documentElement.setAttribute('data-theme', state.theme);
-            
-            // Setup features
-            setupOfflineSupport();
-            setupGestureControls();
-            setupKeyboardNavigation();
-
-            // Initialize map and data
-            Promise.all([
-                initializeMap(),
-                fetchGeoJSONData()
-            ]).catch(error => {
-                console.error('Initialization error:', error);
-                toast.create('error', 'Failed to initialize application');
-                analytics.trackError(error);
-            }).finally(() => {
-                window.performance.mark('appEnd');
-                window.performance.measure('Total Initialization', 'appStart', 'appEnd');
-                perf.end('totalLoad');
+                showWarning('You are offline. Using cached data.');
             });
         }
 
-        // Start application when DOM is ready
+        // Start the application
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initializeApplication);
         } else {
@@ -1626,32 +891,176 @@
     })();
     </script>
 
-    <!-- Service Worker Registration -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js', {
-                    scope: '/',
-                    updateViaCache: 'none'
-                })
-                .then(registration => {
-                    console.log('ServiceWorker registration successful');
-                    
-                    // Handle updates
-                    registration.addEventListener('updatefound', () => {
-                        const newWorker = registration.installing;
-                        newWorker.addEventListener('statechange', () => {
-                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                toast.create('info', 'New version available. Please refresh.');
-                            }
-                        });
-                    });
-                })
-                .catch(error => {
-                    console.error('ServiceWorker registration failed:', error);
-                });
-            });
+    <!-- Additional Styles -->
+    <style>
+    /* Status Messages */
+    .status-messages {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: var(--layer-modal);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        pointer-events: none;
+    }
+
+    .status-message {
+        padding: 12px 24px;
+        border-radius: 8px;
+        background: var(--surface-color);
+        box-shadow: 0 2px 8px var(--shadow-color);
+        animation: slideIn 0.3s ease-out;
+        pointer-events: auto;
+    }
+
+    .status-message.error {
+        border-left: 4px solid var(--error-color);
+    }
+
+    .status-message.warning {
+        border-left: 4px solid var(--warning-color);
+    }
+
+    .status-message.success {
+        border-left: 4px solid var(--success-green);
+    }
+
+    .status-message.info {
+        border-left: 4px solid var(--uoft-light-blue);
+    }
+
+    /* Building Details Panel */
+    .building-details {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        background: var(--surface-color);
+        border-radius: 12px;
+        box-shadow: 0 4px 20px var(--shadow-color);
+        padding: 20px;
+        max-width: 400px;
+        transform: translateY(100%);
+        opacity: 0;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: var(--layer-controls);
+    }
+
+    .building-details.active {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    .details-content h2 {
+        color: var(--uoft-blue);
+        margin-bottom: 8px;
+    }
+
+    .details-content address {
+        color: var(--text-muted);
+        font-style: normal;
+        margin-bottom: 16px;
+    }
+
+    .details-info {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .info-item .label {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+    }
+
+    /* User Location Marker */
+    .user-location-marker {
+        width: 24px;
+        height: 24px;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+
+    /* Loading Screen */
+    #loading-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--uoft-blue);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: var(--layer-modal);
+        color: white;
+    }
+
+    .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-top: 3px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 16px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* High Contrast Mode */
+    @media (forced-colors: active) {
+        .building-item.active {
+            border: 2px solid CanvasText;
         }
-    </script>
+
+        .first-aid-marker {
+            forced-color-adjust: none;
+        }
+    }
+
+    /* Print Styles */
+    @media print {
+        .app-container {
+            display: block;
+        }
+
+        .sidebar,
+        .navigation-controls,
+        .building-details {
+            display: none !important;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+    }
+    </style>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loading-spinner"></div>
+        <p>Loading First Aid Kit Locations...</p>
+    </div>
 </body>
 </html>
